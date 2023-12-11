@@ -12,7 +12,7 @@
  *
  * @command wasyo1
  * @text ループ初期化
- * @desc 使って良い変数の番号をください、０にして返します
+ * @desc 使って良い変数の番号をください、１にして返します
  * @arg val
  * @type number
  * @text 変数の番号（数字）
