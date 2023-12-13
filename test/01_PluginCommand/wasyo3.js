@@ -14,7 +14,7 @@
  *
  */
 
-/* うごかない */
+/* 相変わらずですけど、くそコードになってますm(__)m リファクタリング（ＴへＴ）*/
 
 (() => {
   'use strict';
@@ -30,19 +30,6 @@
     init(){
       this.initCanvas();
       this.initCanvas2();
-    }
-    show(inp){
-      let p = document.getElementById("aaa");
-      p.style.display = (inp==0)? "none":"block";
-      console.log("this.menFunc: "+this.menFunc);
-      console.log(TouchInput.update);
-      this.initdatashow();
-      /*
-      if(inp==0 && this.menFunc){
-        TouchInput.update = this.menFunc;
-      }else{
-        TouchInput.update = this.mdsFunc;
-      }*/
     }
     initCanvas(){
       let [gcw,gch] = [window.innerWidth,window.innerHeight];
@@ -96,6 +83,15 @@
     mover2(e){
       e.stopPropagation();
       this.switch(e.target);
+      let id = "cell_"+e.target.id;
+      let p = document.getElementById(id);
+      p.style.backgroundColor = "#088";
+    }
+    mleave2(e){
+      e.stopPropagation();
+      let id = "cell_"+e.target.id;
+      let p = document.getElementById(id);
+      p.style.backgroundColor = "#000";
     }
     mover(e){
       //DBG//console.log("mover:"+e);
@@ -116,47 +112,22 @@
       console.log("clickfunc"+this.mode);
       this.show(this.mode);
     }
-
-    initdatashow_old(){
-      if(this.dflag){return;}
-      this.dflag = true;
-      //＝＝＝
-      let d = document.getElementById("aaa");
-      let gp = $gameParty.battleMembers(); // 配列
-      for(let cc of gp){
-        let act = $dataActors[cc._actorId];
-        let cls = $dataClasses[cc._classId];
-        console.log(cc);
-        console.log(act);
-        console.log(cls);
-        let out = cc["_name"] + " " + cls.name;
-        let ks = ["_level","_hp","mhp"];
-        for(let k of ks){
-          out = out + " " + cc[k];
-        }
-        let p = document.createElement("p");
-        p.textContent = out;
-        p.id = cc._battlerName;
-        p.addEventListener('mouseover', this.mover2.bind(this));
-        d.appendChild(p);
-      }
-      {
-        let dv = document.createElement("div");
-        dv.width = "100%";
-        dv.style = "text-align: right";
-        d.appendChild(dv);
-        let p = document.createElement("img");
-        p.id = "imggg";
-        p.src = 'img/pictures/Actor1_2.png';
-        dv.appendChild(p);
-      }
+    // clickfunc したら呼ばれる
+    show(inp){
+      let p = document.getElementById("aaa");
+      p.style.display = (inp==0)? "none":"block";
+      console.log("this.menFunc: "+this.menFunc);
+      console.log(TouchInput.update);
+      this.initdatashow();
     }
+    // 一回だけ呼ばれる
     initdatashow(){
       if(this.dflag){return;}
       this.dflag = true;
       //＝＝＝
       let d = document.getElementById("aaa");
 
+      // テーブル
       const tbl = document.createElement("table");
       tbl.style.width ="100%";
       const tblBody = document.createElement("tbody");
@@ -166,15 +137,15 @@
       d.appendChild(tbl);
       let gp = $gameParty.battleMembers(); // 配列
       for (let cc of gp) {
-        // <td> 要素とテキストノードを作成し、テキストノードを
-        // <td> の内容として、その <td> を表の行の末尾に追加
         const cell = document.createElement("td");
         cell.style.width =(100/gp.length)+"%";
         let p = document.createElement("img");
         p.src = this.getImgSrcFromTEXT(cc["_name"]);
         p.id = cc._battlerName;
         p.addEventListener('mouseover', this.mover2.bind(this));
+        p.addEventListener('mouseleave', this.mleave2.bind(this));
         cell.appendChild(p);
+        cell.id = "cell_"+p.id;
         row.appendChild(cell);
       }
 
