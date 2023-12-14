@@ -1,0 +1,32 @@
+body {
+  /* スクロールバー出てほしくないので */
+  overflow: hidden;
+}
+
+.CharaShadow{
+/* https://developer.mozilla.org/ja/docs/Web/CSS/filter-function/drop-shadow */
+filter: drop-shadow(10px -3px 2px #00FFFF);
+}
+
+.fadeIn {
+/*https://coco-factory.jp/ugokuweb/css02/*/
+animation-name: fadeInAnime;
+animation-fill-mode:forwards;
+animation-duration:0.5s;
+/*animation-iteration-count:infinite;*/
+/*animation-timing-function:ease;*/
+/*animation-delay: 0s;*/
+/*animation-direction:normal;*/
+}
+
+@keyframes fadeInAnime{
+  0% {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0px);
+  }
+}
