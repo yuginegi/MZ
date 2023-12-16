@@ -11,6 +11,7 @@
  * @help wasyo2.js
  *
  * HTML側の操作と連携させる
+ * クリックすると戻ってこれる
  *
  * @command wasyo1
  * @text ループ初期化
