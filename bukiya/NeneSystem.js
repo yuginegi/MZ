@@ -11,34 +11,23 @@
  * @help NeneSystem.js
  *
  * 所持している武器を売る
- *
+ * 
+ * @param arrayIDs
+ * @desc 使ってよい変数の配列(ループ用、店用、スキル用)
+ * 数字とカンマ区切りだけを半角で。
+ * （例）2,3,11
+ * 
  * @command purchase
  * @text アイテムの仕入れ
  * @desc 
- * ループ変数の番号をください、１にして返します
- * お店で使うための変数をください
- * @arg val1
- * @type number
- * @text ループ変数の番号（数字）
- * @desc 使って良い変数の数字
- * @arg val2
- * @type number
- * @text 店情報変数の番号（数字）
- * @desc 大事なお店情報
+ * 持っている武器を回収します
+ * ループ変数を１にして返します
  *
  * @command sales
  * @text アイテム売る
  * @desc 
- * 出力用の変数の番号をください、そこに返します
- * お店で使うための変数をください
- * @arg val1
- * @type number
- * @text ループ変数の番号（数字）
- * @desc 使って良い変数の数字
- * @arg val2
- * @type number
- * @text 店情報変数の番号（数字）
- * @desc 大事なお店情報
+ * 在庫の武器を売る
+ * ループ変数に売上金を返します
  */
 
 /* うごかない */
@@ -46,18 +35,37 @@
 (() => {
   'use strict';
   class NeneSystemClass{
-    constructor(){
+    constructor(ids){
       this.name = "NeneSystemClass";
+      //＝＝＝ 入力文字列を数字の配列にする
+      let aa = ids.split(',');
+      this.ids = aa.map(Number);
+      //console.log(this.name+"::isArray="+Array.isArray(this.ids)+":"+this.ids);
+      //＝＝＝ 数字の配列かどうかチェック
+      if(this.ids.length < 3){
+          alert("NeneSystem.js::Given parameter is wrong. \""+ids+"\"\nPlease check plugin parameter. ");
+          // 起動時、ワザとエラーにする
+          NeneSystemClass_initERROR1 = "ERROR";
+      }
+      for(let cc of this.ids){
+        if(typeof cc != "number"){
+          alert("NeneSystem.js::Given parameter is wrong. \""+ids+"\"\nPlease check plugin parameter. ");
+          // 起動時、ワザとエラーにする
+          NeneSystemClass_initERROR2 = "ERROR";
+        }
+      }
+      console.log(this.name+", Init Success. "+this.ids);
     }
     /*************************************************
     * 回収
     *************************************************/
-    init(idx,idx2){
+    init(){
       console.log([this.name,"init"]);
       // 初期化
       $gameVariables.setValue(this.idx,0);
-      this.idx = idx;
-      this.idx2 = idx2;
+      this.idx = this.ids[0];
+      this.idx2 = this.ids[1];
+      console.log("init::"+this.idx,this.idx2);
       // 表示
       this.kaisyuViewMain();
     }
@@ -140,7 +148,7 @@
       let cc = $gameVariables.value(this.idx2);
       // 店情報 が もし未初期化だったら
       if(classOf(cc)!="hash"){
-        cc = {weapons:{},armors:{}};
+        cc = {nanako:0,weapons:{},armors:{}};
       }
       // もっている武器を店に渡す
       this.kaisyuFunc(cc.weapons, $gameParty._weapons);
@@ -152,12 +160,14 @@
     /*************************************************
     * 売りあげ処理
     *************************************************/
-    init2(idx,idx2){
-      console.log([this.name,"init"]);
+    init2(){
+      console.log([this.name,"init2"]);
+      this.idx = this.ids[0];
+      this.idx2 = this.ids[1];
+      this.idx3 = this.ids[2];
+      console.log("init::"+this.idx,this.idx2,this.idx3);
       // 初期化
       $gameVariables.setValue(this.idx,0);
-      this.idx = idx;
-      this.idx2 = idx2;
       this.uriageMain();
     }
     /*** 処理メイン ***/
@@ -170,11 +180,12 @@
       return i;
     }
     uriageMain(){
-      let hh = $gameVariables.value(this.idx2);
       let uval = 0; // 売上
-      let neneskill = 1.5; // 売り増し倍率
+      let hh = $gameVariables.value(this.idx2);
+      let skilllevel = $gameVariables.value(this.idx3);
+      let neneskill = (skilllevel >= 3) ? 2 : 1.5; // 売り増し倍率
       let cc = hh.weapons;
-      let data = $dataWeapons;
+      let data = $dataWeapons; // 武器の定義
       for(let oo of Object.keys(cc)){
         let d = data[oo];
         let m = cc[oo];
@@ -193,7 +204,6 @@
       $gameVariables.setValue(this.idx,uval);
     }
   }
-  let NeneSystem = new NeneSystemClass();
 
   // https://nma.omaww.net/javascript/javascript%E3%81%A7array%E3%81%8Bhash%E3%81%8B%E5%88%A4%E5%AE%9A%E3%81%99%E3%82%8B
   function classOf(obj){
@@ -213,18 +223,27 @@
     https://qiita.com/kijtra/items/472cb34a8f0eb6dde459
     https://tektektech.com/javascript-get-fileinfo-from-path/#i
   */
-  var current = document.currentScript.src;
-  let modname = current.match(/([^/]*)\./)[1];
-  console.log("modname is "+modname);
+    var current = document.currentScript.src;
+    //DBG//console.log("current is "+current);
+    let matchs = current.match(/([^/]*)\.js/);
+    //DBG//console.log("matchs is "+matchs);
+    let modname = matchs.pop();
+    //DBG//console.log("modname is "+modname);
+
+  // 初期値、上からもらえる
+  var parameters = PluginManager.parameters(modname);
+  var paraids = parameters['arrayIDs'];
+  //DBG//console.log("NeneSystemClass: "+paraids+"::"+typeof paraids);
+  let NeneSystem = new NeneSystemClass(paraids);
 
   /* PluginManager.registerCommand： 第１引数 は ファイル名！！ */
   /* FUNC1 */
   PluginManager.registerCommand(modname, "purchase", args => {
-    NeneSystem.init(args.val1,args.val2);
+    NeneSystem.init();
   });
   /* FUNC2 */
   PluginManager.registerCommand(modname, "sales", args => {
-    NeneSystem.init2(args.val1,args.val2);
+    NeneSystem.init2();
   });
 
 })();
