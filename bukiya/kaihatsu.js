@@ -93,15 +93,9 @@
       this.cdb = cdb;
       [this.img,this.cid]= cdb.get(args[2]);
       // Init
-      let can = document.createElement("canvas");
-      this.can = can;
-      can.id = "chara_"+args[2];
-      can.style.position = "absolute";
-      can.style.left = args[0]+"px";
-      can.style.top  = args[1]+"px";
-      can.width = 48;//"48px";
-      can.height= 48;//"48px";
-      this.ctx = can.getContext("2d");
+      this.can = generateElement(null,{type:"canvas",id:"chara_"+args[2], width:48,height:48,
+        style:{position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
+      this.ctx = this.can.getContext("2d");
       // loop
       this.tt = 0;
       setInterval(this.draw.bind(this),250);
@@ -120,15 +114,9 @@
       this.cdb = cdb;
       [this.img,this.cid]= cdb.getFace(args[2]);
       // Init
-      let can = document.createElement("canvas");
-      this.can = can;
-      can.id = "chara_"+args[2];
-      can.style.position = "absolute";
-      can.style.left = args[0]+"px";
-      can.style.top  = args[1]+"px";
-      can.width = 144;//"48px";
-      can.height= 144;//"48px";
-      this.ctx = can.getContext("2d");
+      this.can = generateElement(null,{type:"canvas",id:"chara_"+args[2], width:144,height:144,
+        style:{position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
+      this.ctx = this.can.getContext("2d");
       this.draw();
     }
     draw(){
@@ -143,17 +131,10 @@
   class animationText{
     constructor(args){
       // Init
-      let can = document.createElement("canvas");
-      this.can = can;
       this.cansz = [220,40];
-      can.id = "anitxt_"+args[2];
-      can.style.position = "absolute";
-      can.style.overflow = "hidden";
-      can.style.left = args[0]+"px";
-      can.style.top  = args[1]+"px";
-      can.width = this.cansz[0];
-      can.height= this.cansz[1];
-      this.ctx = can.getContext("2d");
+      this.can = generateElement(null,{type:"canvas",id:"anitxt_"+args[2],width:this.cansz[0],height:this.cansz[1],
+        style:{position:"absolute",overflow:"hidden",left:args[0]+"px",top:args[1]+"px"}});
+      this.ctx = this.can.getContext("2d");
       this.img = new Image();
       // TEXT
       this.txtidx = 0;
@@ -193,16 +174,9 @@
       this.img = cdb.getMonImg();
       this.cid = 3;
       // Init
-      let can = document.createElement("canvas");
-      this.can = can;
-      can.id = "enemy_"+ii;
-      can.enemyid = ii;
-      can.style.position = "absolute";
-      can.style.left = args[0]+"px";
-      can.style.top  = args[1]+"px";
-      can.width = 48;//"48px";
-      can.height= 48;//"48px";
-      this.ctx = can.getContext("2d");
+      this.can = generateElement(null,{type:"canvas",id:"enemy_"+ii,enemyid:ii,width:48,height:48,
+        style:{position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
+      this.ctx = this.can.getContext("2d");
       this.tt = 0;
       // loop
       setInterval(this.draw.bind(this),250);
@@ -322,16 +296,15 @@
       t = this.parent.geneStrImg("eattack","　戦況　");//104x36
       div.append(t);
       //console.log([t.width,t.height]);
-      t.onclick = this.attack1func.bind(this);
+      t.onclick = this.attack2func.bind(this);
       t.onmouseover  = this.attack2func.bind(this);
       t.onmouseleave = this.attack2func.bind(this);
     }
-    attack1func(e){
-      //console.log(e.target);
-      //console.log(e.target.parentNode);
+    /*attack1func(e){
       this.attackfunc();
-    }
+    }*/
     attack2func(e){
+      if(e.type=="click"){return this.attackfunc();}
       let ii = (e.type=="mouseover") ? 1:0;
       let cl = ["#040","#0F0"];
       e.target.parentNode.style.background = cl[ii];
@@ -348,7 +321,8 @@
       let xx = [50,100,50];
       let yy = [50,170,290];
       for(let i=0;i<3;i++){
-        let par = {type:"img",src:"img/enemies/Goblin.png",style:{position:"absolute",left:xx[i]+"px",top:yy[i]+"px"}};
+        let [x,y] = [xx[i],yy[i]];
+        let par = {type:"img",src:"img/enemies/Goblin.png",style:{position:"absolute",left:x+"px",top:y+"px"}};
         generateElement(dv,par);
       }
       let parlist = [
@@ -474,18 +448,18 @@
       let nn=0;
       for(let i=0;i<10;i++){nn += ($gameSwitches.value(21+i)==true)};
       let id = (nn+this.noteinfo++)%nn;
+      // list2[0]
       let e = new charaFace(this.cdb, [20,20,id]);
       list2[0].append(e.can);
       list2[0].style.width ="25%";
-      /*let impar = {type:"img",classList_add:"CharaShadow",
-      src:"img/pictures/"+this.cdb.getPict(id)+".png",,style:{paddingLeft:"50px"}};
-      generateElement(tar,impar);*/
+      // list2[1]
       let par = {type:"div",style:{backgroundColor:"#004",height:"130px",
       padding:"20px 5px 5px 15px"}};
       let dv = generateElement(list2[1],par);
       list2[1].style.width ="75%";
       list2[1].style.textAlign = '';
-      let t
+      // メッセージ
+      let t;
       t = this.parent.geneStrImg(null,"現在戦闘中");
       dv.append(t);
       generateElement(dv, {type:"br"});
@@ -500,6 +474,7 @@
       if(this.maindv.style.display=="none"){return}
       if(vvv != this.invoke){return}
       //DBG//console.log("loopfunc involed.");
+      let intval = 500;
       let n=6;
       let lt = this.looptime%n;
       if(lt==0){
@@ -508,18 +483,18 @@
           background:"#008",padding:"10px"}};
         this.k5note = generateElement(this.maindv,par);
         this.notification(this.k5note);
-      }else
-      if(lt==1){
+      }
+      if(lt==Math.ceil(1000/intval)){
         if(this.k5note){this.k5note.classList.remove("fadeInX1");}
-      }else
+      }
       if(lt==n-2){
         if(this.k5note){this.k5note.classList.add("fadeOutX1");}
-      }else
+      }
       if(lt==n-1){
         if(this.k5note){this.maindv.removeChild(this.k5note);}
       }
       this.looptime++;
-      setTimeout(this.loopfunc.bind(this), 1000,vvv);
+      setTimeout(this.loopfunc.bind(this), intval,vvv);
     }
     submenu(dv,psts){
       dv.innerHTML = "";
@@ -543,13 +518,10 @@
         let childWidth = ["200px","200px","320px"];
         let childPadng = ["0px","0px","5px"];
         for(let i=0;i<childWidth.length;i++){
-          let dv = document.createElement("div");
-          dv.style.width = childWidth[i];
-          dv.style.padding = childPadng[i];
-          dv.style.overflow = "hidden";
-          dv.id = "kmidwnd5_"+(i+1);
+          let dv = generateElement(pdiv,{type:"div",id:"kmidwnd5_"+(i+1),style:{
+            width:childWidth[i],padding:childPadng[i],overflow:"hidden"
+          }});
           dvlist.push(dv);
-          pdiv.appendChild(dv);
         }
       }
       this.dvlist = dvlist;
@@ -594,13 +566,10 @@
         let childWidth = ["400px","320px"];
         let childPadng = ["0px","5px"];
         for(let i=0;i<childWidth.length;i++){
-          let dv = document.createElement("div");
-          dv.style.width = childWidth[i];
-          dv.style.padding = childPadng[i];
-          dv.style.overflow = "hidden";
-          dv.id = "kmidwnd3_"+(i+1);
+          let dv = generateElement(pdiv,{type:"div",id:"kmidwnd3_"+(i+1),style:{
+            width:childWidth[i],padding:childPadng[i],overflow:"hidden"
+          }});
           dvlist.push(dv);
-          pdiv.appendChild(dv);
         }
       }
 
@@ -820,14 +789,9 @@
         let arg = this.targetparg;
         //=== 数字の更新 ===
         let val = "";
-        let data =this.roledata;
-        /*{
-          "kaitaku":{"a1":2,"a2":3,"a3":4},
-          "kassei":{"a1":2,"a2":3,"a3":5},
-          "gijyutu":{"a1":2,"a2":3,"a3":6},
-          "koukyou":{"a1":2,"a2":3,"a3":7}
-        }*/
-        let d = data[arg[0]];
+        //let data =this.roledata;
+        //let d = data[arg[0]];
+        let d = this.roledata[arg[0]];
         console.log(arg[0]+" enter");
         this.psts[d.a1] -= arg[1];
         this.psts[d.a2] -= arg[2];
@@ -845,24 +809,16 @@
     }
     // kaitaku 決め打ち
     kaihatsuFunc(role){
-      let pp = this.rolepp;
-      let vv = this.rolevv;
-      let val = vv[role];
-      let rtn = 0; // 何もなければ、通る
-      let a1 = pp[role].a1;
-      let a2 = pp[role].a2;
-      let a3 = pp[role].a3;
-      let t1 = pp[role].t1;
-      let t2 = pp[role].t2;
-      let t3 = pp[role].t3;
-      let maxV = pp[role].maxV;
+      let val = this.rolevv[role];
+      let rtn = 0; // 何もなければ、通る。１以上はエラーと同じ
+      let prole = this.rolepp[role];
+      let[a1,a2,a3,t1,t2,t3,maxV] = [prole.a1,prole.a2,prole.a3,prole.t1,prole.t2,prole.t3,prole.maxV];
       // 消費量の確認
       if(this.psts[t1] < a1){rtn = 1;}
       if(this.psts[t2] < a2){rtn = 1;}
       // 増加量の確認
       if(this.psts[t3] >= maxV ){rtn = 2;}
       else if(this.psts[t3]+a3 > maxV){a3 = maxV-this.psts[t3];}
-      
       return [rtn,a1,a2,a3,val];
     }
     cfunc(e){
@@ -922,28 +878,21 @@
         let childWidth = ["400px","320px"];
         let childPadng = ["0px","5px"];
         for(let i=0;i<childWidth.length;i++){
-          let dv = document.createElement("div");
-          dv.style.width = childWidth[i];
-          dv.style.padding = childPadng[i];
-          dv.style.overflow = "hidden";
+          let dv = generateElement(pdiv,{type:"div",style:{
+            width:childWidth[i],padding:childPadng[i],overflow:"hidden"
+          }})
           dvlist.push(dv);
-          pdiv.appendChild(dv);
         }
       }
       // Split ?
       {
         let dv = dvlist[0];
-        let pdiv = document.createElement("div");
-        pdiv.style.overflow = "hidden";
-        pdiv.style.height = "185px";
-        pdiv.style.backgroundColor = "#000";
-        dv.appendChild(pdiv);
-        let pdiv2 = document.createElement("div");
-        pdiv2.style.display = "flex";
-        pdiv2.style.overflow = "hidden";
-        pdiv2.style.height = "165px";
-        pdiv2.style.backgroundColor = "#00FFFF40";
-        dv.appendChild(pdiv2);
+        let pdiv = generateElement(dv,{type:"div",style:{
+          overflow:"hidden",height:"185px",backgroundColor:"#000"
+        }})
+        let pdiv2 = generateElement(dv,{type:"div",style:{
+          display:"flex",overflow:"hidden",height:"165px",backgroundColor:"#00FFFF40"
+        }})
         // パラメータ
         let list1 = this.gentable(pdiv,"kpsts",4,2);
         this.setPsts(list1);
@@ -1005,13 +954,9 @@
         let txt = this.roletxt;
         let role = this.roleid;
         for(let i=0;i<n;i++){
-          let dbtn = document.createElement("div");
-          dbtn.id = "kmidwnd_btn"+(i+1);
-          dbtn.style.margin = "10px 15px";
-          dbtn.style.padding = "10px 30px";
-          dbtn.style.width  = "104px";
-          dbtn.style.height = "36px";
-          dbtn.style.background = "#000";
+          let dbtn = generateElement(list[i], {type:"div",id:"kmidwnd_btn"+(i+1),style:{
+            margin:"10px 15px",padding:"10px 30px",width:"104px",height:"36px",background:"#000"
+          }});
           let timg = parent.geneStrImg("kaihatsu_"+(i+1),txt[i]);//104(=26x4)x36
           timg.kaihatsutext = txt[i];
           timg.kaihatsurole = role[i];
@@ -1020,7 +965,6 @@
           timg.onmouseleave = this.hfunc.bind(this);
           dbtn.appendChild(timg);
           dbtn.appendChild(document.createElement("BR"));
-          list[i].appendChild(dbtn);
         }
       }
     }
@@ -1028,24 +972,17 @@
     gentable(pdiv,prefix,nr,nc){
       let list = [];
       // テーブル
-      const tbl = document.createElement("table");
-      const tblBody = document.createElement("tbody");
-      tbl.appendChild(tblBody);
-      tbl.style.width ="100%";
-
+      const tbl = generateElement(pdiv,{type:"table",style:{width:"100%"}});
+      const tblBody = generateElement(tbl,{type:"tbody"});
       for(let i1=0;i1<nr;i1++){
         const row = document.createElement("tr");
         tblBody.appendChild(row);
         for(let i2=0;i2<nc;i2++){
-          const cell = document.createElement("td");
-          cell.style.width =(100/nc)+"%";
-          cell.style.textAlign = 'center';
-          cell.id = prefix+"_"+i1+"_"+i2;
-          row.appendChild(cell);
+          const cell = generateElement(row, {type:"td",id:prefix+"_"+i1+"_"+i2,
+            style:{width:(100/nc)+"%",textAlign:'center'}});
           list.push(cell);
         }
       }
-      pdiv.appendChild(tbl);
       return list;
     }
   }
@@ -1075,12 +1012,10 @@
         let childWidth = ["400px","320px"];
         let childPadng = ["0px","5px"];
         for(let i=0;i<childWidth.length;i++){
-          let dv = document.createElement("div");
-          dv.style.width = childWidth[i];
-          dv.style.padding = childPadng[i];
-          dv.style.overflow = "hidden";
+          let dv = generateElement(pdiv,{type:"div",style:{
+            width:childWidth[i],padding:childPadng[i],overflow:"hidden"
+          }})
           dvlist.push(dv);
-          pdiv.appendChild(dv);
         }
       }
       // 領域
@@ -1122,12 +1057,7 @@
     }
     // div領域をもらう
     init(d){
-      let parent = this.parent;
-      let pdiv = document.createElement("div");
-      pdiv.style.overflow = "hidden";
-      pdiv.style.width = "736px";
-      pdiv.style.height = "350px";
-      d.appendChild(pdiv);
+      let pdiv = generateElement(d,{type:"div",style:{overflow:"hidden",width:"736px",height:"350px"}});
       for(let cc of this.divlist){
         cc.init(pdiv);
       }
@@ -1211,28 +1141,20 @@
     init(d){
       let parent = this.parent;
       // テーブル
-      const tbl = document.createElement("table");
-      d.appendChild(tbl);
-
-      tbl.style.width ="100%";
-      const tblBody = document.createElement("tbody");
-      const row = document.createElement("tr");
-      tblBody.appendChild(row);
-      tbl.appendChild(tblBody);
+      const tbl = generateElement(d,{type:"table",style:{width:"100%"}});
+      const tblBody = generateElement(tbl,{type:"tbody"});
+      const row = generateElement(tblBody,{type:"tr"});
       //let gp = $gameParty.battleMembers(); // 配列
       let gp = ["内政開発","人材編成","遠征討伐","交易商売","街に戻る"];
       let n = gp.length;
       for (let i=0;i<n;i++) {
-        const cell = document.createElement("td");
-        cell.style.width =(100/n)+"%";
-        cell.style.textAlign = 'center';
-        let p = parent.geneStrImg("mid"+(i+1),gp[i]);
+        let id = "mid"+(i+1);
+        const cell = generateElement(row,{type:"td",id:"cell_"+id,style:{width:(100/n)+"%",textAlign:'center'}});
+        let p = parent.geneStrImg(id,gp[i]);
+        p.style.verticalAlign = 'middle';
         p.addEventListener('mouseover', this.mevent.bind(this));
         p.addEventListener('mouseleave', this.mevent.bind(this));
-        p.style.verticalAlign = 'middle';
         cell.appendChild(p);
-        cell.id = "cell_"+p.id;
-        row.appendChild(cell);
       }
       // 戻るボタン(５個目)
       if(1){
@@ -1240,12 +1162,7 @@
         b.addEventListener('click', parent.kaihatsuEndFunc.bind(parent));
       }
       //パーティション
-      if(1){
-        let ppp = document.createElement("div");
-        ppp.style.height = "10px";
-        ppp.style.backgroundColor = "#00FFFF40";
-        d.appendChild(ppp);
-      }
+      generateElement(d,{type:"div",style:{height:"10px",backgroundColor:"#00FFFF40"}});
     }
     //＝＝＝ マウスイベント ＝＝＝
     mevent(e){
@@ -1313,19 +1230,15 @@
       let parent =this.parent;
       // ボタン
       {
-        let dbtn = document.createElement("div");
-        dbtn.style.margin = "10px 5px";
-        dbtn.style.padding = "10px 10px";
-        dbtn.style.width  = "80px";
-        dbtn.style.height = "36px";
-        dbtn.style.background = "#000";
+       let dbtn = generateElement(tar, {type:"div",style:{
+        margin:"10px 5px",padding:"10px 10px",width:"80px",height:"36px",background:"#000"
+       }});
         let timg = parent.geneStrImg(sid,txt);
         timg.onclick = this.cfunc.bind(this);
         timg.onmouseover = this.hfunc.bind(this);
         timg.onmouseleave = this.hfunc.bind(this);
         dbtn.appendChild(timg);
         dbtn.appendChild(document.createElement("BR"));
-        tar.appendChild(dbtn);
       }
     }
     setText(ttt){
@@ -1402,19 +1315,6 @@
         left:x+'px',top:y+'px',width:w+'px',height:h+'px',zIndex:10,padding:pad+'px',
       }};
       generateElement(document.body, par);
-      /*let p = document.createElement("div");
-      p.id = "kaihatsumap";
-      p.style.position = "relative";//"absolute";
-      p.style.display = "none";
-      p.style.backgroundColor = "#000";
-      p.style.color = "#FFF";
-      p.style.left = x+'px';
-      p.style.top = y+'px';
-      p.style.width = w+'px';
-      p.style.height = h+'px';
-      p.style.zIndex = 10; // ERRORが９！gameCanvas は 1 , Video が ２ 
-      p.style.padding = pad+'px';
-      document.body.appendChild(p);*/
     }
     imgchange(tar){
       console.log("imgchange: "+tar.wndid);
@@ -1517,24 +1417,16 @@
     gentable(pdiv,prefix,nr,nc){
       let list = [];
       // テーブル
-      const tbl = document.createElement("table");
-      const tblBody = document.createElement("tbody");
-      tbl.appendChild(tblBody);
-      tbl.style.width ="100%";
-
+      const tbl = generateElement(pdiv,{type:"table",style:{width:"100%"}});
+      const tblBody = generateElement(tbl,{type:"tbody"});
       for(let i1=0;i1<nr;i1++){
-        const row = document.createElement("tr");
-        tblBody.appendChild(row);
+        const row = generateElement(tblBody,{type:"tr"});
         for(let i2=0;i2<nc;i2++){
-          const cell = document.createElement("td");
-          cell.style.width =(100/nc)+"%";
-          cell.style.textAlign = 'center';
-          cell.id = prefix+"_"+i1+"_"+i2;
-          row.appendChild(cell);
+          const cell = generateElement(row,{type:"td",id:prefix+"_"+i1+"_"+i2,
+            style:{width:(100/nc)+"%",textAlign:'center'}});
           list.push(cell);
         }
       }
-      pdiv.appendChild(tbl);
       return list;
     }
 
@@ -1573,7 +1465,6 @@
     let ga = [0,0,window.innerWidth,window.innerHeight];
     let km = document.getElementById("kaihatsumap");
     if(km){
-      //ka = [km.style.left,km.style.top,km.style.width,km.style.height];
       let [w,h] = [816-30,624-30];//[736,544]; //padding:10,border:5;
       let l =(ga[2]-w)/2;
       let t =(ga[3]-h)/2;
@@ -1598,11 +1489,8 @@
   window.addEventListener('resize', resizeKaihatsu);
   // F4 対策
   // https://shanabrian.com/web/javascript/keycode.php
-  window.onkeydown = function(e) {
-    var keyCode = false;
-  
-    if (e) event = e;
-  
+  window.onkeydown = function(event) {
+    var keyCode = false;  
     if (event) {
       if (event.keyCode) {
         keyCode = event.keyCode;
