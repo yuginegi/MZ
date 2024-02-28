@@ -1,0 +1,148 @@
+body {
+  /* スクロールバー出てほしくないので */
+  overflow: hidden;
+}
+
+#kaihatsumap{
+border-width: 5px;
+border-style: solid;
+border-color: #00FFFF80;
+}
+
+
+.CharaShadow{
+/* https://developer.mozilla.org/ja/docs/Web/CSS/filter-function/drop-shadow */
+filter: drop-shadow(10px -3px 2px #00FFFF);
+}
+
+.fadeIn {
+/*https://coco-factory.jp/ugokuweb/css02/*/
+animation-name: fadeInAnime;
+animation-fill-mode:forwards;
+animation-duration:0.5s;
+/*animation-iteration-count:infinite;*/
+/*animation-timing-function:ease;*/
+/*animation-delay: 0s;*/
+/*animation-direction:normal;*/
+}
+
+@keyframes fadeInAnime{
+  0% {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0px);
+  }
+}
+
+.fadeInX1 {
+animation-name: fI1;
+animation-fill-mode:forwards;
+animation-duration:1s;
+}
+
+@keyframes fI1{
+  0% {
+    opacity: 0;
+    transform: translateX(1000px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0px);
+  }
+}
+
+.fadeOutX1 {
+animation-name: fO1;
+animation-fill-mode:forwards;
+animation-duration:1s;
+}
+
+@keyframes fO1{
+  0% {
+    opacity: 1;
+    transform: translateX(0px);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(-1000px);
+  }
+}
+
+/************************************/
+
+.kwnd2menu {
+animation-name: kwnd2ma1;
+animation-fill-mode:forwards;
+animation-duration:0.3s;
+}
+
+@keyframes kwnd2ma1{
+  0% {
+    left:-150px;
+    background: #008;
+  }
+
+  100% {
+    left:0px;
+    background: #00F;
+  }
+}
+
+.kwnd2In {
+animation-name: k02I;
+animation-fill-mode:forwards;
+animation-duration:0.3s;
+}
+@keyframes k02I{
+  0% {
+    opacity: 0;
+    transform: skewX(-20deg) translateY(500px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: skewX(-20deg) translateY(0px);
+  }
+}
+
+.kw2fin {
+animation-name: k02I2;
+animation-fill-mode:forwards;
+}
+@keyframes k02I2{
+  0% {
+    opacity: 0;
+    transform: translateX(-500px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0px);
+  }
+}
+
+#kwnd2cur {
+  animation-name: flashing;
+  animation-duration: 1.0s;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  animation-iteration-count: infinite;
+}
+
+@keyframes flashing {
+  0% {
+    border: 5px solid #0000FF;
+  }
+  50% {
+    border: 5px solid #000080;
+  }
+  100% {
+    border: 5px solid #0000FF;
+  }
+}
