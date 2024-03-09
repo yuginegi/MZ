@@ -31,20 +31,25 @@
 (() => {
   'use strict';
 
+  class skillDB{
+    constructor(){
+    }
+  }
   class charaDB{
     constructor(){
-      /*let imglist = [
-        "Actor1_5","Actor2_2","Actor1_8","Actor3_1","People3_7",
-        "Actor2_7","Actor1_7","Actor3_4","Actor2_4","Actor3_2"
-      ];*/
-      // 'img/characters/Actor1.png'
       //-- Player ---
       this.parlist = [
-        [1,5],[2,2],[1,8],[3,1],[0,7],
+        /*"People4_5","People4_1","People2_8","People1_4","People4_3",
+        "People2_1","People3_3","SF_People1_1","People2_2","Nature_7"*/
+        [1,5],[2,2],[1,8],[3,1],[6,7],
         [2,7],[1,7],[3,4],[2,4],[3,2],
+        [7,5],[7,1],[5,8],[4,4],[7,3],
+        [5,1],[6,3],[8,1],[5,2],[0,7],
       ];
       let imgfilelist = [
-        "People3","Actor1","Actor2","Actor3",
+        "Nature","Actor1","Actor2","Actor3",
+        /*+3*/"People1","People2","People3","People4",
+        /*+7*/"SF_People1"
       ];
       this.imglist = [];
       for(let cc of imgfilelist){
@@ -75,17 +80,34 @@
       //console.log(id+":"+par[id]);
       //console.log(img);
       return [img, par[id][1]];
-
+    }
+    getName(id){
+      let list = [
+        "ユウ","セシリア","アイリン","ゾード","ザイン",
+        "ケイン","リュート","ルーシア","ミンミン","カーラ",
+        "フゴウ","ダンテ","ウルスラ","サファイア","エドガー",
+        "ギース","星の王子","クロイス","レオナ","光の女神"
+      ];
+      return list[id];
     }
     getPict(id){
       let list = [
         "Actor1_5","Actor2_2","Actor1_8","Actor3_1","People3_7",
-        "Actor2_7","Actor1_7","Actor3_4","Actor2_4","Actor3_2"
+        "Actor2_7","Actor1_7","Actor3_4","Actor2_4","Actor3_2",
+        "People4_5","People4_1","People2_8","People1_4","People4_3",
+        "People2_1","People3_3","SF_People1_1","People2_2","Nature_7"
       ];
       return list[id];
     }
     getMonImg(){
       return this.monimg;
+    }
+    getStatus(id){
+      let sts = [
+        [7,5,5],[8,0,6],[8,0,6],[7,7,0],[10,0,0],
+        [5,7,5],[0,4,9],[5,5,7],[0,10,0],[4,0,9]
+      ];
+      return sts[id%10];
     }
   }
   class charaImg{
@@ -93,7 +115,7 @@
       this.cdb = cdb;
       [this.img,this.cid]= cdb.get(args[2]);
       // Init
-      this.can = generateElement(null,{type:"canvas",id:"chara_"+args[2], width:48,height:48,
+      this.can = generateElement(null,{type:"canvas",id:"chara_"+args[2],width:48,height:48,
         style:{position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
       this.ctx = this.can.getContext("2d");
       // loop
@@ -128,6 +150,41 @@
       ctx.drawImage(this.img,144*x,144*y,144,144,0,0,144,144);
     }
   }
+  class charaStatus{
+    constructor(args){
+      // Init
+      this.cansz = [300,40];
+      this.can = generateElement(null,{type:"canvas",id:"anitxt_"+args[2],width:this.cansz[0],height:this.cansz[1],
+        style:{position:"absolute",overflow:"hidden",left:args[0]+"px",top:args[1]+"px"}});
+      this.ctx = this.can.getContext("2d");
+      this.img = new Image();
+      // TEXT
+      this.txtidx = 0;
+      this.val = args[2];
+      this.txtlist = args[3];
+      // loop
+      this.tt = 0;
+      setInterval(this.draw.bind(this),1000/60);
+    }
+    draw(){
+      let tt = (this.tt++)%120;
+      if(tt==0){
+        let aa = generateTextBmp(this.txtlist);
+        this.img.src = aa.context.canvas.toDataURL();
+      }
+      let [x,y,z] = [20,2,20];
+      let w0 = ((this.cansz[0]-x)/30)*(10+this.val);
+      let ww = (tt > z) ? w0 : w0*(tt/z);
+      // draw
+      let ctx = this.ctx;
+      ctx.clearRect(0,0,this.cansz[0],this.cansz[1]);
+      ctx.fillStyle = "#008800C0";
+      let mg = 5;
+      ctx.fillRect(x,mg,ww,this.cansz[1]-2*mg);
+      ctx.drawImage(this.img,x,y);
+    }
+  }
+
   class animationText{
     constructor(args){
       // Init
@@ -151,7 +208,20 @@
       };
       return txt[id];
     }
+    resettext(txt){
+      this.txtlist = txt;
+      this.redraw();
+    }
+    redraw(){
+      this.ctx.clearRect(0,0,this.cansz[0],this.cansz[1]);
+      this.tt = 0;
+    }
     draw(){
+      if(this.txtlist==null){
+        //this.ctx.clearRect(0,0,this.cansz[0],this.cansz[1]);
+        this.redraw();
+        return;
+      }
       let tt = (this.tt++)%120;
       if(tt==0){
         let aa = generateTextBmp(this.txtlist[(this.txtidx++)%this.txtlist.length]);
@@ -698,6 +768,203 @@
   }
 
   class kmidwnd2{
+    constructor(wnd){
+      this.kmidwnd = wnd;
+      this.parent = wnd.parent;
+      this.maindv;
+      this.imggg;
+      // CharaDB
+      this.cdb = new charaDB();
+      // メニューテキスト
+      this.mtxt = ["ステータス","戦闘スキル","レベルアップ","ヒストリー"];
+    }
+    init(pdiv){
+      this.maindv = this.kmidwnd.createDIV(pdiv);
+      this.kaihatsutyu();
+      return 0;
+    }
+    initpage(type){
+      console.log("kmidwnd0:initpage invoke. "+type);
+      if(type==0){return;}
+      this.parent.imgchange(this);
+      //Reset
+      this.resetpage();
+    }
+    resetpage(){
+      this.imggg.classList.add("fadeIn");
+      let d = document.getElementById("kwnd2base");
+      //d.style.display = "block";
+      d.classList.remove("kwnd2u1");
+      this.selected = null;
+      let b = document.getElementById("kwnd2base3");
+      while( b && b.firstChild ){
+        b.removeChild( b.firstChild );
+      }
+      this.updatelist(document.getElementById("kwnd2_list"));
+      this.ecan.txtlist = null;
+      this.ecan.can.style.left = "500px";
+      this.ecan.redraw();
+      // 説明表示変える
+      this.parent.switchexp("mid2");
+    }
+    updatelist(dv){
+      while( dv && dv.firstChild ){
+        dv.removeChild( dv.firstChild );
+      }
+      let p = this.parent.geneStrImg("kwnd2_listxt", "勇者一覧");
+      dv.appendChild(p);
+      for(let i=0;i<20;i++){
+        let par = [10+80*(i%5),60+75*Math.floor(i/5),i];
+        if(!$gameSwitches.value(21+par[2])){continue;}
+        let e = new charaImg(this.cdb, par);
+        let tar = e.can;
+        tar.onclick = this.cfunc.bind(this);
+        tar.onmouseover = this.cfunc.bind(this);
+        tar.onmouseleave = this.cfunc.bind(this);
+        dv.append(tar);
+      }
+    }
+    kaihatsutyu(){
+      let pdiv = this.maindv;
+      let parent = this.parent;
+      let dvlist = [];
+      {
+        let childWidth = ["400px","320px"];
+        let childPadng = ["0px","5px"];
+        for(let i=0;i<childWidth.length;i++){
+          let dv = generateElement(pdiv,{type:"div",style:{
+            width:childWidth[i],padding:childPadng[i],overflow:"hidden",position:"relative"
+          }})
+          dvlist.push(dv);
+        }
+      }
+      // 領域
+      {
+        let dv = dvlist[0];
+        dv.id = "kwnd2base";
+        let dd = generateElement(dv,{type:"div",id:"kwnd2_list",style:{padding:"10px"}})
+        this.updatelist(dd);
+      }
+
+      // 画像の表示領域
+      {
+        let dv = dvlist[1];
+        let p = parent.geneTagImg("kaihatsuchara",this.imgsrc);
+        p.classList.add("CharaShadow");
+        dv.appendChild(p);
+        this.imggg = p;
+      }
+
+      // キャラステータス
+      generateElement(this.maindv,{type:"div",id:"kwnd2base3",style:{padding:"10px"}});
+
+      // キャラ名
+      {
+        //let p = this.maindv
+        let p = generateElement(this.maindv,{type:"div",id:"kwnd2base4"});
+        this.ecan = new animationText([500,370,0]);
+        let e = this.ecan;
+        e.txtlist = null;
+        e.id = "kwnd2base4txt";
+        p.append(e.can);
+      }
+    }
+
+    viewpage0(){
+      let b = document.getElementById("kwnd2base3");
+      while( b && b.firstChild ){
+        b.removeChild( b.firstChild );
+      }
+      let menu = ["武力","知力","魅力"];
+      let msts = [9,6,4];
+      for(let i=0;i<3;i++){
+        let mtxt = this.kmidwnd.textArrange(menu[i],msts[i],5);
+        let e = new charaStatus([350,80+50*i,msts[i],mtxt]);
+        b.appendChild(e.can);
+      }
+    }
+
+    newwnd(){
+      //this.maindv
+      let base = document.getElementById("kwnd2base3");
+      for(let i=0;i<this.mtxt.length;i++){
+        let p = generateElement(base,{type:"div",classList_add:"kwnd2u2",id:"kwnd2base3m_"+i,
+          style:{"animation-duration":((1*i+5)/10)+"s",padding:"5px 5px 0px 40px","z-index":15,
+            position:"absolute",left:"400px",top:90+80*i+"px",width:"200px",height:"40px",background:"#008"}  
+          }
+        );
+        let menu = this.text8(this.mtxt[i]);
+        let tar = this.parent.geneStrImg(null,menu);
+        tar.tarid = String(i);
+        tar.onclick = this.cfunc2.bind(this);
+        tar.onmouseover = this.cfunc2.bind(this);
+        tar.onmouseleave = this.cfunc2.bind(this);
+        p.append(tar);
+      }
+      // 戻る を出す
+      let tar = this.parent.kmsgwnd;
+      tar.BKwnd(this,this.resetpage);
+    }
+    text8(a){
+      let l1 = a.length;
+      let l0 = 7 - l1;
+      let w0=a;
+      while(l0-->0){w0 += "　"}
+      return w0;
+    }
+    chgmsg(ii){
+      let tar = this.parent.kmsgwnd;
+      tar.setText([this.mtxt[ii]]);
+    }
+    cfunc2(e){
+      let p = e.target;
+      if(e.type=="click"){
+        console.log("clicked "+p.tarid);
+        // menu
+        if(p.tarid==0){
+          this.viewpage0();
+        }
+        if(p.tarid==this.mtxt.length-1){
+          //this.resetpage();
+        }
+        return;
+      }
+      if(e.type=="mouseover"){
+        p.parentNode.style.background="#00F";
+        this.chgmsg(p.tarid);
+      }else{
+        p.parentNode.style.background="#008";
+      } 
+    }
+    cfunc(e){
+      let p = e.target;
+      if(e.type=="click"){
+        this.selected = p;
+        this.imggg.classList.remove("fadeIn");
+        console.log("clicked");
+        let d = document.getElementById("kwnd2base");
+        //d.style.display = "none";
+        d.classList.add("kwnd2u1");
+        this.newwnd();
+        this.ecan.can.style.left = "50px";
+        this.ecan.redraw();
+        return;
+      }
+      if(this.selected){return;}
+      if(e.type=="mouseover"){
+        let num = p.id.match(/\d+/g)[0];
+        this.imggg.src = 'img/pictures/'+this.cdb.getPict(num)+'.png';
+        this.imggg.classList.add("fadeIn");
+        //this.ecan.txtlist = [this.cdb.getName(num)];
+        this.ecan.resettext([this.cdb.getName(num)]);
+        audioInvoke("Book1");
+      }else{
+        this.imggg.classList.remove("fadeIn");
+      } 
+    }
+  }
+
+  class kmidwnd2_old{
     constructor(wnd){
       this.kmidwnd = wnd;
       this.parent = wnd.parent;
@@ -1286,12 +1553,12 @@
       while(l0-->0){w0 += " "}
       return w1+w0+w2;
     }
-    text8_org(a,b){
+    textArrange(a,b,n){
       let w1 = toFullWidth(a);
       let w2 = toFullWidth(b);
       let l1 = w1.length;
       let l2 = w2.length;
-      let l0 = 7 - l1 - l2;
+      let l0 = n - l1 - l2;
       //console.log("l1,l2:"+[l1,l2]);
       let w0="";
       while(l0-->0){w0 += "　"}
@@ -1367,16 +1634,29 @@
         this.wnd.appendChild(document.createElement("BR"));
       }
       // YesNoの初期化
-      let pyn = {type:"div",style:{
-        position:"absolute",display:"none",right:"20px",bottom:"30px",width:"220px",height:"60px"}};
-      this.ynWnd = generateElement(this.wnd,pyn);
-      let list = parent.gentable(this.ynWnd,"ynwnd",1,2);
-      this.btn(list[0],"ynwnd_yes", "はい");
-      this.btn(list[1],"ynwnd_no", "いいえ");
+      {
+        let pyn = {type:"div",style:{
+          position:"absolute",display:"none",right:"20px",bottom:"30px",width:"220px",height:"60px"}};
+        this.ynWnd = generateElement(this.wnd,pyn);
+        let list = parent.gentable(this.ynWnd,"ynwnd",1,2);
+        this.btn(list[0],"ynwnd_yes", "はい");
+        this.btn(list[1],"ynwnd_no", "いいえ");
+      }
+      // 戻るボタンの初期化
+      {
+        let pbk = {type:"div",style:{
+          position:"absolute",display:"none",right:"20px",bottom:"30px",width:"120px",height:"60px"}};
+        this.bkWnd = generateElement(this.wnd,pbk);
+        let list = parent.gentable(this.bkWnd,"ynwnd",1,1);
+        this.btn2(list[0],"bkwnd_back", "もどる");
+      }
     }
     switchpage(){
       if(this.ynWnd){
         this.ynWnd.style.display = "none";
+      }
+      if(this.bkWnd){
+        this.bkWnd.style.display = "none";
       }
     }
     cfunc(e){
@@ -1407,6 +1687,28 @@
         dbtn.appendChild(document.createElement("BR"));
       }
     }
+    cfunc2(e){
+      let tid = e.target.id;
+      console.log("click-cfunc:"+tid);
+      let ii = 0;
+      this.bkwndbtn[ii](ii);
+      this.bkWnd.style.display = "none";
+    }
+    btn2(tar,sid,txt){
+      let parent =this.parent;
+      // ボタン
+      {
+       let dbtn = generateElement(tar, {type:"div",style:{
+        margin:"10px 5px",padding:"10px 10px",width:"80px",height:"36px",background:"#000"
+       }});
+        let timg = parent.geneStrImg(sid,txt);
+        timg.onclick = this.cfunc2.bind(this);
+        timg.onmouseover = this.hfunc.bind(this);
+        timg.onmouseleave = this.hfunc.bind(this);
+        dbtn.appendChild(timg);
+        dbtn.appendChild(document.createElement("BR"));
+      }
+    }
     setText(ttt){
       if(!ttt){return;}
       let p = this.wnd;
@@ -1419,6 +1721,12 @@
           e.src = parent.getImgSrcFromTEXT(txt);
         }
       }
+    }
+    BKwnd(clss,bfunc){
+      console.log("BKWnd invoke");
+      let bkWnd = this.bkWnd;
+      bkWnd.style.display = "block";
+      this.bkwndbtn = [bfunc.bind(clss)];
     }
     YNwnd(clss,yfunc,nfunc){
       console.log("YNWnd invoke");
