@@ -95,11 +95,20 @@ function audioInvoke(aid){
 // CSSの追加
 (function(d){
   var head = d.getElementsByTagName('head')[0];
+  // CSSの追加
   var link = d.createElement('link');
   link.setAttribute('rel','stylesheet');
   link.setAttribute('type','text/css');
   link.setAttribute('href','css/wasyo.css');
   head.appendChild(link);
+/*
+  // JSの追加
+  var script = d.createElement('script');
+  //script.src = "js/plugins"
+  script.setAttribute('type','text/javascript');
+  script.setAttribute('src','js/plugins/kdata.js');
+  head.appendChild(script);
+*/
   // 右クリック禁止(これでうまくいくっぽい)
   d.oncontextmenu = function () {return false;}
 })(document);

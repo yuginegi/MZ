@@ -31,239 +31,6 @@
 (() => {
   'use strict';
 
-  class skillDB{
-    constructor(){
-    }
-  }
-  class charaDB{
-    constructor(){
-      //-- Player ---
-      this.parlist = [
-        /*"People4_5","People4_1","People2_8","People1_4","People4_3",
-        "People2_1","People3_3","SF_People1_1","People2_2","Nature_7"*/
-        [1,5],[2,2],[1,8],[3,1],[6,7],
-        [2,7],[1,7],[3,4],[2,4],[3,2],
-        [7,5],[7,1],[5,8],[4,4],[7,3],
-        [5,1],[6,3],[8,1],[5,2],[0,7],
-      ];
-      let imgfilelist = [
-        "Nature","Actor1","Actor2","Actor3",
-        /*+3*/"People1","People2","People3","People4",
-        /*+7*/"SF_People1"
-      ];
-      this.imglist = [];
-      for(let cc of imgfilelist){
-        let i = new Image();
-        i.src = 'img/characters/'+cc+'.png';
-        this.imglist.push(i);
-      }
-      this.facelist = [];
-      for(let cc of imgfilelist){
-        let i = new Image();
-        i.src = 'img/faces/'+cc+'.png';
-        this.facelist.push(i);
-      }
-      let monsrc = "SF_Monster";
-      this.monimg = new Image();
-      this.monimg.src = 'img/characters/'+monsrc+'.png';
-    }
-    get(id){
-      let par = this.parlist;
-      let img = this.imglist[par[id][0]];
-      //console.log(id+":"+par[id]);
-      //console.log(img);
-      return [img, par[id][1]];
-    }
-    getFace(id){
-      let par = this.parlist;
-      let img = this.facelist[par[id][0]];
-      //console.log(id+":"+par[id]);
-      //console.log(img);
-      return [img, par[id][1]];
-    }
-    getName(id){
-      let list = [
-        "ユウ","セシリア","アイリン","ゾード","ザイン",
-        "ケイン","リュート","ルーシア","ミンミン","カーラ",
-        "フゴウ","ダンテ","ウルスラ","サファイア","エドガー",
-        "ギース","星の王子","クロイス","レオナ","光の女神"
-      ];
-      return list[id];
-    }
-    getPict(id){
-      let list = [
-        "Actor1_5","Actor2_2","Actor1_8","Actor3_1","People3_7",
-        "Actor2_7","Actor1_7","Actor3_4","Actor2_4","Actor3_2",
-        "People4_5","People4_1","People2_8","People1_4","People4_3",
-        "People2_1","People3_3","SF_People1_1","People2_2","Nature_7"
-      ];
-      return list[id];
-    }
-    getMonImg(){
-      return this.monimg;
-    }
-    getStatus(id){
-      let sts = [
-        [7,5,5],[8,0,6],[8,0,6],[7,7,0],[10,0,0],
-        [5,7,5],[0,4,9],[5,5,7],[0,10,0],[4,0,9]
-      ];
-      return sts[id%10];
-    }
-  }
-  class charaImg{
-    constructor(cdb,args){
-      this.cdb = cdb;
-      [this.img,this.cid]= cdb.get(args[2]);
-      // Init
-      this.can = generateElement(null,{type:"canvas",id:"chara_"+args[2],width:48,height:48,
-        style:{position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
-      this.ctx = this.can.getContext("2d");
-      // loop
-      this.tt = 0;
-      setInterval(this.draw.bind(this),250);
-    }
-    draw(){
-      const ctx = this.ctx;
-      ctx.clearRect(0,0,48,48);
-      let ii = this.cid-1;
-      let ll = [0,1,2,1]
-      let [x,y]=[3*(ii%4)+ll[(this.tt++)%4], 4*Math.floor(ii/4)];
-      ctx.drawImage(this.img,48*x,48*y,48,48,0,0,48,48);
-    }
-  }
-  class charaFace{
-    constructor(cdb,args){
-      this.cdb = cdb;
-      [this.img,this.cid]= cdb.getFace(args[2]);
-      // Init
-      this.can = generateElement(null,{type:"canvas",id:"chara_"+args[2], width:144,height:144,
-        style:{position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
-      this.ctx = this.can.getContext("2d");
-      this.draw();
-    }
-    draw(){
-      const ctx = this.ctx;
-      ctx.clearRect(0,0,144,144);
-      let ii = this.cid-1;
-      let [x,y]=[(ii%4), Math.floor(ii/4)];
-      //console.log("draw:"+[ii,x,y]);
-      ctx.drawImage(this.img,144*x,144*y,144,144,0,0,144,144);
-    }
-  }
-  class charaStatus{
-    constructor(args){
-      // Init
-      this.cansz = [300,40];
-      this.can = generateElement(null,{type:"canvas",id:"anitxt_"+args[2],width:this.cansz[0],height:this.cansz[1],
-        style:{position:"absolute",overflow:"hidden",left:args[0]+"px",top:args[1]+"px"}});
-      this.ctx = this.can.getContext("2d");
-      this.img = new Image();
-      // TEXT
-      this.txtidx = 0;
-      this.val = args[2];
-      this.txtlist = args[3];
-      // loop
-      this.tt = 0;
-      setInterval(this.draw.bind(this),1000/60);
-    }
-    draw(){
-      let tt = (this.tt++)%120;
-      if(tt==0){
-        let aa = generateTextBmp(this.txtlist);
-        this.img.src = aa.context.canvas.toDataURL();
-      }
-      let [x,y,z] = [20,2,20];
-      let w0 = ((this.cansz[0]-x)/30)*(10+this.val);
-      let ww = (tt > z) ? w0 : w0*(tt/z);
-      // draw
-      let ctx = this.ctx;
-      ctx.clearRect(0,0,this.cansz[0],this.cansz[1]);
-      ctx.fillStyle = "#008800C0";
-      let mg = 5;
-      ctx.fillRect(x,mg,ww,this.cansz[1]-2*mg);
-      ctx.drawImage(this.img,x,y);
-    }
-  }
-
-  class animationText{
-    constructor(args){
-      // Init
-      this.cansz = [220,40];
-      this.can = generateElement(null,{type:"canvas",id:"anitxt_"+args[2],width:this.cansz[0],height:this.cansz[1],
-        style:{position:"absolute",overflow:"hidden",left:args[0]+"px",top:args[1]+"px"}});
-      this.ctx = this.can.getContext("2d");
-      this.img = new Image();
-      // TEXT
-      this.txtidx = 0;
-      this.txtlist = this.getText(args[2]);
-      // loop
-      this.tt = 0;
-      setInterval(this.draw.bind(this),1000/60);
-    }
-    getText(id){
-      let txt = {
-       0:["戦力アップ","東方の勇者","ソードエンペラー"],
-       1:["戦力アップ","スーパーパワー","一騎当千"],
-       2:["戦力アップ","大魔導士の才能"]
-      };
-      return txt[id];
-    }
-    resettext(txt){
-      this.txtlist = txt;
-      this.redraw();
-    }
-    redraw(){
-      this.ctx.clearRect(0,0,this.cansz[0],this.cansz[1]);
-      this.tt = 0;
-    }
-    draw(){
-      if(this.txtlist==null){
-        //this.ctx.clearRect(0,0,this.cansz[0],this.cansz[1]);
-        this.redraw();
-        return;
-      }
-      let tt = (this.tt++)%120;
-      if(tt==0){
-        let aa = generateTextBmp(this.txtlist[(this.txtidx++)%this.txtlist.length]);
-        this.img.src = aa.context.canvas.toDataURL();
-      }
-      let ww = this.img.width;
-      let [x,y,z] = [(220-ww)/2,2,20];
-      y = (tt > z) ? y : y+2*(z-tt);
-      // draw
-      let ctx = this.ctx;
-      ctx.clearRect(0,0,this.cansz[0],this.cansz[1]);
-      ctx.fillStyle = "#0000FF80";
-      ctx.fillRect(0,y,this.cansz[0],this.cansz[1]);
-      ctx.drawImage(this.img,x,y);
-    }
-  }
-  class enemyImg{
-    constructor(cdb,args,ii){
-      this.cdb = cdb;
-      this.img = cdb.getMonImg();
-      this.cid = 3;
-      // Init
-      this.can = generateElement(null,{type:"canvas",id:"enemy_"+ii,enemyid:ii,width:48,height:48,
-        style:{position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
-      this.ctx = this.can.getContext("2d");
-      this.tt = 0;
-      // loop
-      setInterval(this.draw.bind(this),250);
-    }
-    draw(){
-      const ctx = this.ctx;
-      ctx.clearRect(0,0,48,48);
-      let ii = this.cid-1;
-      let ll = [0,1,2,1]
-      let [x,y]=[3*(ii%4)+ll[(this.tt++)%4], 4*Math.floor(ii/4)];
-      ctx.drawImage(this.img,48*x,48*y,48,48,0,0,48,48);
-    }
-  }
-
-  //=====================================================================
-
-
   class newWnd3{
     constructor(wnd,parent){
       this.wnd = wnd;
@@ -775,6 +542,8 @@
       this.imggg;
       // CharaDB
       this.cdb = new charaDB();
+      // SkillDB
+      this.skd = new skillData();
       // メニューテキスト
       this.mtxt = ["ステータス","戦闘スキル","レベルアップ","ヒストリー"];
     }
@@ -870,13 +639,25 @@
       }
     }
 
+    viewpage2(){
+      let b = document.getElementById("kwnd2base3");
+      while( b && b.firstChild ){
+        b.removeChild( b.firstChild );
+      }
+      // メニュー
+      let e = new skillTree(this.parent,this.skd,this.cdb,this.charatarget);
+      b.appendChild(e.can);
+    }
+
     viewpage0(){
       let b = document.getElementById("kwnd2base3");
       while( b && b.firstChild ){
         b.removeChild( b.firstChild );
       }
       let menu = ["武力","知力","魅力"];
-      let msts = [9,6,4];
+      //let msts = [9,6,4];
+      let id = this.charatarget;
+      let msts = this.cdb.getStatus(id);
       for(let i=0;i<3;i++){
         let mtxt = this.kmidwnd.textArrange(menu[i],msts[i],5);
         let e = new charaStatus([350,80+50*i,msts[i],mtxt]);
@@ -924,8 +705,8 @@
         if(p.tarid==0){
           this.viewpage0();
         }
-        if(p.tarid==this.mtxt.length-1){
-          //this.resetpage();
+        if(p.tarid==2){
+          this.viewpage2();
         }
         return;
       }
@@ -939,6 +720,8 @@
     cfunc(e){
       let p = e.target;
       if(e.type=="click"){
+        let num = p.id.match(/\d+/g)[0];
+        this.charatarget = num;
         this.selected = p;
         this.imggg.classList.remove("fadeIn");
         console.log("clicked");
@@ -1479,7 +1262,8 @@
       // 戻るボタンの初期化
       {
         let pbk = {type:"div",style:{
-          position:"absolute",display:"none",right:"20px",bottom:"30px",width:"120px",height:"60px"}};
+          position:"absolute",display:"none",right:"20px",
+          bottom:"30px",width:"120px",height:"60px"}};
         this.bkWnd = generateElement(this.wnd,pbk);
         let list = parent.gentable(this.bkWnd,"ynwnd",1,1);
         this.btn2(list[0],"bkwnd_back", "もどる");
@@ -1533,7 +1317,7 @@
       // ボタン
       {
        let dbtn = generateElement(tar, {type:"div",style:{
-        margin:"10px 5px",padding:"10px 10px",width:"80px",height:"36px",background:"#000"
+        margin:"10px 5px",padding:"10px 10px",width:"100px",height:"36px",background:"#000"
        }});
         let timg = parent.geneStrImg(sid,txt);
         timg.onclick = this.cfunc2.bind(this);
