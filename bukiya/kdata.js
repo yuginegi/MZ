@@ -16,6 +16,166 @@
 
 /* 相変わらずですけど、くそコードになってますm(__)m リファクタリング（ＴへＴ）*/
 
+class kjyodata{
+  constructor(){
+    this.psname = [
+      "街・拠点","人口","銀","行動力",
+      "農業","商業","技術","施設"
+    ];
+    this.psts = [20,10000,10000,100,110,120,130,140];
+    console.log("kjyodata constructor");
+  }
+  bindMoneyFunc(tar){
+    bindFuncListInit(tar,this,["getMoney","updMoney"]);
+  }
+  getMoney(){
+    return this.psts[2];
+  }
+  updMoney(val){
+    this.psts[2] = val;
+  }
+  // 行動力の回復
+  ResetActivePower(){
+    this.psts[3] = 100;
+  }
+}
+
+class kmapdata{
+  constructor(){
+    this.fcl = ["rgba( 33, 150, 234, 0.2 )","rgba( 234, 150, 150, 0.5 )"];
+    this.scl = ["rgba( 0,255,255,1 )","rgba( 255,0,255,1 )"];
+    let cl = this.fcl[0];//"rgba( 33, 150, 234, 0.5 )";
+    let st = this.scl[0];//"rgba( 0,255,255,1 )"
+    this.parlist = [
+      {"id":"rect3_1","x":20,"y":10,"width":"100px","height":"100px","fill":cl
+    /*,"stroke":st*/},
+      {"id":"rect3_2","x":40,"y":190,"width":"100px","height":"100px","fill":cl},
+      {"id":"rect3_3","x":140,"y":70,"width":"100px","height":"100px","fill":cl},
+      {"id":"rect3_4","x":270,"y":120,"width":"100px","height":"100px","fill":cl},
+      {"id":"rect3_5","x":290,"y":10,"width":"100px","height":"100px","fill":cl},
+    ];
+    this.maptext = {
+      "rect3_1":["ノーマ地方。平地が多く、人口が多い。","遠征不可"],
+      "rect3_2":["アストリア地方。大きな海峡を挟んだ国、森林も多い。","遠征不可"],
+      "rect3_3":["リーヴェ地方。豊かな海の資源と広い平地の地方。","遠征不可"],
+      "rect3_4":["シャイニングベイ。魔王の城に近く、モンスターが強い。","遠征不可"],
+      "rect3_5":["ダークキャッスル。魔王の城","遠征不可"]
+    };
+    this.mapname = {
+      "rect3_1":"ノーマ地方",
+      "rect3_2":"アストリア地方",
+      "rect3_3":"リーヴェ地方",
+      "rect3_4":"シャイニングベイ",
+      "rect3_5":"ダークキャッスル"
+    }
+    this.mapopened = [1,1,1,1,1];
+    // 開いていればデータ更新
+    for(let i=0;i<5;i++){
+      let key = "rect3_"+(i+1);
+      if(this.mapopened[i]==1){
+        this.maptext[key][1] = "解放済　１０　未開放　１０";
+        this.parlist[i]["stroke"] = st;
+      }
+    }
+  }
+  
+  getNMfromMAPName(name){
+    return this.mapname[name];
+  }
+  getXYfromMAPName(name){
+    let id = this.getidfromname(name);
+    let e = this.parlist[id];
+    return [e["x"],e["y"]];
+  }
+  getidfromname(name){
+    for(let i=0;i<5;i++){
+      if(name == "rect3_"+(i+1)){return i;}
+    }
+    return -1;
+  }
+  isopen(id){
+    let ii = this.getidfromname(id);
+    return this.mapopened[ii];
+  }
+  chgAttr(p,tp){
+    p.setAttribute("fill", this.fcl[tp]);
+    if(p.getAttribute("stroke")){
+      p.setAttribute("stroke", this.scl[tp]);
+    }
+  }
+}
+
+class chardata{
+  constructor(){
+    this.skilldata = new skillData();
+    // For imagchange
+    this.prernd1 = -1;
+    this.prernd2 = -1;
+    console.log("chardata constructor");
+  }
+  imgchange(tar){
+    console.log("imgchange: "+tar.wndid);
+    if(tar.wndid==3){ // 商人
+      let imglist = [
+        "People4_5","People4_1","People2_8","People1_4","People4_3",
+        "People2_1","People3_3","SF_People1_1","People2_2","Nature_7"
+      ];
+      let n = imglist.length;
+      let rnd = Math.floor(Math.random()*n);
+      rnd = this.prernd2; // ランダムにしない
+      //if(this.prernd2 == rnd){rnd = (rnd+1)%n;}
+      if(this.prernd2 == rnd){
+      for(let i=0;i<10;i++){
+        rnd = (rnd+1)%n;
+        if($gameSwitches.value(31+rnd)){break;}
+      }}
+      this.prernd2 = rnd;
+      tar.imggg.src = 'img/pictures/'+imglist[rnd]+'.png';
+    }
+    if(tar.wndid==1 || tar.wndid==2){ // 勇者
+      let imglist = [
+        "Actor1_5","Actor2_2","Actor1_8","Actor3_1","People3_7",
+        "Actor2_7","Actor1_7","Actor3_4","Actor2_4","Actor3_2"
+      ];
+      let n = imglist.length;
+      let rnd = Math.floor(Math.random()*n);
+      rnd = this.prernd1; // ランダムにしない
+      //if(this.prernd1 == rnd){rnd = (rnd+1)%n;}
+      if(this.prernd1 == rnd){
+      for(let i=0;i<10;i++){
+        rnd = (rnd+1)%n;
+        if($gameSwitches.value(21+rnd)){break;}
+      }}
+      this.prernd1 = rnd;
+      tar.imggg.src = 'img/pictures/'+imglist[rnd]+'.png';
+    }
+  }
+  getpstatusAll(){
+    let p = {"勇者":0,"商人":0};
+    for(let i=0;i<10;i++){
+      p["勇者"] += ($gameSwitches.value(21+i)==true);
+      p["商人"] += ($gameSwitches.value(31+i)==true);
+    }
+    return p;
+  }
+  getpstatus(tar){
+    let p = this.getpstatusAll();
+    return p[tar];
+  }
+  getpcharlist(s=0,e=20){
+    let list = [];
+    for(let i=s;i<e;i++){
+      if($gameSwitches.value(21+i)==true){
+        list.push(i);
+      }
+    }
+    return list;
+  }
+  isCharFlag(par){
+    return $gameSwitches.value(par);
+  }
+}
+
 class charaDB{
   constructor(){
     //-- Player ---
@@ -130,6 +290,64 @@ class charaFace{
     ctx.drawImage(this.img,144*x,144*y,144,144,0,0,144,144);
   }
 }
+class charaStatusView{
+  //this.charatarget,this.cdb,b
+  constructor(parent,tar,cdb,base){
+    this.parent = parent;
+    this.tar = tar;
+    this.cdb = cdb;
+    this.base = base;
+    this.elist = [];
+    this.init();
+    // draw update controll.
+    setInterval(this.draw.bind(this),1000/60);
+  }
+  init(){
+    let id = this.tar;
+    let msts = this.getStatus(id);
+    let msts2 = this.getSkillExt(id);
+    let menu = (id<10)? ["武力","知力","魅力"] : ["経済","産出","技術"];
+    for(let i=0;i<3;i++){
+      let mtxt = this.textArrange(menu[i],msts[i],msts2[i]);
+      this.elist[i] = new charaStatus([350,80+50*i,msts[i],msts2[i],mtxt]);
+      this.base.appendChild(this.elist[i].can);
+    }
+  }
+  draw(){
+    for(let cc of this.elist){
+      cc.draw();
+    }
+  }
+  getStatus(id){
+    return this.cdb.getStatus(id);
+  }
+  getSkillExt(id){
+    let ulist = this.parent.chardata.skilldata.getulist(id);
+    let ret = [0,0,0];
+    for(let j=0;j<3;j++){
+    for(let i=10*j;i<10*(j+1);i++){
+      ret[j] += ulist[i];
+    }}
+    return ret;
+  }
+  textArrange(a,b,c){
+    let w1 = toFullWidth(a);
+    let w2 = toFullWidth(b);
+    let l1 = w1.length;
+    let l2 = w2.length;
+    let n = 5;
+    let l0 = n - l1 - l2;
+    let w0="";
+    while(l0-->0){w0 += "　"}
+    if(c > 0){
+      let w3 = toFullWidth(c);
+      return w1+w0+w2+"＋"+w3;
+    }else{
+      return w1+w0+w2;
+    }
+  }
+}
+
 class charaStatus{
   constructor(args){
     // Init
@@ -140,11 +358,13 @@ class charaStatus{
     this.img = new Image();
     // TEXT
     this.txtidx = 0;
-    this.val = args[2];
-    this.txtlist = args[3];
+    this.val1 = args[2];
+    this.val2 = args[3];
+    this.txtlist = args[4];
+    this.ext = 5;
     // loop
     this.tt = 0;
-    setInterval(this.draw.bind(this),1000/60);
+    //setInterval(this.draw.bind(this),1000/60);
   }
   draw(){
     let tt = (this.tt++)%120;
@@ -153,14 +373,25 @@ class charaStatus{
       this.img.src = aa.context.canvas.toDataURL();
     }
     let [x,y,z] = [20,2,20];
-    let w0 = ((this.cansz[0]-x)/20)*(this.val);
+    let [v1,v2] = [this.val1,this.val2];
+    let v0 = v1+v2;
+    let w0 = ((this.cansz[0]-x)/20)*(v0);
     let ww = (tt > z) ? w0 : w0*(tt/z);
     // draw
     let ctx = this.ctx;
     ctx.clearRect(0,0,this.cansz[0],this.cansz[1]);
-    ctx.fillStyle = "#008800C0";
     let mg = 5;
-    ctx.fillRect(x,mg,ww,this.cansz[1]-2*mg);
+    {
+      let [a1,a2]=[v1/v0,v2/v0];
+      ctx.fillStyle = "#008800C0";
+      let w1 = (ww > w0*a1) ? w0*a1 : ww; 
+      ctx.fillRect(x,mg,w1,this.cansz[1]-2*mg);
+      if(ww > w0*a1){
+        let w2 = ww-w0*a1;
+        ctx.fillStyle = "#FFFF00C0";
+        ctx.fillRect(x+w0*a1,mg,w2,this.cansz[1]-2*mg);
+      }
+    }
     ctx.drawImage(this.img,x,y);
   }
 }
@@ -237,6 +468,9 @@ class skillTree{
     this.skd = skd;
     this.cdb = cdb;
     this.num = num;
+    // For using MoneyFunc
+    this.parent.kjyodata.bindMoneyFunc(this);
+
     // Init
     let csz = [746,350];
     this.dpar = {type:"div",id:"sktree_main",
@@ -297,12 +531,6 @@ class skillTree{
     let gintxt = this.parent.geneStrImg("gintxt", this.viewSkillCost(mn));
     gindiv.append(gintxt);
   }
-  getMoney(){
-    return this.parent.kmidwnd.divlist[0].psts[2];
-  }
-  updMobey(val){
-    this.parent.kmidwnd.divlist[0].psts[2] = val;
-  }
   cfunc(e){
     let p = e.target;
     let ii = p.vid;
@@ -319,12 +547,13 @@ class skillTree{
         this.ulist[ii] = 1;
         this.parent.kmsgwnd.setText(["パワーアップ！！"]);
         audioInvoke("Item3");
-        this.updMobey(mn-mc);
+        this.updMoney(mn-mc);
         let ele = document.getElementById("gindiv");
         this.viewMoney(ele,(mn-mc));
         this.draw();
       }else{
         this.parent.kmsgwnd.setText(["銀が足りない"]);
+        audioInvoke("Cancel2");
       }
       return;
     }

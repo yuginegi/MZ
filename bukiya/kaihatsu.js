@@ -32,10 +32,11 @@
   'use strict';
 
   class newWnd3{
-    constructor(wnd,parent){
+    constructor(wnd,parent,tarmap){
       this.wnd = wnd;
       this.cdb = wnd.cdb;
       this.parent = parent;
+      this.tarmap = tarmap;
     }
     newwnd(){
       let epar = {type:"div", id:"enseiwnd",classList_add:"fadeIn",style:{
@@ -73,7 +74,9 @@
       img.src = imgsrc;
       let cz = canvasSize;
       let v = 2048/cz;
-      ctx.drawImage(img,20*v,10*v,100*v,100*v,0,0,cz,cz);
+      console.log("map target = "+this.tarmap);
+      let [mapx,mapy] = this.parent.kmapdata.getXYfromMAPName(this.tarmap);
+      ctx.drawImage(img,mapx*v,mapy*v,100*v,100*v,0,0,cz,cz);
 
       // 画像を歩かせる
       let cdb = this.cdb;
@@ -84,14 +87,9 @@
         let e = new enemyImg(cdb,ene,ii++);
         ele.append(e.can);
       }
-      // 味方の画像を
-      let parlist = [
-        [10,420,0],[60,420,1],[110,420,2],
-        [160,420,3],[210,420,4],[260,420,5],[310,420,6],[360,420,7],[410,420,8],[460,420,9]
-      ];
-      for(let par of parlist){
-        if(!$gameSwitches.value(21+par[2])){continue;}
-        let e = new charaImg(cdb, par);
+      // 味方の画像を・勇者一覧
+      for(let i of this.parent.chardata.getpcharlist(0,10)){
+        let e = new charaImg(cdb, [10+50*i,420,i]);
         ele.append(e.can);
       }
       // クリック
@@ -133,9 +131,12 @@
       t = this.parent.geneStrImg("eattack","　戦況　");//104x36
       div.append(t);
       //console.log([t.width,t.height]);
+      /*
       t.onclick = this.attack2func.bind(this);
       t.onmouseover  = this.attack2func.bind(this);
       t.onmouseleave = this.attack2func.bind(this);
+      */
+      set3func(t,this,this.attack2func);
     }
     /*attack1func(e){
       this.attackfunc();
@@ -166,7 +167,7 @@
         [500,30,0],[500,180,1],[500,330,2],
       ];
       for(let par of parlist){
-        if(!$gameSwitches.value(21+par[2])){continue;}
+        if(!this.parent.chardata.isCharFlag(21+par[2])){continue;}
         let e = new charaFace(this.cdb, par);
         dv.append(e.can);
       }
@@ -175,7 +176,7 @@
         [posbase,140,0],[posbase,290,1],[posbase,440,2],
       ];
       for(let par of poslist){
-        if(!$gameSwitches.value(21+par[2])){continue;}
+        if(!this.parent.chardata.isCharFlag(21+par[2])){continue;}
         let e = new animationText(par);
         dv.append(e.can);
       }
@@ -203,7 +204,8 @@
       dv.append(t);
       dv.append(document.createElement("br"));
       //画像
-      let impar = {type:"img",classList_add:"CharaShadow",src:"img/pictures/"+this.cdb.getPict(id)+".png",height:200,style:{paddingLeft:"50px"}};
+      let impar = {type:"img",classList_add:"CharaShadow",style:{paddingLeft:"50px"},
+        src:"img/pictures/"+this.cdb.getPict(id)+".png",height:200};
       let im = generateElement(dv,impar);
       dv.append(document.createElement("br"));
       // TEXT
@@ -241,18 +243,18 @@
       // CharaDB
       this.cdb = new charaDB();
       this.invoke = 0;
-    }
-    getpstatus1(){
-      let p = {"勇者":0,"商人":0};
-      for(let i=0;i<10;i++){
-        p["勇者"] += ($gameSwitches.value(21+i)==true);
-        p["商人"] += ($gameSwitches.value(31+i)==true);
-      }
-      return p;
+      // 城データ
+      let tar = this.parent.kjyodata;
+      this.psts = tar.psts;
+      this.psname = tar.psname;
+      // 関数
+      let tar2 = this.parent.chardata;
+      this.getpstatus1 = tar2.getpstatusAll.bind(tar2);
+      this.getpstatus = tar2.getpstatus.bind(tar2);
     }
     getpstatus2(){
       let p = {};
-      let tar = this.kmidwnd.divlist[0]; // From kmidwnd1
+      let tar = this;//this.kmidwnd.divlist[0]; // From kmidwnd1
       for(let i=0;i<8;i++){
         let key =  tar.psname[i];
         let val =  tar.psts[i];
@@ -282,8 +284,7 @@
     }
     notification(tar){
       let list2 = this.parent.gentable(tar,"ktbl2",1,2);
-      let nn=0;
-      for(let i=0;i<10;i++){nn += ($gameSwitches.value(21+i)==true)};
+      let nn = this.getpstatus("勇者");
       let id = (nn+this.noteinfo++)%nn;
       // list2[0]
       let e = new charaFace(this.cdb, [20,20,id]);
@@ -383,8 +384,8 @@
       this.maindv;
       this.imggg;
       this.imgsrc = 'img/pictures/Actor1_5.png';
-      this.fcl = ["rgba( 33, 150, 234, 0.2 )","rgba( 234, 150, 150, 0.5 )"];
-      this.scl = ["rgba( 0,255,255,1 )","rgba( 255,0,255,1 )"];
+      //this.fcl = ["rgba( 33, 150, 234, 0.2 )","rgba( 234, 150, 150, 0.5 )"];
+      //this.scl = ["rgba( 0,255,255,1 )","rgba( 255,0,255,1 )"];
       // CharaDB
       this.cdb = new charaDB();
     }
@@ -424,22 +425,13 @@
         }
         // 四角
         {
-          let cl = this.fcl[0];//"rgba( 33, 150, 234, 0.5 )";
-          let st = this.scl[0];//"rgba( 0,255,255,1 )"
-          let parlist = [
-            {"id":"rect3_1","x":20,"y":10,"width":"100px","height":"100px","fill":cl,"stroke":st},
-            {"id":"rect3_2","x":40,"y":190,"width":"100px","height":"100px","fill":cl},
-            {"id":"rect3_3","x":140,"y":70,"width":"100px","height":"100px","fill":cl},
-            {"id":"rect3_4","x":270,"y":120,"width":"100px","height":"100px","fill":cl},
-            {"id":"rect3_5","x":290,"y":10,"width":"100px","height":"100px","fill":cl},
-          ];
+          //let cl = this.fcl[0];//"rgba( 33, 150, 234, 0.5 )";
+          //let st = this.scl[0];//"rgba( 0,255,255,1 )"
+          let parlist = this.parent.kmapdata.parlist;
           for(let par of parlist){
             par.type = "rect";
             let p = generateSVG(svg,par);
-            //let p = this.setrect(svg,par);
-            p.onmouseenter = this.mevent.bind(this);
-            p.onmouseleave = this.mevent.bind(this);
-            p.onclick = this.mclick.bind(this);
+            set3func(p,this,this.mclick,this.mevent);
           }
         }
       }
@@ -466,14 +458,15 @@
       for(let i=0;i<5;i++){
         let rid = "rect3_"+(i+1);
         let p = document.getElementById(rid);
-        p.setAttribute("fill", this.fcl[0]);
+        /*p.setAttribute("fill", this.fcl[0]);
         if(p.getAttribute("stroke")){
           p.setAttribute("stroke", this.scl[0]);
-        }
+        }*/
+        this.parent.kmapdata.chgAttr(p,0);
       }
     }
     newwnd(){
-      let e = new newWnd3(this,this.parent);
+      let e = new newWnd3(this,this.parent,this.enseitarget);
       e.newwnd();
     }
 
@@ -483,11 +476,11 @@
       let txt;//= (ii==0)? ["はいを押された"]:["いいえを押された"];
       if(ii==0){
         audioInvoke("Attack3");//Item3は成功音
-        txt = ["はいを押された"];
+        txt = ["はいが押された"];
         this.newwnd();
       }else{
         audioInvoke("Cancel2");
-        txt = ["いいえを押された"];
+        txt = ["いいえが押された"];
       }
       tar.setText(txt); 
       this.reset();
@@ -496,14 +489,18 @@
       this.enseitarget = e.target.id;
       audioInvoke("Cursor3");
       let tar = this.parent.kmsgwnd;
-      if(e.target.id!="rect3_1"){
+      let isopen = this.parent.kmapdata.isopen(e.target.id);
+      //if(e.target.id!="rect3_1")
+      if(!isopen){
         let txt = ["遠征不可"];
         tar.setText(txt); 
         this.reset();
         // はい・いいえ 消す
         tar.switchpage();
       }else{
-        let txt = ["ノーマ地方に、遠征討伐しますか？"];
+        let nm = this.parent.kmapdata.getNMfromMAPName(e.target.id);
+        let txt = [nm+" に、遠征討伐しますか？"];
+        //let txt = ["ノーマ地方に、遠征討伐しますか？"];
         tar.setText(txt);
         // はい・いいえ を出す
         tar.YNwnd(this,this.react1,this.react1);
@@ -512,21 +509,23 @@
     mevent(e){
       if(this.enseitarget){return;}
       //console.log("mevent:"+e.type);
-      let tp = (e.type=="mouseenter")? 1:0; //これがバグってた。。いつも０のバグ
+      let tp = (e.type=="mouseenter"||e.type=="mouseover")? 1:0; //これがバグってた。。いつも０のバグ
       let p = e.target;
-      //let cl = (tp==1)? this.fcl[1]:this.fcl[0];
+      /*
       p.setAttribute("fill", this.fcl[tp]);
       if(p.getAttribute("stroke")){
         p.setAttribute("stroke", this.scl[tp]);
-      }
+      }*/
+      this.parent.kmapdata.chgAttr(p,tp);
       if(tp==1){
-        let ptxt = {
+        /*let ptxt = {
           "rect3_1":["ノーマ地方。平地が多く、人口が多い。","解放済　１０　未開放　１０"],
           "rect3_2":["アストリア地方。大きな海峡を挟んだ国、森林も多い。","遠征不可"],
           "rect3_3":["リーヴェ地方。豊かな海の資源と広い平地の地方。","遠征不可"],
           "rect3_4":["シャイニングベイ。魔王の城に近く、モンスターが強い。","遠征不可"],
           "rect3_5":["ダークキャッスル。魔王の城","遠征不可"]
-        };
+        };*/
+        let ptxt = this.parent.kmapdata.maptext;
         let txt = ptxt[e.target.id];//["なにをしますか？","行動力 １００"];
         let tarwnd = this.parent.kmsgwnd;
         tarwnd.setText(txt);
@@ -543,7 +542,8 @@
       // CharaDB
       this.cdb = new charaDB();
       // SkillDB
-      this.skd = new skillData();
+      //this.skd = new skillData();
+      this.skd = this.parent.chardata.skilldata;
       // メニューテキスト
       this.mtxt = ["ステータス","戦闘スキル","レベルアップ","ヒストリー"];
     }
@@ -582,14 +582,12 @@
       }
       let p = this.parent.geneStrImg("kwnd2_listxt", "勇者一覧");
       dv.appendChild(p);
-      for(let i=0;i<20;i++){
+      // 勇者・商人一覧
+      for(let i of this.parent.chardata.getpcharlist()){
         let par = [10+80*(i%5),60+75*Math.floor(i/5),i];
-        if(!$gameSwitches.value(21+par[2])){continue;}
         let e = new charaImg(this.cdb, par);
         let tar = e.can;
-        tar.onclick = this.cfunc.bind(this);
-        tar.onmouseover = this.cfunc.bind(this);
-        tar.onmouseleave = this.cfunc.bind(this);
+        set3func(tar,this,this.cfunc);
         dv.append(tar);
       }
     }
@@ -654,15 +652,18 @@
       while( b && b.firstChild ){
         b.removeChild( b.firstChild );
       }
-      let menu = ["武力","知力","魅力"];
+      this.stview = new charaStatusView(this.parent,this.charatarget,this.cdb,b);
+      /*
       //let msts = [9,6,4];
       let id = this.charatarget;
       let msts = this.cdb.getStatus(id);
+      let menu = (id<10)?["武力","知力","魅力"]:["経済","産出","技術"];
       for(let i=0;i<3;i++){
         let mtxt = this.kmidwnd.textArrange(menu[i],msts[i],5);
         let e = new charaStatus([350,80+50*i,msts[i],mtxt]);
         b.appendChild(e.can);
       }
+      */
     }
 
     newwnd(){
@@ -677,9 +678,10 @@
         let menu = this.text8(this.mtxt[i]);
         let tar = this.parent.geneStrImg(null,menu);
         tar.tarid = String(i);
-        tar.onclick = this.cfunc2.bind(this);
+        /*tar.onclick = this.cfunc2.bind(this);
         tar.onmouseover = this.cfunc2.bind(this);
-        tar.onmouseleave = this.cfunc2.bind(this);
+        tar.onmouseleave = this.cfunc2.bind(this);*/
+        set3func(tar,this,this.cfunc2);
         p.append(tar);
       }
       // 戻る を出す
@@ -753,11 +755,10 @@
       this.parent = wnd.parent;
       this.maindv;
       this.imggg;
-      this.psts = [20,10000,10000,100,110,120,130,140];
-      this.psname = [
-        "街・拠点","人口","銀","行動力",
-        "農業","商業","技術","施設"
-      ];
+      // 城データ
+      let tar = this.parent.kjyodata;
+      this.psts = tar.psts;
+      this.psname = tar.psname;
       // Role
       this.rolepp ={
         "kaitaku":{t1:2,t2:3,t3:4,a1:100,a2:20,a3:10,maxV:999},
@@ -983,8 +984,7 @@
       {
         // ボタン
         let n = 8;
-        let txt = this.psname;/*["街・拠点","人口","銀","行動力",
-        "農業","商業","技術","施設"];*/
+        let txt = this.psname;
         let par = this.psts;
         for(let i=0;i<n;i++){
           let ttt = txt[i]+"　"+par[i];
@@ -999,8 +999,6 @@
       {
         // ボタン
         let n = 4;
-        //let txt = ["農地開拓","商業活性","技術開発","公共工事"];
-        //let role = ["kaitaku","kassei","gijyutu","koukyou"];
         let txt = this.roletxt;
         let role = this.roleid;
         for(let i=0;i<n;i++){
@@ -1010,9 +1008,10 @@
           let timg = parent.geneStrImg("kaihatsu_"+(i+1),txt[i]);//104(=26x4)x36
           timg.kaihatsutext = txt[i];
           timg.kaihatsurole = role[i];
-          timg.onclick = this.cfunc.bind(this);
+          /*timg.onclick = this.cfunc.bind(this);
           timg.onmouseover = this.hfunc.bind(this);
-          timg.onmouseleave = this.hfunc.bind(this);
+          timg.onmouseleave = this.hfunc.bind(this);*/
+          set3func(timg,this,this.cfunc,this.hfunc);
           dbtn.appendChild(timg);
           dbtn.appendChild(document.createElement("BR"));
         }
@@ -1298,9 +1297,11 @@
         margin:"10px 5px",padding:"10px 10px",width:"80px",height:"36px",background:"#000"
        }});
         let timg = parent.geneStrImg(sid,txt);
+        /*
         timg.onclick = this.cfunc.bind(this);
         timg.onmouseover = this.hfunc.bind(this);
-        timg.onmouseleave = this.hfunc.bind(this);
+        timg.onmouseleave = this.hfunc.bind(this);*/
+        set3func(timg,this,this.cfunc,this.hfunc);
         dbtn.appendChild(timg);
         dbtn.appendChild(document.createElement("BR"));
       }
@@ -1320,9 +1321,11 @@
         margin:"10px 5px",padding:"10px 10px",width:"100px",height:"36px",background:"#000"
        }});
         let timg = parent.geneStrImg(sid,txt);
+        /*
         timg.onclick = this.cfunc2.bind(this);
         timg.onmouseover = this.hfunc.bind(this);
-        timg.onmouseleave = this.hfunc.bind(this);
+        timg.onmouseleave = this.hfunc.bind(this);*/
+        set3func(timg,this,this.cfunc2,this.hfunc);
         dbtn.appendChild(timg);
         dbtn.appendChild(document.createElement("BR"));
       }
@@ -1380,6 +1383,11 @@
       this.init();
     }
     init(){
+      // DB準備（Initよりも前に）
+      this.kjyodata = new kjyodata(); // 城
+      this.kmapdata = new kmapdata(); // マップデータ
+      this.chardata = new chardata(); // 勇者商人データ
+      // Init処理
       this.mode = 0;
       this.menFunc = TouchInput.update; // 確保する。関数定義を持ってきた方が良いかもだが・・・
       this.mdsFunc = function() {}; // 無効化の書き方
@@ -1390,8 +1398,7 @@
       // 表示領域の初期化
       this.initflag=0;
       // For imagchange
-      this.prernd1 = -1;
-      this.prernd2 = -1;
+      this.imgchange = this.chardata.imgchange.bind(this.chardata);
     }
     initCanvas(){
       //let [gcw,gch] = [window.innerWidth,window.innerHeight];
@@ -1408,50 +1415,13 @@
       }};
       generateElement(document.body, par);
     }
-    imgchange(tar){
-      console.log("imgchange: "+tar.wndid);
-      if(tar.wndid==3){ // 商人
-        let imglist = [
-          "People4_5","People4_1","People2_8","People1_4","People4_3",
-          "People2_1","People3_3","SF_People1_1","People2_2","Nature_7"
-        ];
-        let n = imglist.length;
-        let rnd = Math.floor(Math.random()*n);
-        rnd = this.prernd2; // ランダムにしない
-        //if(this.prernd2 == rnd){rnd = (rnd+1)%n;}
-        if(this.prernd2 == rnd){
-        for(let i=0;i<10;i++){
-          rnd = (rnd+1)%n;
-          if($gameSwitches.value(31+rnd)){break;}
-        }}
-        this.prernd2 = rnd;
-        tar.imggg.src = 'img/pictures/'+imglist[rnd]+'.png';
-      }
-      if(tar.wndid==1 || tar.wndid==2){ // 勇者
-        let imglist = [
-          "Actor1_5","Actor2_2","Actor1_8","Actor3_1","People3_7",
-          "Actor2_7","Actor1_7","Actor3_4","Actor2_4","Actor3_2"
-        ];
-        let n = imglist.length;
-        let rnd = Math.floor(Math.random()*n);
-        rnd = this.prernd1; // ランダムにしない
-        //if(this.prernd1 == rnd){rnd = (rnd+1)%n;}
-        if(this.prernd1 == rnd){
-        for(let i=0;i<10;i++){
-          rnd = (rnd+1)%n;
-          if($gameSwitches.value(21+rnd)){break;}
-        }}
-        this.prernd1 = rnd;
-        tar.imggg.src = 'img/pictures/'+imglist[rnd]+'.png';
-      }
-    }
 
     kaihatsuEndFunc(e){
       //DBG//console.log(e);
       e.stopPropagation();
       this.clickfuncCore(0); // 開発END
-      // DBG
-      this.kmidwnd.divlist[0].psts[3] = 100;
+      // DBG : 行動力の回復
+      this.kjyodata.ResetActivePower();
     }
     clickfuncCore(inp){
       this.mode = inp;

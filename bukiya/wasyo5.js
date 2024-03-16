@@ -33,6 +33,30 @@
 * Utility Functions. (this funcs are global. take care impact)
 ***************************************************************/
 
+// 関数を呼んだら、相手先のデータと処理をするように初期化
+function bindFuncListInit(tar,res,funclist){
+  for(let cc of funclist){
+    tar[cc] = res[cc].bind(res);
+  }
+}
+
+// click, over, leave ３セット
+function set3func(tar,base,func1,func2=null,func3=null){
+  if(func2==null){func2 = func1;}
+  if(func3==null){func3 = func2;}
+  tar.onclick      = func1.bind(base);
+  tar.onmouseover  = func2.bind(base);
+  tar.onmouseleave = func3.bind(base);
+}
+// click, enter, leave ３セット
+function set3func2(tar,base,func1,func2=null,func3=null){
+  if(func2==null){func2 = func1;}
+  if(func3==null){func3 = func2;}
+  tar.onclick      = func1.bind(base);
+  tar.onmouseenter = func2.bind(base);
+  tar.onmouseleave = func3.bind(base);
+}
+
 function generateElement(target,par){
   let ele = document.createElement(par.type);
   if(target){target.append(ele);}
