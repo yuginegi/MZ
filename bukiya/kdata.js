@@ -220,6 +220,22 @@ class charaDB{
     let monsrc = "SF_Monster";
     this.monimg = new Image();
     this.monimg.src = 'img/characters/'+monsrc+'.png';
+    // ATTACKLIST
+    this.attackhash = {};
+  }
+  getAttachRhash(tar=null){
+    let h = {};
+    for(let k in this.attackhash){
+      let t = -1;
+      if(tar==null){
+        t = this.attackhash[k];
+      }else if(tar==this.attackhash[k]){
+        t = tar;
+      }else{continue;}
+      if(h[t]==null){h[t]=[];}
+      h[t].push(Number(k));
+    }
+    return h;
   }
   get(id){
     let par = this.parlist;
@@ -244,27 +260,85 @@ class charaDB{
   }
   getStatus(id){
     let sts = [
-      [7,5,5],[8,0,6],[0,8,6],[7,7,0],[20,0,0],
-      [5,7,5],[0,4,9],[5,5,7],[0,10,0],[4,0,9]
+      [7,5,5],[8,0,6],[0,8,6],[7,7,0],[10,0,0],
+      [5,7,5],[0,4,9],[0,10,0],[5,5,7],[4,0,9]
     ];
     return sts[id%10];
   }
 }
+class charaAttackView{
+  constructor(){
+
+  }
+}
 class charaImg{
-  constructor(cdb,args){
+  constructor(cdb,args,draggable=false,par=null){
     this.cdb = cdb;
     [this.img,this.cid]= cdb.get(args[2]);
+    this.charaid = args[2];
     // Init
-    this.can = generateElement(null,{type:"canvas",id:"chara_"+args[2],width:48,height:48,
-      style:{position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
+    this.xx = args[0];
+    this.yy = args[1];
+    this.can = generateElement(null,{type:"canvas",id:"chara_"+args[2],width:48,height:48, 
+    style:{"z-index":51,position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
     this.ctx = this.can.getContext("2d");
+    // For Drag
+    if(draggable){
+      this.can.addEventListener("mousedown", this.func1.bind(this) ) ;
+      this.par = par;
+    }
     // loop
     this.tt = 0;
     setInterval(this.draw.bind(this),250);
   }
+  move(event){
+    if(this.dragging!=1){return;}
+    var drag = this.can;
+    let [xx,yy]=[event.pageX - this.ox,event.pageY - this.oy];
+    this.par.movetarget(this.charaid,xx,yy);
+    //要素内の相対座標で移動
+    drag.style.top  = yy + "px";
+    drag.style.left = xx + "px";
+  }
+  func2(event){
+    if(this.dragging!=1){return;}
+    var drag = this.can;
+    this.dragging = 0;
+    let [xx,yy]=[event.pageX - this.ox,event.pageY - this.oy];
+    this.par.settarget(this.charaid,xx,yy);
+    //元の位置に戻る
+    drag.style.top = this.yy + "px";
+    drag.style.left = this.xx + "px";
+    //ここでおしまい
+    document.body.removeEventListener("mousemove", this.move.bind(this) ) ;
+    document.body.removeEventListener("mouseup", this.func2.bind(this) ) ;
+  }
+  func1(event){
+    console.log("func invoked.");
+    if(this.dragging==1){return;}
+    this.dragging = 1;
+    // Original
+    //let ele = document.getElementById("ensei_div_txt");
+    //this.par.updateCharaPage(ele,this.charaid);
+    //setTimeout(this.mmove.bind(this),600);
+    this.par.updateCharaPage(this.charaid);
+    //要素内の相対座標を取得
+    this.ox = event.pageX -this.xx;
+    this.oy = event.pageY -this.yy;
+    //ここから開始
+    document.body.addEventListener("mousemove", this.move.bind(this) ) ;
+    document.body.addEventListener("mouseup", this.func2.bind(this) ) ;
+  }
+  setdraw(flag){
+    this.setflag=flag;
+  }
   draw(){
     const ctx = this.ctx;
     ctx.clearRect(0,0,48,48);
+    if(this.setflag){
+      ctx.fillStyle = "#0000FF80";
+      ctx.fillRect(0,0,48,48);
+    }
     let ii = this.cid-1;
     let ll = [0,1,2,1]
     let [x,y]=[3*(ii%4)+ll[(this.tt++)%4], 4*Math.floor(ii/4)];
@@ -308,9 +382,35 @@ class charaStatusView{
     let msts2 = this.getSkillExt(id);
     let menu = (id<10)? ["武力","知力","魅力"] : ["経済","産出","技術"];
     for(let i=0;i<3;i++){
-      let mtxt = this.textArrange(menu[i],msts[i],msts2[i]);
+      let mtxt = this.textArrange(5, menu[i],msts[i],msts2[i]);
       this.elist[i] = new charaStatus([350,80+50*i,msts[i],msts2[i],mtxt]);
       this.base.appendChild(this.elist[i].can);
+    }
+
+    // 武器防具
+    let bukibougu4 = ["武器LV4","アイスブリンガー","防具LV4","ドラゴンアーマー"]
+    for(let i=0;i<4;i++){
+      let mtxt = this.parent.geneStrImg(null,bukibougu4[i]);
+      mtxt.style.position = "absolute"; 
+      mtxt.style.left = (390+(i%2)*120)+"px"; 
+      mtxt.style.top  = (320+40*(i>=2))+"px";
+      this.base.appendChild(mtxt);
+    }
+
+    // ステータス
+    let status4 = [
+      "兵力　 17000",
+      "戦力　 15000",
+      "ＡＡ　 15000",
+      "ＢＢ　 15000",
+    ];
+    for(let i=0;i<4;i++){
+      //let mtxt = this.textArrange(10,"戦力",15000,0);
+      let mtxt = this.parent.geneStrImg(null,status4[i]);
+      mtxt.style.position = "absolute"; 
+      mtxt.style.left = (370+(i%2)*190)+"px"; 
+      mtxt.style.top  = (240+40*(i>=2))+"px";
+      this.base.appendChild(mtxt);
     }
   }
   draw(){
@@ -330,12 +430,11 @@ class charaStatusView{
     }}
     return ret;
   }
-  textArrange(a,b,c){
+  textArrange(n,a,b,c){
     let w1 = toFullWidth(a);
     let w2 = toFullWidth(b);
     let l1 = w1.length;
     let l2 = w2.length;
-    let n = 5;
     let l0 = n - l1 - l2;
     let w0="";
     while(l0-->0){w0 += "　"}
@@ -631,9 +730,16 @@ class animationText{
     let txt = {
      0:["戦力アップ","東方の勇者","ソードエンペラー"],
      1:["戦力アップ","スーパーパワー","一騎当千"],
-     2:["戦力アップ","大魔導士の才能"]
+     2:["戦力アップ","大魔導士の才能"],
+     3:["英知の号令"],
+     4:["豪傑"],
+     5:[],
+     6:[],
+     7:["魔導の神髄"],
+     8:["明日への希望"],
+     9:["剣聖"],
     };
-    return txt[id];
+    return (txt[id].length>0)?txt[id]:null;
   }
   resettext(txt){
     this.txtlist = txt;
@@ -672,15 +778,22 @@ class enemyImg{
     this.cid = 3;
     // Init
     this.can = generateElement(null,{type:"canvas",id:"enemy_"+ii,enemyid:ii,width:48,height:48,
-      style:{position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
+      style:{"z-index":50,position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
     this.ctx = this.can.getContext("2d");
     this.tt = 0;
     // loop
     setInterval(this.draw.bind(this),250);
   }
+  setdraw(flag){
+    this.setflag=flag;
+  }
   draw(){
     const ctx = this.ctx;
     ctx.clearRect(0,0,48,48);
+    if(this.setflag){
+      ctx.fillStyle = "#00FF0080";
+      ctx.fillRect(0,0,48,48);
+    }
     let ii = this.cid-1;
     let ll = [0,1,2,1]
     let [x,y]=[3*(ii%4)+ll[(this.tt++)%4], 4*Math.floor(ii/4)];

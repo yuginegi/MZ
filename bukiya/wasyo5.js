@@ -78,6 +78,10 @@ function generateSVG(target,par){
   let svg = document.createElementNS('http://www.w3.org/2000/svg',par.type);
   target.appendChild(svg);
   for (let key in par) {
+    if(key == "classList_add"){
+      svg.classList.add(par[key]);
+      continue;
+    }
     if(["type"].indexOf(key) != -1){continue;}
     svg.setAttribute(key,par[key]);
   }
