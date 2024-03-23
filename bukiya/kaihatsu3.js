@@ -22,15 +22,22 @@ class newWnd3{
     this.cdb = wnd.cdb;
     this.parent = parent;
     this.tarmap = tarmap;
+    this.kmapdata = this.parent.kmapdata;
     //敵の配置
-    this.enelist = [[20,20,1],[150,80,1],[270,140,1],[20,260,1]];
+    this.enelist = this.kmapdata.getenelist(tarmap);
     this.eimglist=[];
     //味方のリスト
-    this.charlist=[];
+    this.charlist=[null,null,null,null,null,null,null,null,null,null];
+  }
+  eneid(id){
+    return this.tarmap+"_"+id;
   }
   // 線を引く
   drawarrow(id,target){
+    console.log("drawarrow:"+[id,target]);
+    if(!target){return;}
     this.cdb.attackhash[id] = target;
+    this.cdb.attackarea[id] = this.tarmap;
     let mm = 24;// = size/2
     let [cx,cy] = [10+50*id+mm,420+mm];
     let cc = this.enelist[target];
@@ -66,7 +73,6 @@ class newWnd3{
     }
   }
   movetarget(id,xx,yy){
-    //console.log("movetarget:"+[id,xx,yy]);
     let mg=50; // 両方とも左上の点だけ考える
     let target = -1;
     for(let i in this.enelist){
@@ -80,7 +86,6 @@ class newWnd3{
       this.eimglist[i].setdraw(ison);
     }
     this.charlist[id].setdraw(1);
-    //console.log("settarget:"+target);
   }
   updatetarget(id){
     for(let i in this.eimglist){
@@ -89,9 +94,13 @@ class newWnd3{
     }
   }
   usertarget(id){
+    console.log("usertarget "+id);
+    console.log(this.charlist);
     for(let i in this.charlist){
       let ison = (i==id) ? 1:0;
-      this.charlist[i].setdraw(ison);
+      if(this.charlist[i]){
+        this.charlist[i].setdraw(ison);
+      }
     }
   }
   newwnd(){
@@ -117,7 +126,6 @@ class newWnd3{
     this.newwnd1(d);
   }
   newwnd1(ele){
-    //let t2 = this.parent.geneStrImg("enseiwnd_txt2","さあ、どうしようかなあ・・")
     let imgsrc = 'img/0img/map.jpg';
     let canvasSize = 400;
     let parcan = {
@@ -131,23 +139,25 @@ class newWnd3{
     let cz = canvasSize;
     let v = 2048/cz;
     console.log("map target = "+this.tarmap);
-    let [mapx,mapy] = this.parent.kmapdata.getXYfromMAPName(this.tarmap);
+    let [mapx,mapy] = this.kmapdata.getXYfromMAPName(this.tarmap);
     ctx.drawImage(img,mapx*v,mapy*v,100*v,100*v,0,0,cz,cz);
 
     let par1 = {type:'svg','id':'atkmap','viewbox':'0 0 500 450',"width":"500px","height":"450px"}
     let g1 = generateSVG(ele,par1);
     g1.style["z-index"] = 20;
     g1.style.pointerEvents = "none";
-    //,fill:"#f00",stroke:"#f00","stroke-width":"5"
     let par2 = {type:"g", classList_add:"attackline"};
     let g2 = generateSVG(g1,par2);
     g2.style.pointerEvents = "none";
     this.atkmapsvg = g2; 
     // 矢印初期値
     let hash = this.cdb.attackhash;
+    let area = this.cdb.attackarea;
     for (let key in hash) {
+      if(area[key] && area[key]!=this.tarmap){continue;}
       this.drawarrow(key,hash[key]);
     }
+    console.log(hash);
 
     // 画像を歩かせる
     let cdb = this.cdb;
@@ -161,13 +171,14 @@ class newWnd3{
     }
     // 味方の画像を・勇者一覧
     for(let i of this.parent.chardata.getpcharlist(0,10)){
-      let e = new charaImg(cdb, [10+50*i,420,i],true,this);
-      this.charlist.push(e);
+      let flag = (cdb.attackarea[i] && cdb.attackarea[i]!=this.tarmap) ? false:true;
+      let e = new charaImg(cdb, [10+50*i,420,i],flag,this);
+      e.grayout = (flag)? null:1;
+      this.charlist[i] = e;
       ele.append(e.can);
     }
     // クリック
     ele.onclick = this.cfunc.bind(this);
-    //ele.onmousemove = this.mmove.bind(this);
     //　右側Wnd
     {
       let dvpos = [cz+20,0];
@@ -254,15 +265,11 @@ class newWnd3{
         poslist.push([x2,y2,ii]);
       }
     }
-    console.log(parlist);
-    //let parlist = [[500,30,0],[500,180,1],[500,330,2],];
     for(let par of parlist){
       if(!this.parent.chardata.isCharFlag(21+par[2])){continue;}
       let e = new charaFace(this.cdb, par);
       dv.append(e.can);
     }
-    //let posbase = 480;
-    //let poslist = [[posbase,140,0],[posbase,290,1],[posbase,440,2],];
     for(let par of poslist){
       if(!this.parent.chardata.isCharFlag(21+par[2])){continue;}
       let e = new animationText(par);
@@ -305,24 +312,48 @@ class newWnd3{
     let im = generateElement(dv,impar);
     dv.append(document.createElement("br"));
     // TEXT
-    t = this.parent.geneStrImg(null,"戦闘中");
+    let aa = this.cdb.attackarea[id];
+    let a2 = this.kmapdata.getNMfromMAPName(aa);
+    let a3 = (a2)? a2+"で戦闘中" : null;
+    let txt = (a3) ? a3 : "待機中";
+    t = this.parent.geneStrImg("k3attacktarget",txt);
+    if(a3){
+      //t.onclick = this.cancelFunc.bind(this);
+      set3func(t,this,this.cancelFunc);
+      t.tarid = id;
+      t.tarexp = a3;
+    }
     dv.append(t);
     dv.append(document.createElement("br"));
     t = this.parent.geneStrImg(null,"戦力：１００");
     dv.append(t);
   }
+  cancelFunc(e){
+    if(e.type=="click"){
+      let tid = e.target.tarid;
+      console.log("cancelFunc:"+tid);
+      this.cdb.attackhash[tid] = null;
+      this.cdb.attackarea[tid] = null;
+      let ele = this.charlist[tid];
+      ele.grayout = null;
+      ele.draggable = true;
+      setTimeout(this.updateCharaPage.bind(this,tid), 50);
+      let arrowid = "drawarrow"+tid;
+      let arr =document.getElementById(arrowid);
+      if(arr){arr.remove();}
+    }
+    let ii = (e.type=="mouseover") ? 1:0;
+    if(ii){
+      this.parent.updateStrImg("k3attacktarget","\\C[2]キャンセル？");
+    }else{
+      this.parent.updateStrImg("k3attacktarget",e.target.tarexp);
+    }
+  }
   cfunc(e){
     let tid = e.target.id;
-    //console.log("click:"+tid);
-    let ele = document.getElementById("ensei_div_txt");
     if(tid.indexOf("enemy") == 0){
       this.updatePage(e.target.enemyid);
-    /* [処理削除] charaImgの中でやるので削除
-    }else if(tid.indexOf("chara") == 0){
-      let num = tid.match(/\d+/g)[0];
-      this.updateCharaPage(ele,num);*/
-    }else{return;}
-    //setTimeout(this.mmove.bind(this),600);
+    }
   }
   mmove(){
     let ele = document.getElementById("ensei_div_txt");
@@ -337,10 +368,10 @@ class kmidwnd3{
     this.maindv;
     this.imggg;
     this.imgsrc = 'img/pictures/Actor1_5.png';
-    //this.fcl = ["rgba( 33, 150, 234, 0.2 )","rgba( 234, 150, 150, 0.5 )"];
-    //this.scl = ["rgba( 0,255,255,1 )","rgba( 255,0,255,1 )"];
     // CharaDB
     this.cdb = new charaDB();
+    // mapdata
+    this.kmapdata = this.parent.kmapdata;
   }
   init(pdiv){
     this.maindv = this.kmidwnd.createDIV(pdiv);
@@ -378,9 +409,7 @@ class kmidwnd3{
       }
       // 四角
       {
-        //let cl = this.fcl[0];//"rgba( 33, 150, 234, 0.5 )";
-        //let st = this.scl[0];//"rgba( 0,255,255,1 )"
-        let parlist = this.parent.kmapdata.parlist;
+        let parlist = this.kmapdata.parlist;
         for(let par of parlist){
           par.type = "rect";
           let p = generateSVG(svg,par);
@@ -411,11 +440,7 @@ class kmidwnd3{
     for(let i=0;i<5;i++){
       let rid = "rect3_"+(i+1);
       let p = document.getElementById(rid);
-      /*p.setAttribute("fill", this.fcl[0]);
-      if(p.getAttribute("stroke")){
-        p.setAttribute("stroke", this.scl[0]);
-      }*/
-      this.parent.kmapdata.chgAttr(p,0);
+      this.kmapdata.chgAttr(p,0);
     }
   }
   newwnd(){
@@ -442,8 +467,7 @@ class kmidwnd3{
     this.enseitarget = e.target.id;
     audioInvoke("Cursor3");
     let tar = this.parent.kmsgwnd;
-    let isopen = this.parent.kmapdata.isopen(e.target.id);
-    //if(e.target.id!="rect3_1")
+    let isopen = this.kmapdata.isopen(e.target.id);
     if(!isopen){
       let txt = ["遠征不可"];
       tar.setText(txt); 
@@ -451,9 +475,8 @@ class kmidwnd3{
       // はい・いいえ 消す
       tar.switchpage();
     }else{
-      let nm = this.parent.kmapdata.getNMfromMAPName(e.target.id);
+      let nm = this.kmapdata.getNMfromMAPName(e.target.id);
       let txt = [nm+" に、遠征討伐しますか？"];
-      //let txt = ["ノーマ地方に、遠征討伐しますか？"];
       tar.setText(txt);
       // はい・いいえ を出す
       tar.YNwnd(this,this.react1,this.react1);
@@ -464,21 +487,9 @@ class kmidwnd3{
     //console.log("mevent:"+e.type);
     let tp = (e.type=="mouseenter"||e.type=="mouseover")? 1:0; //これがバグってた。。いつも０のバグ
     let p = e.target;
-    /*
-    p.setAttribute("fill", this.fcl[tp]);
-    if(p.getAttribute("stroke")){
-      p.setAttribute("stroke", this.scl[tp]);
-    }*/
-    this.parent.kmapdata.chgAttr(p,tp);
+    this.kmapdata.chgAttr(p,tp);
     if(tp==1){
-      /*let ptxt = {
-        "rect3_1":["ノーマ地方。平地が多く、人口が多い。","解放済　１０　未開放　１０"],
-        "rect3_2":["アストリア地方。大きな海峡を挟んだ国、森林も多い。","遠征不可"],
-        "rect3_3":["リーヴェ地方。豊かな海の資源と広い平地の地方。","遠征不可"],
-        "rect3_4":["シャイニングベイ。魔王の城に近く、モンスターが強い。","遠征不可"],
-        "rect3_5":["ダークキャッスル。魔王の城","遠征不可"]
-      };*/
-      let ptxt = this.parent.kmapdata.maptext;
+      let ptxt = this.kmapdata.maptext;
       let txt = ptxt[e.target.id];//["なにをしますか？","行動力 １００"];
       let tarwnd = this.parent.kmsgwnd;
       tarwnd.setText(txt);

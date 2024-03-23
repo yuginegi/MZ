@@ -184,7 +184,6 @@
       // CharaDB
       this.cdb = new charaDB();
       // SkillDB
-      //this.skd = new skillData();
       this.skd = this.parent.chardata.skilldata;
       // メニューテキスト
       this.mtxt = ["ステータス","戦闘スキル","レベルアップ","ヒストリー"];
@@ -295,17 +294,6 @@
         b.removeChild( b.firstChild );
       }
       this.stview = new charaStatusView(this.parent,this.charatarget,this.cdb,b);
-      /*
-      //let msts = [9,6,4];
-      let id = this.charatarget;
-      let msts = this.cdb.getStatus(id);
-      let menu = (id<10)?["武力","知力","魅力"]:["経済","産出","技術"];
-      for(let i=0;i<3;i++){
-        let mtxt = this.kmidwnd.textArrange(menu[i],msts[i],5);
-        let e = new charaStatus([350,80+50*i,msts[i],mtxt]);
-        b.appendChild(e.can);
-      }
-      */
     }
 
     newwnd(){
@@ -320,9 +308,6 @@
         let menu = this.text8(this.mtxt[i]);
         let tar = this.parent.geneStrImg(null,menu);
         tar.tarid = String(i);
-        /*tar.onclick = this.cfunc2.bind(this);
-        tar.onmouseover = this.cfunc2.bind(this);
-        tar.onmouseleave = this.cfunc2.bind(this);*/
         set3func(tar,this,this.cfunc2);
         p.append(tar);
       }
@@ -382,7 +367,6 @@
         let num = p.id.match(/\d+/g)[0];
         this.imggg.src = 'img/pictures/'+this.cdb.getPict(num)+'.png';
         this.imggg.classList.add("fadeIn");
-        //this.ecan.txtlist = [this.cdb.getName(num)];
         this.ecan.resettext([this.cdb.getName(num)]);
         audioInvoke("Book1");
       }else{
@@ -650,9 +634,6 @@
           let timg = parent.geneStrImg("kaihatsu_"+(i+1),txt[i]);//104(=26x4)x36
           timg.kaihatsutext = txt[i];
           timg.kaihatsurole = role[i];
-          /*timg.onclick = this.cfunc.bind(this);
-          timg.onmouseover = this.hfunc.bind(this);
-          timg.onmouseleave = this.hfunc.bind(this);*/
           set3func(timg,this,this.cfunc,this.hfunc);
           dbtn.appendChild(timg);
           dbtn.appendChild(document.createElement("BR"));
@@ -753,7 +734,6 @@
       let l1 = w1.length;
       let l2 = w2.length;
       let l0 = 12 - 2*l1 - l2;
-      //DBG//console.log("l0,l1,l2:"+[l0,l1,l2]);
       let w0="";
       while(l0-->0){w0 += " "}
       return w1+w0+w2;
@@ -782,7 +762,6 @@
       const tbl = generateElement(d,{type:"table",style:{width:"100%"}});
       const tblBody = generateElement(tbl,{type:"tbody"});
       const row = generateElement(tblBody,{type:"tr"});
-      //let gp = $gameParty.battleMembers(); // 配列
       let gp = ["内政開発","人材編成","遠征討伐","交易商売","街に戻る"];
       let n = gp.length;
       for (let i=0;i<n;i++) {
@@ -806,10 +785,7 @@
     mevent(e){
       e.stopPropagation();
       let id = "cell_"+e.target.id;
-      //if(this.previousid == id){return;}
-      //this.previousid = id;
       let p = document.getElementById(id);
-      //DBG//console.log(e.type);
       if(e.type=="mouseover"){
         this.parent.switch(e.target,1);
         p.style.backgroundColor = "#088";
@@ -1027,8 +1003,6 @@
       }
       let p = document.getElementById("kaihatsumap");
       p.style.display = (inp==0)? "none":"block";
-      //DBG//console.log("this.menFunc: "+this.menFunc);
-      //DBG//console.log(TouchInput.update);
       // リサイズ呼んでおく
       resizeKaihatsu();
       this.initdatashow();
@@ -1091,6 +1065,12 @@
     // テキストを画像にする関数、IMG要素でもらえる
     geneStrImg(sid,inptxt){
       return this.geneTagImg(sid,this.getImgSrcFromTEXT(inptxt));
+    }
+    updateStrImg(sid,inptxt){
+      let e = document.getElementById(sid);
+      if(e){
+        e.src = this.getImgSrcFromTEXT(inptxt);
+      }
     }
     // For Image.src
     getImgSrcFromTEXT(txt){

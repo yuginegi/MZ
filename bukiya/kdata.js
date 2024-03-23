@@ -77,8 +77,18 @@ class kmapdata{
         this.parlist[i]["stroke"] = st;
       }
     }
+    //[[20,20,1],[150,80,1],[270,140,1],[20,260,1]];
+    this.enelist = {
+      "rect3_1":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]],
+      "rect3_2":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]],
+      "rect3_3":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]],
+      "rect3_4":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]],
+      "rect3_5":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]]
+    }
   }
-  
+  getenelist(name){
+    return this.enelist[name];
+  }
   getNMfromMAPName(name){
     return this.mapname[name];
   }
@@ -165,6 +175,7 @@ class chardata{
   getpcharlist(s=0,e=20){
     let list = [];
     for(let i=s;i<e;i++){
+      if(i==5||i==7||i==14||i==17){continue;}//DEBUG//
       if($gameSwitches.value(21+i)==true){
         list.push(i);
       }
@@ -222,6 +233,8 @@ class charaDB{
     this.monimg.src = 'img/characters/'+monsrc+'.png';
     // ATTACKLIST
     this.attackhash = {};
+    // ATTACKAREA
+    this.attackarea = {};
   }
   getAttachRhash(tar=null){
     let h = {};
@@ -283,10 +296,9 @@ class charaImg{
     style:{"z-index":51,position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
     this.ctx = this.can.getContext("2d");
     // For Drag
-    if(draggable){
-      this.can.addEventListener("mousedown", this.func1.bind(this) ) ;
-      this.par = par;
-    }
+    this.can.addEventListener("mousedown", this.func1.bind(this) ) ;
+    this.draggable = draggable;
+    this.par = par;
     // loop
     this.tt = 0;
     setInterval(this.draw.bind(this),250);
@@ -315,12 +327,14 @@ class charaImg{
   }
   func1(event){
     console.log("func invoked.");
+    if(this.grayout){
+      console.log("grayout invoked.");
+      this.par.updateCharaPage(this.charaid);
+      return;
+    }
+    if(!this.draggable){return;}
     if(this.dragging==1){return;}
     this.dragging = 1;
-    // Original
-    //let ele = document.getElementById("ensei_div_txt");
-    //this.par.updateCharaPage(ele,this.charaid);
-    //setTimeout(this.mmove.bind(this),600);
     this.par.updateCharaPage(this.charaid);
     //要素内の相対座標を取得
     this.ox = event.pageX -this.xx;
@@ -339,10 +353,16 @@ class charaImg{
       ctx.fillStyle = "#0000FF80";
       ctx.fillRect(0,0,48,48);
     }
+    if(this.grayout){
+      ctx.globalAlpha  = 0.5;
+    }
     let ii = this.cid-1;
     let ll = [0,1,2,1]
     let [x,y]=[3*(ii%4)+ll[(this.tt++)%4], 4*Math.floor(ii/4)];
     ctx.drawImage(this.img,48*x,48*y,48,48,0,0,48,48);
+    if(this.grayout){
+      ctx.globalAlpha  = 1;
+    }
   }
 }
 class charaFace{
