@@ -40,7 +40,7 @@
     dv.style.backgroundColor = "#00FFFF";
     // dv.style.z-index は書けない。ハイフンがあるので。(引き算だと思ってしまう)
     dv.style["z-index"] = 10;
-    dv.style.position = "absolute"; //
+    dv.style.position = "absolute"; //"z-index"のためにも必要
     dv.innerHTML = "<P>HELLO WORLD!!</P>";
     document.body.appendChild(dv);
     console.log("<< HTML Insert");
