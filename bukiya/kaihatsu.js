@@ -17,12 +17,31 @@
  * 数字とカンマ区切りだけを半角で。
  * （例）2,15,16,17,18,19,20
  *
+* @command init
+ * @text 初期化テスト用
+ * @desc 
+ * テスト用に変数などの内部データを書き換えるタイミングとして使う
+ * 
  * @command enter
  * @text 玉座コマンド
  * @desc 
  * ループ変数を０にして実行します
  * そとでループして待機してください。
  * ループ変数を１にして返します
+ * 
+ * @command turnend
+ * @text ターンエンド
+ * @desc 
+ * 戦闘処理をします
+ * ループ変数にターン数を返します
+ * 
+ * @command turnrepo
+ * @text ターンエンド結果
+ * @desc 
+ * 戦闘処理の結果表示
+ * ループ変数を０にして実行します
+ * そとでループして待機してください。
+ * ループ変数にターン数を返します
  * 
  */
 
@@ -39,7 +58,8 @@
       this.imggg;
       this.imgsrc = 'img/pictures/Actor2_1.png';
       // CharaDB
-      this.cdb = new charaDB();
+      //this.cdb = new charaDB();
+      this.cdb = this.parent.cdb;
       this.invoke = 0;
       // 城データ
       let tar = this.parent.kjyodata;
@@ -182,11 +202,12 @@
       this.maindv;
       this.imggg;
       // CharaDB
-      this.cdb = new charaDB();
+      //this.cdb = new charaDB();
+      this.cdb = this.parent.cdb;
       // SkillDB
       this.skd = this.parent.chardata.skilldata;
       // メニューテキスト
-      this.mtxt = ["ステータス","戦闘スキル","レベルアップ","ヒストリー"];
+      this.mtxt = ["ステータス","所有スキル","レベルアップ","ヒストリー"];
     }
     init(pdiv){
       this.maindv = this.kmidwnd.createDIV(pdiv);
@@ -418,14 +439,14 @@
         case "tarinai":
           txt = [
             t[3]+"をすると、"+t[0],
-            "銀 "+t[1]+" と、実行力 "+t[2]+" を消費します。",
+            "銀 "+t[1]+" と、行動力 "+t[2]+" を消費します。",
             "\\C[2]資源が足りません。"
           ];
           break;
         case "tariru":
           txt = [
             t[3]+"をすると、\\C[1]"+t[0],
-            "\\C[2]銀 "+t[1]+" と、実行力 "+t[2]+" を消費します。",
+            "\\C[2]銀 "+t[1]+" と、行動力 "+t[2]+" を消費します。",
             "実行しますか？"
           ];
           break;
@@ -949,9 +970,11 @@
     }
     init(){
       // DB準備（Initよりも前に）
+      this.cdb = new charaDB(this);
       this.kjyodata = new kjyodata(); // 城
-      this.kmapdata = new kmapdata(); // マップデータ
+      this.kmapdata = new kmapdata(this); // マップデータ
       this.chardata = new chardata(); // 勇者商人データ
+      this.kturn  = new kturn(this);
       // Init処理
       this.mode = 0;
       this.menFunc = TouchInput.update; // 確保する。関数定義を持ってきた方が良いかもだが・・・
@@ -1080,6 +1103,19 @@
       let aa = generateTextBmp(txt);
       return aa.context.canvas.toDataURL();
     }
+    turnend(){
+      this.kturn.turnend();
+      this.kband.turnend();
+    }
+    turnrepo(){
+      this.kturn.turnrepo();
+    }
+    initfunction(){
+      // セット
+      this.kband = setClass2kband(this);
+      setClass2kband = {}; // 使い終わったので無効化
+      this.kband.init();
+    }
   }
 
   var current = document.currentScript.src;
@@ -1142,9 +1178,20 @@
   };
 
   /* PluginManager.registerCommand： 第１引数 は ファイル名！！ */
+  /* FUNC0 */
+  PluginManager.registerCommand(modname, "init", args => {
+    kaihatsu.initfunction(1); // INIT
+  });
   /* FUNC1 */
   PluginManager.registerCommand(modname, "enter", args => {
     kaihatsu.clickfuncCore(1); // 開発START
   });
-
+  /* FUNC2 */
+  PluginManager.registerCommand(modname, "turnend", args => {
+    kaihatsu.turnend(); // TURNEND
+  });
+  /* FUNC3 */
+  PluginManager.registerCommand(modname, "turnrepo", args => {
+    kaihatsu.turnrepo(); // TURNEND
+  });
 })();

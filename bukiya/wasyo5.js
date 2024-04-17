@@ -119,6 +119,11 @@ function audioInvoke(aid){
   const music = new Audio('audio/se/'+aid+'.ogg');
   music.play();
 }
+function audioMEInvoke(aid){
+  const music = new Audio('audio/me/'+aid+'.ogg');
+  music.play();
+}
+
 
 // CSSの追加
 (function(d){

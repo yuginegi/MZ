@@ -41,18 +41,19 @@ class kjyodata{
 }
 
 class kmapdata{
-  constructor(){
+  constructor(par){
+    this.parent = par;
     this.fcl = ["rgba( 33, 150, 234, 0.2 )","rgba( 234, 150, 150, 0.5 )"];
     this.scl = ["rgba( 0,255,255,1 )","rgba( 255,0,255,1 )"];
     let cl = this.fcl[0];//"rgba( 33, 150, 234, 0.5 )";
     let st = this.scl[0];//"rgba( 0,255,255,1 )"
+    // MAP
     this.parlist = [
-      {"id":"rect3_1","x":20,"y":10,"width":"100px","height":"100px","fill":cl
-    /*,"stroke":st*/},
-      {"id":"rect3_2","x":40,"y":190,"width":"100px","height":"100px","fill":cl},
-      {"id":"rect3_3","x":140,"y":70,"width":"100px","height":"100px","fill":cl},
-      {"id":"rect3_4","x":270,"y":120,"width":"100px","height":"100px","fill":cl},
-      {"id":"rect3_5","x":290,"y":10,"width":"100px","height":"100px","fill":cl},
+      {"id":"rect3_1","x":20, "y":10, "width":100,"height":100,"fill":cl},
+      {"id":"rect3_2","x":40, "y":190,"width":100,"height":100,"fill":cl},
+      {"id":"rect3_3","x":140,"y":70, "width":100,"height":100,"fill":cl},
+      {"id":"rect3_4","x":270,"y":120,"width":100,"height":100,"fill":cl},
+      {"id":"rect3_5","x":290,"y":10, "width":100,"height":100,"fill":cl},
     ];
     this.maptext = {
       "rect3_1":["ノーマ地方。平地が多く、人口が多い。","遠征不可"],
@@ -77,13 +78,104 @@ class kmapdata{
         this.parlist[i]["stroke"] = st;
       }
     }
+    /*** 敵の情報 ******/
     //[[20,20,1],[150,80,1],[270,140,1],[20,260,1]];
     this.enelist = {
-      "rect3_1":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]],
+      "rect3_1":[[270,260,1],[150,80,1],[270,140,1],[20,260,1],[20,20,1]],
       "rect3_2":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]],
       "rect3_3":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]],
       "rect3_4":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]],
       "rect3_5":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]]
+    }
+    this.enedata = {
+      "rect3_1":[
+        ["草原 1","ゴブリン","Goblin.png",0,100],
+        ["草原 2","クロウ","Crow.png",0,110],
+        ["草原 3","カニクラブ","Crab.png",0,120],
+        ["草原 4","ホーネット","Machinerybee.png",0,130],
+        ["ボスエリア","ドラゴン","Dragon.png",1,100],
+      ],
+    }
+    this.edetail = {
+      "rect3_1":[
+        {num:3,xx:[50,100,50],yy:[50,170,290],img:"Goblin.png"},
+        {num:3,xx:[50,150,250],yy:[50,170,50],img:"Crow.png"},
+        {num:3,xx:[50,100,50],yy:[50,170,290],img:"Crab.png"},
+        {num:3,xx:[50,100,200],yy:[50,170,50],img:"Machinerybee.png"},
+        {num:1,xx:[20],yy:[50],img:"Dragon.png"},
+      ],
+    };
+    this.enestatus =  {
+      "rect3_1":[
+        {type:"武",hp:100,mhp:100},
+        {type:"魅",hp:100,mhp:100},
+        {type:"武",hp:100,mhp:100},
+        {type:"魅",hp:100,mhp:100},
+        {type:"知",hp:100,mhp:100},  
+      ]
+    };
+  }
+  setEneStatus(name,id,key,val){
+    let enedt = this.enestatus;
+    if(enedt[name] && enedt[name][id]){
+      console.log(key,val,enedt[name][id],enedt[name][id][key])
+      enedt[name][id][key] = val;
+    }
+  }
+  getEneStatus(name,id){
+    let enedt = this.enestatus;
+    if(enedt[name] && enedt[name][id]){return enedt[name][id];}
+    return {type:"武",hp:100,mhp:100};
+  }
+  getEneImg(dv,eimg){
+    let sz = ("Dragon.png"==eimg) ? 300:150;
+    let par = {type:"div",style:{width:sz+"px",height:sz+"px",overflow:"hidden"}};
+    let div = generateElement(dv,par);
+    let im = document.createElement("img");
+    this.imgsize = sz;    
+    im.onload = () => {
+      if(im.width > this.imgsize){
+        im.width = this.imgsize;
+      } 
+    };
+    im.src = "img/enemies/"+eimg;
+    div.append(im);
+  }
+  getEneInfo(name,id){
+    let enedt = this.enedata;
+    if(enedt[name] && enedt[name][id]){return enedt[name][id];}
+    return ["草原 "+id,"ゴブリン","Goblin.png",100];
+  }
+  getEnePicts(dv,name,id){
+    console.log("getEnePicts:"+[name,id]);
+    let enedt = this.edetail;
+    let dt = (enedt[name] && enedt[name][id]) ? enedt[name][id] : {num:3,xx:[50,100,50],yy:[50,170,290],img:"Goblin.png"};
+    for(let i=0;i<dt.num;i++){
+      let [x,y] = [dt.xx[i],dt.yy[i]];
+      let par = {type:"img",src:"img/enemies/"+dt.img,style:{position:"absolute",left:x+"px",top:y+"px"}};
+      generateElement(dv,par);
+    }
+    let est = this.getEneStatus(name,id);
+    {
+      let [x,y,w,h] = [150,10,350,30];
+      let wlist = [w,w*(est.hp/est.mhp)];
+      let clist = ["#FF0000","#FFFF00"];
+      for(let i=0;i<2;i++){
+        let par = {type:"div",style:{
+          position:"absolute",left:x+"px",top:y+"px",width:wlist[i]+"px",height:h+"px",
+          background:clist[i]
+        }};
+        generateElement(dv,par);
+      }
+    }
+    {
+      let [x,y] = [10,10];
+      let par = {type:"div",style:{
+        position:"absolute",left:x+"px",top:y+"px"
+      }};
+      let dv0 = generateElement(dv,par);
+      let t = this.parent.geneStrImg(null,"HP "+est.hp);
+      dv0.appendChild(t);
     }
   }
   getenelist(name){
@@ -95,7 +187,7 @@ class kmapdata{
   getXYfromMAPName(name){
     let id = this.getidfromname(name);
     let e = this.parlist[id];
-    return [e["x"],e["y"]];
+    return [e["x"],e["y"],e["width"],e["height"]];
   }
   getidfromname(name){
     for(let i=0;i<5;i++){
@@ -141,6 +233,7 @@ class chardata{
       }}
       this.prernd2 = rnd;
       tar.imggg.src = 'img/pictures/'+imglist[rnd]+'.png';
+      return 10+rnd;
     }
     if(tar.wndid==1 || tar.wndid==2){ // 勇者
       let imglist = [
@@ -175,7 +268,7 @@ class chardata{
   getpcharlist(s=0,e=20){
     let list = [];
     for(let i=s;i<e;i++){
-      if(i==5||i==7||i==14||i==17){continue;}//DEBUG//
+      //if(i==5||i==7||i==14||i==17){continue;}//DEBUG//
       if($gameSwitches.value(21+i)==true){
         list.push(i);
       }
@@ -345,6 +438,8 @@ class charaImg{
   }
   setdraw(flag){
     this.setflag=flag;
+    this.tt--;
+    this.draw();
   }
   draw(){
     const ctx = this.ctx;
@@ -406,9 +501,15 @@ class charaStatusView{
       this.elist[i] = new charaStatus([350,80+50*i,msts[i],msts2[i],mtxt]);
       this.base.appendChild(this.elist[i].can);
     }
-
+    // 勇者用
+    if(id<10){
+      this.initBrave(id);
+    }
+  }
+  initBrave(id){
     // 武器防具
-    let bukibougu4 = ["武器LV4","アイスブリンガー","防具LV4","ドラゴンアーマー"]
+    //let bukibougu4 = ["武器LV4","アイスブリンガー","防具LV4","ドラゴンアーマー"]
+    let bukibougu4 = this.getWeapon(id);
     for(let i=0;i<4;i++){
       let mtxt = this.parent.geneStrImg(null,bukibougu4[i]);
       mtxt.style.position = "absolute"; 
@@ -449,6 +550,12 @@ class charaStatusView{
       ret[j] += ulist[i];
     }}
     return ret;
+  }
+  getWeapon(id){
+    let [wep,def] = this.parent.chardata.skilldata.weaponlv[id];
+    let wname = ["剣","ロングソード","ミスリルソード","ルーンブレイド","アイスブリンガー","ブレイブカリバー"];
+    let dname = ["鎧","ブロンズアーマー","ミスリルアーマー","ゴールドアーマー","ドラゴンアーマー","クリスタルメイル"];
+    return ["武器LV"+wep,wname[wep],"防具LV"+def,dname[def]];
   }
   textArrange(n,a,b,c){
     let w1 = toFullWidth(a);
@@ -519,9 +626,12 @@ class skillData{
   constructor(){
     // キャラごとに保存
     this.ulist = [];
+    this.weaponlv = [];
     for(let i=0;i<20;i++){
       this.ulist[i] = Array(50).fill(0);
+      this.weaponlv[i] = [0,0];//武器・防具
     }
+    
  
     // SkillMap
     this.skillInit();
@@ -538,17 +648,16 @@ class skillData{
     this.ico = new Image();
     this.ico.src = "img/system/IconSet.png";
   }
-  getulist(id){
-    return this.ulist[id];
-  }
+
   skillInit(){
     this.slist0 = [
       1,1,1,1,1,1,1,1,1,1,
       2,2,2,2,2,2,2,2,2,2,
       3,3,3,3,3,3,3,3,3,3,
-      6,6,7,7,8,8,9,9,10,10,
+      6,6,6,6,6,7,7,7,7,7,
       11,12,13,14,15,16,17,18,19,20
     ];
+    //6,6,7,7,8,8,9,9,10,10,
     
     this.slist10 = [
       4,4,4,4,4,4,4,4,4,4,
@@ -569,8 +678,14 @@ class skillData{
     this.skiilmsg = {
       1:"武を上げる",2:"知を上げる",3:"魅を上げる",
       4:"経を上げる",100:"産を上げる",5:"技を上げる",
+      6:"武器LV上げる",7:"防具LV上げる",
     };
   }
+
+  getulist(id){
+    return this.ulist[id];
+  }
+
   getslist(id){
     if(id==0){
       return this.slist0;
@@ -579,6 +694,23 @@ class skillData{
       return this.slist10;
     }
     return this.slist;
+  }
+
+  getWeaponSkillLV(id){
+    let slist = this.getslist(id);
+    let ulist = this.getulist(id);
+    let ret = [0,0];
+    for(let i=0;i<50;i++){
+      if(slist[i]==6){
+        ret[0] += ulist[i];
+        continue;
+      }
+      if(slist[i]==7){
+        ret[1] += ulist[i];
+        continue;
+      }
+    }
+    return ret;
   }
 }
 class skillTree{
@@ -759,7 +891,7 @@ class animationText{
      8:["明日への希望"],
      9:["剣聖"],
     };
-    return (txt[id].length>0)?txt[id]:null;
+    return (txt[id]&&txt[id].length>0)?txt[id]:null;
   }
   resettext(txt){
     this.txtlist = txt;

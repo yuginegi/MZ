@@ -38,21 +38,28 @@ class newWnd3{
     if(!target){return;}
     this.cdb.attackhash[id] = target;
     this.cdb.attackarea[id] = this.tarmap;
+    console.log("drawarrow:",this.tarmap,target);
+    let hh = this.kmapdata.getEneStatus(this.tarmap,target);
+    console.log("drawarrow:",hh);
+    let arrowid = "drawarrow"+id;
+    // arrowid
+    let e =document.getElementById(arrowid);
+    if(e){e.remove();}
+    if(hh.hp <=0){
+      return;
+    }
     let mm = 24;// = size/2
     let [cx,cy] = [10+50*id+mm,420+mm];
     let cc = this.enelist[target];
     let [ex,ey] = [cc[0]+mm,cc[1]+mm];
     let postxt = `M${cx},${cy} L${ex},${ey}`;//"M10,420 L50,10"
-    let arrowid = "drawarrow"+id;
-    let e =document.getElementById(arrowid);
-    if(e){e.remove();}
     let g = this.atkmapsvg;
     let par2 = {type:"path", id:arrowid,d:postxt};
     let g2 = generateSVG(g,par2);
     g2.style.pointerEvents = "none";
   }
   settarget(id,xx,yy){
-    console.log("settarget:"+[id,xx,yy]);
+    //console.log("settarget:"+[id,xx,yy]);
     let mg=50; // 両方とも左上の点だけ考える
     let target = -1;
     for(let i in this.enelist){
@@ -62,7 +69,7 @@ class newWnd3{
         target = i;
       }
     }
-    console.log("settarget:"+target);
+    //console.log("settarget:"+target);
     if(target>=0){
       this.drawarrow(id,target);
       this.updatetarget(target);
@@ -77,6 +84,7 @@ class newWnd3{
     let target = -1;
     for(let i in this.enelist){
       let cc = this.enelist[i];
+      if(!this.eimglist[i]){continue;}
       let [x0,x1,y0,y1] = [cc[0]-mg,cc[0]+mg,cc[1]-mg,cc[1]+mg];
       let ison = 0;
       if(x0<xx&&xx<x1&&y0<yy&&yy<y1){
@@ -89,13 +97,14 @@ class newWnd3{
   }
   updatetarget(id){
     for(let i in this.eimglist){
+      if(!this.eimglist[i]){continue;}
       let ison = (i==id) ? 1:0;
       this.eimglist[i].setdraw(ison);
     }
   }
   usertarget(id){
-    console.log("usertarget "+id);
-    console.log(this.charlist);
+    //console.log("usertarget "+id);
+    //console.log(this.charlist);
     for(let i in this.charlist){
       let ison = (i==id) ? 1:0;
       if(this.charlist[i]){
@@ -139,8 +148,8 @@ class newWnd3{
     let cz = canvasSize;
     let v = 2048/cz;
     console.log("map target = "+this.tarmap);
-    let [mapx,mapy] = this.kmapdata.getXYfromMAPName(this.tarmap);
-    ctx.drawImage(img,mapx*v,mapy*v,100*v,100*v,0,0,cz,cz);
+    let [mapx,mapy,mapW,mapH] = this.kmapdata.getXYfromMAPName(this.tarmap);
+    ctx.drawImage(img,mapx*v,mapy*v,mapW*v,mapH*v,0,0,cz,cz);
 
     let par1 = {type:'svg','id':'atkmap','viewbox':'0 0 500 450',"width":"500px","height":"450px"}
     let g1 = generateSVG(ele,par1);
@@ -163,10 +172,16 @@ class newWnd3{
     let cdb = this.cdb;
     // 敵の画像を(indexで → Flexibleに)
     let enelist = this.enelist;
-    let ii=1;
-    for(let ene of enelist){
-      let e = new enemyImg(cdb,ene,ii++);
-      this.eimglist.push(e);
+    let ii=0;
+    for(let i=0;i<enelist.length;i++){
+      let hh = this.kmapdata.getEneStatus(this.tarmap,i);
+      if(hh.hp<=0){
+        this.eimglist[i] = null;
+        continue;}
+      let ene = enelist[i]
+      let e = new enemyImg(cdb,ene,i);
+      //this.eimglist.push(e);
+      this.eimglist[i]=e;
       ele.append(e.can);
     }
     // 味方の画像を・勇者一覧
@@ -189,40 +204,67 @@ class newWnd3{
       generateElement(ele,par);
     }
   }
+  text6(a){
+    let l1 = a.length;
+    let l0 = 6 - l1;
+    let w0=a;
+    while(l0-->0){w0 += "Ｘ"}
+    return w0;
+  }
   // 敵の画面
   updatePage(id){
     if(this.currentenevieweid == id){return;}
     this.currentenevieweid = id;
-    this.updatetarget(id-1);
+    this.updatetarget(id);
     this.usertarget(-1);
-    let dv = document.getElementById("ensei_div_txt");
-    dv.innerHTML = "";
-    dv.classList.add("fadeIn");
+    let dv0 = document.getElementById("ensei_div_txt");
+    dv0.innerHTML = "";
+    dv0.classList.add("fadeIn");
     setTimeout(this.mmove.bind(this),600); // addとペア
     let t;
-    let im = document.createElement("img");
+    let dv = generateElement(dv0, {type:"div",style:{position:"relative"}});
+    // パラメータ this.tarmap
+    let [area,enm,eimg,etype,epow] = this.kmapdata.getEneInfo(this.tarmap,id);
     // エリア
-    t = this.parent.geneStrImg(null,"エリア：草原 "+id);
-    dv.append(t);
-    generateElement(dv, {type:"br"});
-    //画像
-    im.src = "img/enemies/Goblin.png";
-    dv.append(im);
-    generateElement(dv, {type:"br"});
-    // TEXT
-    t = this.parent.geneStrImg(null,"ゴブリン");
-    dv.append(t);
-    generateElement(dv, {type:"br"});
-    t = this.parent.geneStrImg(null,"戦力：１００");
-    dv.append(t);
-    let par = {type:"div",style:{width:"124px",height:"46px",paddingLeft:"18px",paddingTop:"8px",background:"#040"}};
-    let div = generateElement(dv,par);
+    let dv1 = generateElement(dv, {type:"div",style:{
+      position:"absolute", top:"0px"}});
+    t = this.parent.geneStrImg(null,"エリア："+area);
+    dv1.append(t);
+    // Info
+    if(etype==1){
+      //画像
+      let dv2 = generateElement(dv, {type:"div",style:{
+        position:"absolute", top:"50px"}});
+      this.kmapdata.getEneImg(dv2,eimg,etype);
+      let dv3 = generateElement(dv, {type:"div",style:{
+        position:"absolute", top:"285px",
+        background:"#00000080",width:"100%"}});
+      let txt = this.text6(enm) + " 戦力？？？";
+      t = this.parent.geneStrImg(null,txt);
+      dv3.append(t);
+    }else{
+      //画像
+      let dv2 = generateElement(dv, {type:"div",style:{
+        position:"absolute", top:"50px",left:"50px"}});
+      this.kmapdata.getEneImg(dv2,eimg,etype);
+      let dv3 = generateElement(dv, {type:"div",style:{
+        position:"absolute", top:"220px",left:"50px"}});
+      t = this.parent.geneStrImg(null,enm);
+      dv3.append(t);
+      generateElement(dv3, {type:"br"});
+      t = this.parent.geneStrImg(null,"戦力："+epow);
+      dv3.append(t);
+    }
     //　攻め込むボタン
+    let par = {type:"div",style:{width:"124px",height:"46px",
+      position:"absolute", top:"320px", left:"70px",
+      paddingLeft:"18px",paddingTop:"8px",background:"#040"}};
+    let div = generateElement(dv,par);
     t = this.parent.geneStrImg("eattack","　戦況　");//104x36
-    div.append(t);
-
     set3func(t,this,this.attackfunc);
+    div.append(t);
   }
+
   attackfunc(e){
     if(e.type=="click"){return this.attackclickfunc();}
     let ii = (e.type=="mouseover") ? 1:0;
@@ -240,19 +282,13 @@ class newWnd3{
     }};
     let dv = generateElement(document.getElementById("enseiwnd"),par);
     dv.classList.add("fadeIn");
-    //敵配置
-    let xx = [50,100,50];
-    let yy = [50,170,290];
-    for(let i=0;i<3;i++){
-      let [x,y] = [xx[i],yy[i]];
-      let par = {type:"img",src:"img/enemies/Goblin.png",style:{position:"absolute",left:x+"px",top:y+"px"}};
-      generateElement(dv,par);
-    }
-    //　味方を集める
-    let eid = this.currentenevieweid-1;
-    console.log("getAttachRhash:"+eid);
+
+    let eid = this.currentenevieweid;
     let hh = this.cdb.getAttachRhash(eid);
-    console.log("getAttachRhash:"+hh);
+    console.log("attackclickfunc:",this.tarmap,eid,hh,hh[eid]);
+    // 敵配置
+    this.kmapdata.getEnePicts(dv,this.tarmap,eid);
+    //　味方を集める
     let parlist = [];
     let poslist = [];
     if(hh[eid]){
@@ -275,6 +311,7 @@ class newWnd3{
       let e = new animationText(par);
       dv.append(e.can);
     }
+    // Closeボタン
     let ppp = {type:"div",textContent:"close",style:{
       position:"absolute",margin:"5px",padding:"2px 2px 2px 10px",left:"680px",top:"0px",
       width:"46px",height:"24px",backgroundColor:"#00F"
@@ -369,7 +406,8 @@ class kmidwnd3{
     this.imggg;
     this.imgsrc = 'img/pictures/Actor1_5.png';
     // CharaDB
-    this.cdb = new charaDB();
+    //this.cdb = new charaDB();
+    this.cdb = this.parent.cdb;
     // mapdata
     this.kmapdata = this.parent.kmapdata;
   }
@@ -464,6 +502,7 @@ class kmidwnd3{
     this.reset();
   }
   mclick(e){
+    if(this.enseitarget){return;}
     this.enseitarget = e.target.id;
     audioInvoke("Cursor3");
     let tar = this.parent.kmsgwnd;
