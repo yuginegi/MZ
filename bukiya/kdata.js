@@ -18,11 +18,13 @@
 
 class kjyodata{
   constructor(){
+    // ＜行動力は外部の数字＞
     this.psname = [
       "街・拠点","人口","銀","行動力",
       "農業","商業","技術","施設"
     ];
     this.psts = [20,10000,10000,100,110,120,130,140];
+    this.kome = 10000;
     console.log("kjyodata constructor");
   }
   bindMoneyFunc(tar){
@@ -34,9 +36,15 @@ class kjyodata{
   updMoney(val){
     this.psts[2] = val;
   }
-  // 行動力の回復
-  ResetActivePower(){
-    this.psts[3] = 100;
+  ReflectActivePower(){
+    let hh = $gameVariables.value(20);
+    console.log("ReflectActivePower:",this.psts[3], hh);
+    hh.ap  = this.psts[3]; // Update
+    $gameVariables.setValue(20, hh); // Write
+  }
+  initActivePower(){
+    let hh = $gameVariables.value(20);
+    this.psts[3] = hh.ap; // Read
   }
 }
 
@@ -107,11 +115,11 @@ class kmapdata{
     };
     this.enestatus =  {
       "rect3_1":[
-        {type:"武",hp:100,mhp:100},
-        {type:"魅",hp:100,mhp:100},
-        {type:"武",hp:100,mhp:100},
-        {type:"魅",hp:100,mhp:100},
-        {type:"知",hp:100,mhp:100},  
+        {type:"武",hp:100,mhp:100,atk:100},
+        {type:"魅",hp:100,mhp:100,atk:100},
+        {type:"武",hp:100,mhp:100,atk:100},
+        {type:"魅",hp:100,mhp:100,atk:100},
+        {type:"知",hp:100,mhp:100,atk:100},  
       ]
     };
   }
@@ -121,11 +129,6 @@ class kmapdata{
       console.log(key,val,enedt[name][id],enedt[name][id][key])
       enedt[name][id][key] = val;
     }
-  }
-  getEneStatus(name,id){
-    let enedt = this.enestatus;
-    if(enedt[name] && enedt[name][id]){return enedt[name][id];}
-    return {type:"武",hp:100,mhp:100};
   }
   getEneImg(dv,eimg){
     let sz = ("Dragon.png"==eimg) ? 300:150;
@@ -140,6 +143,11 @@ class kmapdata{
     };
     im.src = "img/enemies/"+eimg;
     div.append(im);
+  }
+  getEneStatus(name,id){
+    let enedt = this.enestatus;
+    if(enedt[name] && enedt[name][id]){return enedt[name][id];}
+    return {type:"武",hp:100,mhp:100,atk:100};
   }
   getEneInfo(name,id){
     let enedt = this.enedata;
@@ -207,7 +215,7 @@ class kmapdata{
   }
 }
 
-class chardata{
+class chardata{ // FROM kaihatsuclass
   constructor(){
     this.skilldata = new skillData();
     // For imagchange
@@ -280,7 +288,7 @@ class chardata{
   }
 }
 
-class charaDB{
+class charaDB{ // FROM kaihatsuclass
   constructor(){
     //-- Player ---
     this.namelist = [
@@ -300,6 +308,7 @@ class charaDB{
       /*+3*/"People1","People2","People3","People4",
       /*+7*/"SF_People1"
     ];
+    // 絵のパラメータ（０：imgfilelist、１："_X"）
     this.parlist = [
       [1,5],[2,2],[1,8],[3,1],[6,7],
       [2,7],[1,7],[3,4],[2,4],[3,2],
@@ -324,10 +333,28 @@ class charaDB{
     let monsrc = "SF_Monster";
     this.monimg = new Image();
     this.monimg.src = 'img/characters/'+monsrc+'.png';
-    // ATTACKLIST
+    // ATTACKLIST , ATTACKAREA
     this.attackhash = {};
-    // ATTACKAREA
     this.attackarea = {};
+    // キャラのパラメータ（武力、知力、魅力）
+    this.chapsts = {}; 
+    let cp = [
+    [7,5,5],[8,0,6],[0,8,6],[7,7,0],[10,0,0],
+    [5,7,5],[0,4,9],[0,10,0],[5,5,7],[4,0,9]
+    ];
+    for(let i=0;i<20;i++){
+      let sts ={};
+      sts["st"] = cp[i%10];
+      sts["hp"] = 10000;
+      this.chapsts[i] = sts;
+    }
+  }
+  getAttackAll(){
+    return [this.attackhash,this.attackarea];
+  }
+  setAttackData(id,h,a){
+    this.attackhash[id] = h;
+    this.attackarea[id] = a; 
   }
   getAttachRhash(tar=null){
     let h = {};
@@ -365,11 +392,13 @@ class charaDB{
     return this.monimg;
   }
   getStatus(id){
-    let sts = [
-      [7,5,5],[8,0,6],[0,8,6],[7,7,0],[10,0,0],
-      [5,7,5],[0,4,9],[0,10,0],[5,5,7],[4,0,9]
-    ];
-    return sts[id%10];
+    return this.chapsts[id]["st"];
+  }
+  getStatusHP(id){
+    return this.chapsts[id]["hp"];
+  }
+  setStatusHP(id,hp){
+    this.chapsts[id]["hp"] = hp;
   }
 }
 class charaAttackView{
@@ -475,12 +504,10 @@ class charaFace{
     ctx.clearRect(0,0,144,144);
     let ii = this.cid-1;
     let [x,y]=[(ii%4), Math.floor(ii/4)];
-    //console.log("draw:"+[ii,x,y]);
     ctx.drawImage(this.img,144*x,144*y,144,144,0,0,144,144);
   }
 }
 class charaStatusView{
-  //this.charatarget,this.cdb,b
   constructor(parent,tar,cdb,base){
     this.parent = parent;
     this.tar = tar;
@@ -636,7 +663,7 @@ class skillData{
     // SkillMap
     this.skillInit();
 
-    // icon
+    // icon（レベルアップのアイコン）
     this.iconpar = {
       1:[2,10],2:[5,10],3:[4,10],4:[3,10],5:[1,10],
       100:[0,10],

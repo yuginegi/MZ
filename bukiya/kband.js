@@ -85,106 +85,16 @@ function setClass2kband(par){
       this.kaihatsu = null;
       // For Special Initialize
       setClass2kband = this.setclass.bind(this);
-      // Data
-      this.textres = {
-        0:{
-          4:[
-            ["お疲れ様、イヌタロさん","すこしはお役に立ているだろうか",""],
-          ],
-          5:[
-            ["イヌタロさん","勇者というのは重責だな",""],
-            ["いや、弱気になってはいけない","世界を救う途中なのだから",""],
-            ["前に進むと、この剣に誓おう","東方の勇者の名に懸けて",""],
-          ],
-          6:[
-            ["イヌタロさん、いつもあなたはそばで支えてくれて","自分の背中を押してくれる",""],
-            ["それが自分の勇気を奮い立たせてくれる","困難があっても前に進ませてくれる",""],
-            ["これが自分の勇者としての道なんだ","みんなに支えてもらって前に進む","その力で切り拓く、それが勇者なんだ"],
-          ],
-        },
-        1:{
-          2:[
-            ["やほ、イヌタロさん","見て見て！強くなってるでしょ！",""],
-          ],
-          3:[
-            ["あ、イヌタロさん","わたし、重い武器を持つしか・・","取り柄がないから・・"],
-            ["うん、でも頑張る","ユウさんもイヌタロさんも頑張ってるし",""],
-            ["うん、できる事をしていこうって","そう、思ったから・・",""],
-          ]
-        },
-        2:{
-          2:[
-            ["イヌタロさん、こんにちわ","魔法が必要な時はいつでも教えてくださいね",""],
-          ],
-          3:[
-            ["イヌタロさん、こんにちわ・・","いえ、あの・・その・・","ちょっと、困ったことが"],
-            ["ユウさんが、その・・イケメン過ぎて・・","まともにお話できなくて・・",""],
-            ["イヌタロさんも素敵ですけど、まあでも、","イヌタロさんは何ともないんですけどね",""],
-          ],
-          4:[
-            ["逃げちゃダメだ・・逃げちゃダメだ・・","あ、お師様に教わったのを試してみよう","２，３，５，７，１１，１３・・",],
-          ],
-        },
-      };
-      this.textsp = {
-        0:{
-          6:[
-            ["ユウは勇者の心得を手に入れた","",""],
-            ["イヌタロとユウ、お互いに支えあい、補いあい","協力して困難に立ち向かう勇気","そしてみんなに与える希望"],
-            ["かたい絆がユウをまた一つ強くする","",""],
-          ],
-        }
-      };
+      // DATA
+      this.dhash = kbanddata;
       this.testinitval = [
         {name:"ユウ",exp:12,lv:3},
         {name:"セシリア",exp:23,lv:0},
-        {name:"アイリン",exp:11,lv:1}
+        {name:"アイリン",exp:11,lv:1},
       ];
     }
-    getCheck(id,lv){
-      if(this.textres[id] && this.textres[id][lv]){
-        return 1;
-      }
-      return 0;
-    }
-    getTextSP(cnt){
-      let text = this.textsp;
-      let [tar,lv] = this.kbandsts;
-      if(!text[tar]){
-        return ["DEFAULT TEXT"];
-      }
-      return text[tar][lv][cnt];
-    }
-    getText(cnt){
-      let text = this.textres;
-      let [tar,lv] = this.kbandsts;
-      if(!text[tar]){
-        return ["DEFAULT TEXT"];
-      }
-      return text[tar][lv][cnt];
-    }
-    getCount(){
-      let text = this.textres;
-      let [tar,lv] = this.kbandsts;
-      if(!text[tar]){
-        return 1;
-      }
-      return text[tar][lv].length;
-    }
-    setclass(par){
-      //DBG//console.log("setclass invoke.");
-      this.kaihatsu = par;
-      this.cdb = par.cdb;
-      //DBG//let nm = this.kaihatsu.name;
-      //DBG//console.log("setclass", nm);
-      return this;
-    }
-    init(){
-      console.log("init invoke.");
-      // テスト
-      let barr = this.testinitval;
-      $gameVariables.setValue(20, {ap:100,band:barr});
-    }
+
+    //=== バンドコマンド実施前判定 ====
     getband(){
       let vid = this.kaihatsu.ids[0];//ループ変数
       let id = $gameVariables.value(vid);
@@ -199,6 +109,7 @@ function setClass2kband(par){
       //res = (id%2==0)?res:-1; // メンバーの条件
       $gameVariables.setValue(25, res);
     }
+    //=== バンドコマンド ====
     kbandcmd(){
       // ループ変数 初期化
       let vid = this.kaihatsu.ids[0];//ループ変数
@@ -235,6 +146,11 @@ function setClass2kband(par){
       // とりいつもあげとく
       return 1;
     }
+    getCheck(id,lv){
+      let key = "c_"+id+"_"+lv;
+      let dt = this.dhash[key];
+      return (dt)?1:0;
+    }
     drawdiv(base,txt,x,y,w,h){
       let btndiv = generateElement(base, {type:"div",style:
       {position:"absolute",left:x+"px",top:y+"px",width:w+"px",height:h+"px"}
@@ -245,70 +161,7 @@ function setClass2kband(par){
       }
       return btndiv;
     }
-    /*candraw(){
-      let canvas = document.getElementById("kbandcanvas");
-      if(!canvas){
-        console.log("CANVAS LOOP break.");
-        return;
-      }
-      this.tm++;
-      const ctx = canvas.getContext("2d");
-      ctx.fillStyle = "blue";
-      ctx.fillRect(10+this.tm, 10, 100, 100);
-      setTimeout(this.candraw.bind(this), 1000/60.0);
-    }*/
-    cfunc(){
-      if(this.cfuncflag == 1){return;}
-      this.kaiwacnt++;
-      let cnt = this.getCount();
-      if(this.kaiwacnt >= cnt){
-        // 特別
-        let [tar,lv] = this.kbandsts;
-        if(tar==0 && lv==6){
-          if(this.kaiwacnt-cnt < 3){
-            if(this.kaiwacnt == cnt){
-              //{"code":241,"indent":1,"parameters":[{"name":"Scene4","volume":90,"pitch":100,"pan":0}]}
-              let params = [{"name":"Scene4","volume":90,"pitch":100,"pan":0}];
-              Game_Interpreter.prototype.command241(params);
-            }
-            audioInvoke("Cursor3");
-            this.setTextSP(this.kaiwacnt-cnt);
-          }else{
-            this.cfuncflag = 1;
-            //{"code":249,"indent":3,"parameters":[{"name":"Victory2","volume":90,"pitch":100,"pan":0}]}
-            //audioMEInvoke("Fanfare2");
-            let par = [{"name":"Fanfare2","volume":90,"pitch":100,"pan":0}]
-            Game_Interpreter.prototype.command249(par);
-            let e = document.getElementById("kbandarea");
-            let gwnd = document.getElementById("gameCanvas");
-            //gwnd = window;
-            let [gcw,gch] = [gwnd.width,gwnd.height];
-            let can = generateElement(e, {type:"canvas", id:"kbandcanvas", height:gch,width:gcw,
-            //style:{height:gch,width:gcw}
-            });
-            this.candraw = new candraw(can);
-            setTimeout(() => {
-              // 抜ける
-              console.log("END FLOW");
-              let vid = this.kaihatsu.ids[0];//ループ変数
-              $gameVariables.setValue(vid, 2);
-              let e = document.getElementById("kbandarea");
-              if(e){e.remove();}
-              delete this.candraw;
-            },10000);
-          }
-          return;
-        }
-        // 抜ける
-        console.log("END FLOW");
-        let vid = this.kaihatsu.ids[0];//ループ変数
-        $gameVariables.setValue(vid, 2);
-        document.getElementById("kbandarea").remove();
-        return;
-      }
-      audioInvoke("Cursor3");
-      this.setText();
-    }
+
     kbandshow(tarid){
       //let [gcw,gch] = [window.innerWidth,window.innerHeight];
       let gwnd = document.getElementById("gameCanvas");
@@ -350,36 +203,104 @@ function setClass2kband(par){
       dvt.style["border-width"]="10px";
       dvt.style.backgroundColor="#000000A0";
       dvt.style.padding="10px";
+      // テキスト表示エリア
       for(let i=0;i<3;i++){
         let timg = this.kaihatsu.geneStrImg("kbandtxt"+(i+1),""); //78x36
         dvt.appendChild(timg);
         generateElement(dvt, {type:"br"});
       }
       this.kaiwacnt = 0;
+      this.kaiwacur3 = false;
       // コントロールの位置
       this.cfuncflag = 0;
       div.onclick = this.cfunc.bind(this);
-      this.setText();
+      // 最初の実行
+      this.candraw = null;
+      this.cexec();
     }
-    setText(){
-      let cnt = this.kaiwacnt;
-      let ttt = this.getText(cnt);
-      for(let i=0;i<ttt.length;i++){
-        this.kaihatsu.updateStrImg("kbandtxt"+(i+1),ttt[i]);
+    cfunc(){
+      if(this.cfuncflag == 1){return;}
+      this.cexec();
+    }
+    cexec(){
+      let [tar,lv] = this.kbandsts;
+      let key = "c_"+tar+"_"+lv;
+      let dt = this.dhash[key];
+      let n = dt.length;
+      while(this.kaiwacnt < n){
+        let ttt = dt[this.kaiwacnt];
+        console.log(this.kaiwacnt,ttt)
+        this.kaiwacnt++;
+        if(ttt[0]=="text" || ttt[0]=="txsp"){
+          for(let i=0;i<ttt.length;i++){
+            let tx = (ttt[0]=="txsp" && ttt[i+1] && ttt[i+1].length > 0)?"\\C[1]"+ttt[i+1]:ttt[i+1];
+            this.kaihatsu.updateStrImg("kbandtxt"+(i+1), tx);
+          }
+          if(this.kaiwacur3){ // 初回は鳴らさない（特別）
+            audioInvoke("Cursor3");
+          }else{
+            this.kaiwacur3 = true;
+          }
+          return;
+        }
+        if(ttt[0]=="bgm"){
+          audioSwitchBGM(ttt[1]);
+          continue;
+        }
+        if(ttt[0]=="pup"){
+          this.cfuncflag = 1;
+          audioME("Fanfare2");
+          // CANVAS追加
+          let e = document.getElementById("kbandarea");
+          let gwnd = document.getElementById("gameCanvas");
+          let [gcw,gch] = [gwnd.width,gwnd.height];
+          let can = generateElement(e, {type:"canvas", id:"kbandcanvas", height:gch,width:gcw});
+          this.candraw = new candraw(can);
+          setTimeout(this.cendf.bind(this),10*1000);
+          return;
+        }
       }
+      // ここに来たら抜ける。breakせず、return か continue する。
+      this.cendf();
     }
-    setTextSP(cnt){
-      let ttt = this.getTextSP(cnt);
-      for(let i=0;i<ttt.length;i++){
-        let t = (ttt[i].length > 0)? "\\C[1]"+ttt[i] : "";
-        this.kaihatsu.updateStrImg("kbandtxt"+(i+1),t);
+    cendf(){
+      // 抜ける
+      console.log("END FLOW");
+      let vid = this.kaihatsu.ids[0];//ループ変数
+      $gameVariables.setValue(vid, 2);
+      document.getElementById("kbandarea").remove();
+      delete this.candraw
+    }
+
+/***************************************************************/
+    // 開発とやり取りするための特別処理
+    setclass(par){
+      console.log("setClass2kband.");
+      this.kaihatsu = par;
+      this.cdb = par.cdb;
+      return this;
+    }
+    // 初期化
+    init(){
+      console.log("init invoke.");
+      // テスト（初期値詰め）
+      let s = this.testinitval.length;
+      let e = 20;
+      for(let i=s;i<e;i++){
+        let nm = this.cdb.getName(i);
+        let hh = {name:nm,exp:0,lv:0};
+        this.testinitval.push(hh);
       }
+      $gameVariables.setValue(20, {ap:100,band:this.testinitval});
     }
+    // ターンエンド時の処理
     turnend(){
       console.log("kband turnend.");
       let hh = $gameVariables.value(20);
-      hh.ap = 100; // 特殊効果なし
+      hh.ap = 100; // 特殊効果なし時 １００。
       $gameVariables.setValue(20, hh);
+      let atxt = "行動力が回復した。("+hh.ap+")";
+      $gameVariables.setValue(25, atxt); // 行動力テキスト
     }
   }
 
@@ -387,6 +308,7 @@ function setClass2kband(par){
   let matchs = current.match(/([^/]*)\.js/);
   let modname = matchs.pop();
 
+  console.log("kband.js loaded.");
   const kband = new kbandclass();
 
   /* PluginManager.registerCommand： 第１引数 は ファイル名！！ */

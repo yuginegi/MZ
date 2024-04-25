@@ -43,6 +43,11 @@
  * そとでループして待機してください。
  * ループ変数にターン数を返します
  * 
+ * @command turncheck
+ * @text 攻撃設定しているかどうか
+ * @desc 
+ * ループ変数に有無を返します
+ * 
  */
 
 /* 相変わらずですけど、くそコードになってますm(__)m リファクタリング（ＴへＴ）*/
@@ -57,8 +62,6 @@
       this.maindv;
       this.imggg;
       this.imgsrc = 'img/pictures/Actor2_1.png';
-      // CharaDB
-      //this.cdb = new charaDB();
       this.cdb = this.parent.cdb;
       this.invoke = 0;
       // 城データ
@@ -78,6 +81,12 @@
         let val =  tar.psts[i];
         p[key] = val;
       }
+      //DBG//console.log("getpstatus2",p);
+      return p;
+    }
+    getpstatus3(){
+      let p = this.getpstatus1();
+      p["糧"] = this.parent.kjyodata.kome;
       return p;
     }
     init(pdiv){
@@ -166,7 +175,7 @@
     }
     updatemenu(){
       this.submenu(this.dvlist[0],this.getpstatus2());
-      this.submenu(this.dvlist[1],this.getpstatus1());
+      this.submenu(this.dvlist[1],this.getpstatus3());
     }
     menu(pdiv,parent,kwnd){
       let dvlist = [];
@@ -201,8 +210,6 @@
       this.parent = wnd.parent;
       this.maindv;
       this.imggg;
-      // CharaDB
-      //this.cdb = new charaDB();
       this.cdb = this.parent.cdb;
       // SkillDB
       this.skd = this.parent.chardata.skilldata;
@@ -974,7 +981,7 @@
       this.kjyodata = new kjyodata(); // 城
       this.kmapdata = new kmapdata(this); // マップデータ
       this.chardata = new chardata(); // 勇者商人データ
-      this.kturn  = new kturn(this);
+      //this.kturn  = new kturn(this);
       // Init処理
       this.mode = 0;
       this.menFunc = TouchInput.update; // 確保する。関数定義を持ってきた方が良いかもだが・・・
@@ -1009,12 +1016,14 @@
       e.stopPropagation();
       this.clickfuncCore(0); // 開発END
       // DBG : 行動力の回復
-      this.kjyodata.ResetActivePower();
+      //DBG//this.kjyodata.ResetActivePower();
+      // 出ていくときの初期化
+      this.kjyodata.ReflectActivePower();
     }
     clickfuncCore(inp){
       this.mode = inp;
       TouchInput.update = (this.mode==0) ? this.menFunc : this.mdsFunc;
-      console.log("clickfunc"+this.mode);
+      console.log("clickfuncCore",this.mode);
       this.kaihatsushow(this.mode);
       $gameVariables.setValue(this.ids[0], 1-inp);
     }
@@ -1022,13 +1031,21 @@
     kaihatsushow(inp){
       if(this.initflag==0){
         this.initCanvas();
-        this.initflag=1;
+        this.initflag=1;//一回しか呼ばれないようにするため
       }
       let p = document.getElementById("kaihatsumap");
       p.style.display = (inp==0)? "none":"block";
+      // ＜テスト0421＞出るときは以降呼ばなくてもいいんじゃないかな（’へ’）
+      if(inp==0){
+        return;
+      }
       // リサイズ呼んでおく
       resizeKaihatsu();
       this.initdatashow();
+      // 入るときの初期化、(inp==1)の時だけ！！
+      if(inp==1){
+        this.kjyodata.initActivePower();
+      }
       // 入るときの初期化
       this.kmidwnd.initpage();
     }
@@ -1103,6 +1120,15 @@
       let aa = generateTextBmp(txt);
       return aa.context.canvas.toDataURL();
     }
+    turncheck(){
+      let v = 1;
+      let [ah,area] = this.cdb.getAttackAll();// 有効なものを調べるため。。
+      console.log("turncheck:", area);
+      for(let k in area){
+        if(area[k]){v = 0;break;}
+      }
+      $gameVariables.setValue(this.ids[0], v);
+    }
     turnend(){
       this.kturn.turnend();
       this.kband.turnend();
@@ -1115,6 +1141,10 @@
       this.kband = setClass2kband(this);
       setClass2kband = {}; // 使い終わったので無効化
       this.kband.init();
+      // セット
+      this.kturn = setClass2kturn(this);
+      setClass2kturn = {}; // 使い終わったので無効化
+      this.kturn.init();
     }
   }
 
@@ -1142,7 +1172,7 @@
       let gc = document.getElementById("gameCanvas");
       let [ww,hh] = [gc.width,gc.height]; // 816x624
       let [sw,sh] = [parseInt(gc.style.width,10),parseInt(gc.style.height,10)];
-      console.log("gameCanvas:"+[ww,hh,sw,sh]);
+      //console.log("gameCanvas:"+[ww,hh,sw,sh]);
       // transform need ?
       if(sw!=ww && sh!=hh){
         let [ax,ay] = [(sw/ww),(sh/hh)];//[(ga[2]/w),(ga[3]/h)];
@@ -1186,6 +1216,7 @@
   PluginManager.registerCommand(modname, "enter", args => {
     kaihatsu.clickfuncCore(1); // 開発START
   });
+
   /* FUNC2 */
   PluginManager.registerCommand(modname, "turnend", args => {
     kaihatsu.turnend(); // TURNEND
@@ -1193,5 +1224,9 @@
   /* FUNC3 */
   PluginManager.registerCommand(modname, "turnrepo", args => {
     kaihatsu.turnrepo(); // TURNEND
+  });
+  /* FUNC4 */
+  PluginManager.registerCommand(modname, "turncheck", args => {
+    kaihatsu.turncheck(); // TURNEND
   });
 })();

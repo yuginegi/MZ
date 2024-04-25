@@ -44,8 +44,6 @@ class kmidwnd4{
     this.parent = wnd.parent;
     this.maindv;
     this.imggg;
-    // CharaDB
-    //this.cdb = new charaDB();
     this.cdb = this.parent.cdb;
     // SkillDB
     this.skd = this.parent.chardata.skilldata;
@@ -160,7 +158,7 @@ class kmidwnd4{
       dbtn.innerHTML="";
       //DBG//console.log("dbtn-2:"+dbtn.innerHTML);
       if(i < txt.length){
-        console.log("txt[i]:"+[i,txt[i]]);
+        //DBG//console.log("txt[i]:"+[i,txt[i]]);
         let timg = this.parent.geneStrImg("k4mn_"+(i+1),txt[i]);//104(=26x4)x36
         dbtn.appendChild(timg);
         dbtn.appendChild(document.createElement("BR"));

@@ -36,8 +36,7 @@ class newWnd3{
   drawarrow(id,target){
     console.log("drawarrow:"+[id,target]);
     if(!target){return;}
-    this.cdb.attackhash[id] = target;
-    this.cdb.attackarea[id] = this.tarmap;
+    this.cdb.setAttackData(id,target,this.tarmap)
     console.log("drawarrow:",this.tarmap,target);
     let hh = this.kmapdata.getEneStatus(this.tarmap,target);
     console.log("drawarrow:",hh);
@@ -160,8 +159,7 @@ class newWnd3{
     g2.style.pointerEvents = "none";
     this.atkmapsvg = g2; 
     // 矢印初期値
-    let hash = this.cdb.attackhash;
-    let area = this.cdb.attackarea;
+    let [hash,area] = this.cdb.getAttackAll();//有効なものがあれば描く
     for (let key in hash) {
       if(area[key] && area[key]!=this.tarmap){continue;}
       this.drawarrow(key,hash[key]);
@@ -186,7 +184,8 @@ class newWnd3{
     }
     // 味方の画像を・勇者一覧
     for(let i of this.parent.chardata.getpcharlist(0,10)){
-      let flag = (cdb.attackarea[i] && cdb.attackarea[i]!=this.tarmap) ? false:true;
+      let aa = cdb.attackarea[i];
+      let flag = (aa && aa != this.tarmap) ? false:true;
       let e = new charaImg(cdb, [10+50*i,420,i],flag,this);
       e.grayout = (flag)? null:1;
       this.charlist[i] = e;
@@ -369,8 +368,7 @@ class newWnd3{
     if(e.type=="click"){
       let tid = e.target.tarid;
       console.log("cancelFunc:"+tid);
-      this.cdb.attackhash[tid] = null;
-      this.cdb.attackarea[tid] = null;
+      this.cdb.setAttackData(tid,null,null)
       let ele = this.charlist[tid];
       ele.grayout = null;
       ele.draggable = true;
@@ -405,8 +403,6 @@ class kmidwnd3{
     this.maindv;
     this.imggg;
     this.imgsrc = 'img/pictures/Actor1_5.png';
-    // CharaDB
-    //this.cdb = new charaDB();
     this.cdb = this.parent.cdb;
     // mapdata
     this.kmapdata = this.parent.kmapdata;

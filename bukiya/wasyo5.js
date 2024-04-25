@@ -33,6 +33,18 @@
 * Utility Functions. (this funcs are global. take care impact)
 ***************************************************************/
 
+function rangeValue(r,r1,r2,v0,v1){
+  if(r1 > r2){
+    return rangeValue(r,r2,r1,v1,v0)
+  }
+  if(r <= r1){return v0;} // r=r1 => v0
+  if(r2 <= r){return v1;} // r=r2 => v1
+  // return v0 + ((r-r1)/(r2-r1))*(v1-v0); <= これであってる
+  // (Y-y0) = A(X-x0) => Y = A(X-x0)+y0
+  let A = (v1-v0)/(r2-r1);
+  return A*(r-r1) + v0;
+}
+
 // 関数を呼んだら、相手先のデータと処理をするように初期化
 function bindFuncListInit(tar,res,funclist){
   for(let cc of funclist){
@@ -115,15 +127,30 @@ function toFullWidth(inp) {
   return str;
 }
 
-function audioInvoke(aid){
+// For SE
+function audioInvoke(name,vol=90,pitch=100,pan=0){
+  let par = [{"name":name,"volume":vol,"pitch":pitch,"pan":pan}]
+  Game_Interpreter.prototype.command250(par);
+}
+function audioInvoke_old(aid){
   const music = new Audio('audio/se/'+aid+'.ogg');
   music.play();
 }
-function audioMEInvoke(aid){
-  const music = new Audio('audio/me/'+aid+'.ogg');
-  music.play();
-}
 
+// MEを再生するなら以下です。BGM停止してくれるので
+//  let par = [{"name":"Fanfare2","volume":90,"pitch":100,"pan":0}]
+//  Game_Interpreter.prototype.command249(par);
+function audioME(name,vol=90,pitch=100,pan=0){
+  let par = [{"name":name,"volume":vol,"pitch":pitch,"pan":pan}]
+  Game_Interpreter.prototype.command249(par);
+}
+// BGM切り替えは以下です。
+//  let params = [{"name":"Scene4","volume":90,"pitch":100,"pan":0}];
+//  Game_Interpreter.prototype.command241(params);
+function audioSwitchBGM(name,vol=90,pitch=100,pan=0){
+  let par = [{"name":name,"volume":vol,"pitch":pitch,"pan":pan}]
+  Game_Interpreter.prototype.command241(par);
+}
 
 // CSSの追加
 (function(d){
