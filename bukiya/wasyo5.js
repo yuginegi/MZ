@@ -68,6 +68,17 @@ function set3func2(tar,base,func1,func2=null,func3=null){
   tar.onmouseenter = func2.bind(base);
   tar.onmouseleave = func3.bind(base);
 }
+// children だけど、こっちのほうが 
+function removeAllChilds(p){
+  while( p && p.firstChild ){
+    p.removeChild( p.firstChild );
+  }
+}
+function removeAllChildsByID(id){
+  let b=document.getElementById(id);
+  removeAllChilds(b);
+  return b;
+}
 
 function generateElement(target,par){
   let ele = document.createElement(par.type);
@@ -132,21 +143,12 @@ function audioInvoke(name,vol=90,pitch=100,pan=0){
   let par = [{"name":name,"volume":vol,"pitch":pitch,"pan":pan}]
   Game_Interpreter.prototype.command250(par);
 }
-function audioInvoke_old(aid){
-  const music = new Audio('audio/se/'+aid+'.ogg');
-  music.play();
-}
-
 // MEを再生するなら以下です。BGM停止してくれるので
-//  let par = [{"name":"Fanfare2","volume":90,"pitch":100,"pan":0}]
-//  Game_Interpreter.prototype.command249(par);
 function audioME(name,vol=90,pitch=100,pan=0){
   let par = [{"name":name,"volume":vol,"pitch":pitch,"pan":pan}]
   Game_Interpreter.prototype.command249(par);
 }
 // BGM切り替えは以下です。
-//  let params = [{"name":"Scene4","volume":90,"pitch":100,"pan":0}];
-//  Game_Interpreter.prototype.command241(params);
 function audioSwitchBGM(name,vol=90,pitch=100,pan=0){
   let par = [{"name":name,"volume":vol,"pitch":pitch,"pan":pan}]
   Game_Interpreter.prototype.command241(par);

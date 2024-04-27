@@ -283,13 +283,15 @@ class newWnd3{
     dv.classList.add("fadeIn");
 
     let eid = this.currentenevieweid;
-    let hh = this.cdb.getAttachRhash(eid);
+    let hh = this.cdb.getAttachRhash(this.tarmap,eid);
     console.log("attackclickfunc:",this.tarmap,eid,hh,hh[eid]);
     // 敵配置
     this.kmapdata.getEnePicts(dv,this.tarmap,eid);
     //　味方を集める
     let parlist = [];
     let poslist = [];
+    // 表示用のパラメータ決め
+    //DBG//console.log(hh[eid]);
     if(hh[eid]){
       for(let ii of hh[eid]){
         let x1 = 500;
@@ -298,8 +300,10 @@ class newWnd3{
         let y2 = (poslist.length)*150+140;
         parlist.push([x1,y1,ii]);
         poslist.push([x2,y2,ii]);
+        if(parlist.length >= 3){break;}
       }
     }
+    //DBG//console.log(parlist);
     for(let par of parlist){
       if(!this.parent.chardata.isCharFlag(21+par[2])){continue;}
       let e = new charaFace(this.cdb, par);
@@ -408,15 +412,31 @@ class kmidwnd3{
     this.kmapdata = this.parent.kmapdata;
   }
   init(pdiv){
-    this.maindv = this.kmidwnd.createDIV(pdiv);
-    this.menu(this.maindv,this.parent,this.kmidwnd);
+    let [maindv,dv,p] = this.kmidwnd.createDIV2(pdiv,this.imgsrc);
+    this.maindv = maindv;
+    this.imggg = p;
+    this.menu(dv);
     return 0;
   }
   initpage(){
     console.log("kmidwnd3 initpage invoke.");
     this.reset();
   }
-  menu(pdiv,parent,kwnd){
+  menu(dv){
+    let par = {type:'svg','id':'enseimap','viewbox':'0 0 400 300',"width":"400px","height":"300px"}
+    let svg = generateSVG(dv,par);
+    // 地図の画像
+    let pmap = {type:'image',"href":'img/0img/map.jpg',"x":0,"y":0,"width":"400px","height":"300px"}
+    generateSVG(svg,pmap);
+    // 地図に置く四角
+    let parlist = this.kmapdata.parlist;
+    for(let pp of parlist){
+      pp.type = "rect";
+      let p = generateSVG(svg,pp);
+      set3func(p,this,this.mclick,this.mevent);
+    }
+  }
+  menu_org(pdiv,parent,kwnd){
     let dvlist = [];
     {
       let childWidth = ["400px","320px"];

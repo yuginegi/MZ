@@ -91,8 +91,10 @@
     }
     init(pdiv){
       console.log("kmidwnd5 init invoke.");
-      this.maindv = this.kmidwnd.createDIV(pdiv);
-      this.menu(this.maindv,this.parent,this.kmidwnd);
+      let [maindv,dv,p] = this.kmidwnd.createDIV2(pdiv,this.imgsrc);
+      this.maindv = maindv;
+      this.imggg = p;
+      this.menu(dv);
       return 0;
     }
     initpage(){
@@ -167,7 +169,7 @@
       let kwnd = this.kmidwnd;
       let i=1;
       for(let key in psts){
-        let str = kwnd.text8(key,psts[key]);
+        let str = kwnd.text82(key,psts[key]);
         let p = parent.geneStrImg("st"+(i++), str);
         dv.appendChild(p);
         dv.appendChild(document.createElement("BR"));
@@ -177,7 +179,23 @@
       this.submenu(this.dvlist[0],this.getpstatus2());
       this.submenu(this.dvlist[1],this.getpstatus3());
     }
-    menu(pdiv,parent,kwnd){
+    menu(pdiv){
+      pdiv.style.display = "flex";
+      //pdiv.style.padding = "4px";
+      this.dvlist = [];
+      {
+        let childWidth = ["200px","200px"];
+        let childPadng = ["4px","4px"];
+        for(let i=0;i<childWidth.length;i++){
+          let dv = generateElement(pdiv,{type:"div",id:"kmidwnd5_"+(i+1),style:{
+            width:childWidth[i],padding:childPadng[i],overflow:"hidden"
+          }});
+          this.dvlist.push(dv);
+        }
+      }
+      this.updatemenu();
+    }
+    menu_org(pdiv,parent,kwnd){
       let dvlist = [];
       {
         let childWidth = ["200px","200px","320px"];
@@ -217,8 +235,12 @@
       this.mtxt = ["ステータス","所有スキル","レベルアップ","ヒストリー"];
     }
     init(pdiv){
-      this.maindv = this.kmidwnd.createDIV(pdiv);
-      this.kaihatsutyu();
+      let [maindv,dv,p] = this.kmidwnd.createDIV2(pdiv,this.imgsrc);
+      this.maindv = maindv;
+      dv.id = "kwnd2base"; // For RightMove
+      dv.style.position = "relative";
+      this.imggg = p;
+      this.kaihatsutyu(dv);
       return 0;
     }
     initpage(type){
@@ -234,10 +256,7 @@
       //d.style.display = "block";
       d.classList.remove("kwnd2u1");
       this.selected = null;
-      let b = document.getElementById("kwnd2base3");
-      while( b && b.firstChild ){
-        b.removeChild( b.firstChild );
-      }
+      removeAllChildsByID("kwnd2base3");
       this.updatelist(document.getElementById("kwnd2_list"));
       this.ecan.txtlist = null;
       this.ecan.can.style.left = "500px";
@@ -246,9 +265,7 @@
       this.parent.switchexp("mid2");
     }
     updatelist(dv){
-      while( dv && dv.firstChild ){
-        dv.removeChild( dv.firstChild );
-      }
+      removeAllChilds(dv);
       let p = this.parent.geneStrImg("kwnd2_listxt", "勇者一覧");
       dv.appendChild(p);
       // 勇者・商人一覧
@@ -260,43 +277,15 @@
         dv.append(tar);
       }
     }
-    kaihatsutyu(){
-      let pdiv = this.maindv;
-      let parent = this.parent;
-      let dvlist = [];
-      {
-        let childWidth = ["400px","320px"];
-        let childPadng = ["0px","5px"];
-        for(let i=0;i<childWidth.length;i++){
-          let dv = generateElement(pdiv,{type:"div",style:{
-            width:childWidth[i],padding:childPadng[i],overflow:"hidden",position:"relative"
-          }})
-          dvlist.push(dv);
-        }
-      }
-      // 領域
-      {
-        let dv = dvlist[0];
-        dv.id = "kwnd2base";
-        let dd = generateElement(dv,{type:"div",id:"kwnd2_list",style:{padding:"10px"}})
-        this.updatelist(dd);
-      }
-
-      // 画像の表示領域
-      {
-        let dv = dvlist[1];
-        let p = parent.geneTagImg("kaihatsuchara",this.imgsrc);
-        p.classList.add("CharaShadow");
-        dv.appendChild(p);
-        this.imggg = p;
-      }
-
-      // キャラステータス
+    kaihatsutyu(dv){
+      // キャラリスト
+      let dd = generateElement(dv,{type:"div",id:"kwnd2_list",style:{padding:"10px"}});
+      this.updatelist(dd);
+      // あとでここに入れるよう
       generateElement(this.maindv,{type:"div",id:"kwnd2base3",style:{padding:"10px"}});
 
-      // キャラ名
+      // キャラ名（cfuncで絶対位置移動）
       {
-        //let p = this.maindv
         let p = generateElement(this.maindv,{type:"div",id:"kwnd2base4"});
         this.ecan = new animationText([500,370,0]);
         let e = this.ecan;
@@ -307,33 +296,25 @@
     }
 
     viewpage2(){
-      let b = document.getElementById("kwnd2base3");
-      while( b && b.firstChild ){
-        b.removeChild( b.firstChild );
-      }
-      // メニュー
-      let e = new skillTree(this.parent,this.skd,this.cdb,this.charatarget);
-      b.appendChild(e.can);
+      let b = removeAllChildsByID("kwnd2base3");
+      new skillTree(b,this.parent,this.skd,this.cdb,this.charatarget);
     }
 
     viewpage0(){
-      let b = document.getElementById("kwnd2base3");
-      while( b && b.firstChild ){
-        b.removeChild( b.firstChild );
-      }
+      let b = removeAllChildsByID("kwnd2base3");
       this.stview = new charaStatusView(this.parent,this.charatarget,this.cdb,b);
     }
-
+    // cfuncのclickで呼ばれる
     newwnd(){
-      //this.maindv
       let base = document.getElementById("kwnd2base3");
+      // メニューを設置する
       for(let i=0;i<this.mtxt.length;i++){
         let p = generateElement(base,{type:"div",classList_add:"kwnd2u2",id:"kwnd2base3m_"+i,
           style:{"animation-duration":((1*i+5)/10)+"s",padding:"5px 5px 0px 40px","z-index":15,
             position:"absolute",left:"400px",top:90+80*i+"px",width:"200px",height:"40px",background:"#008"}  
           }
         );
-        let menu = this.text8(this.mtxt[i]);
+        let menu = this.kmidwnd.text8(this.mtxt[i]);
         let tar = this.parent.geneStrImg(null,menu);
         tar.tarid = String(i);
         set3func(tar,this,this.cfunc2);
@@ -342,13 +323,6 @@
       // 戻る を出す
       let tar = this.parent.kmsgwnd;
       tar.BKwnd(this,this.resetpage);
-    }
-    text8(a){
-      let l1 = a.length;
-      let l0 = 7 - l1;
-      let w0=a;
-      while(l0-->0){w0 += "　"}
-      return w0;
     }
     chgmsg(ii){
       let tar = this.parent.kmsgwnd;
@@ -464,8 +438,10 @@
       tar.setText(txt);  
     }
     init(pdiv){
-      this.maindv = this.kmidwnd.createDIV(pdiv);
-      this.kkk();
+      let [maindv,dv,p] = this.kmidwnd.createDIV2(pdiv,this.imgsrc);
+      this.maindv = maindv;
+      this.imggg = p;
+      this.kkk(dv);
       return 0;
     }
     initpage(){
@@ -575,7 +551,24 @@
         tar.setText(txt);
       }
     }
-    kkk(){
+    kkk(dv){
+      //let dv = dvlist[0];
+      let pdiv = generateElement(dv,{type:"div",style:{
+        overflow:"hidden",height:"185px",backgroundColor:"#000"
+      }})
+      let pdiv2 = generateElement(dv,{type:"div",style:{
+        display:"flex",overflow:"hidden",height:"165px",backgroundColor:"#00FFFF40"
+      }})
+      // パラメータ
+      let list1 = this.gentable(pdiv,"kpsts",4,2);
+      this.setPsts(list1);
+
+      // 選択コマンド
+      let list2 = this.gentable(pdiv2,"ktbl2",2,2);
+      this.setbtn2(list2);
+      this.targetfunc = "";
+    }
+    kkk_org(){
       let pdiv = this.maindv;
       let parent = this.parent;
       let dvlist = [];
@@ -719,9 +712,33 @@
       this.divlist[ii].initpage();
       this.parent.switchexp(id);
     }
-    createDIV(pdiv){
+    /*createDIV(pdiv){
       let par = {type:"div",style:{display:"none",width:"100%",height:"100%",backgroundColor:"#000"}};
       return generateElement(pdiv,par);
+    }*/
+    createDIV2(target,imgsrc){
+      let par = {type:"div",style:{display:"none",width:"100%",height:"100%",backgroundColor:"#000"}};
+      let pdiv = generateElement(target,par);
+      let parent = this.parent;
+      let dvlist = [];
+      {
+        let childWidth = ["400px","320px"];
+        let childPadng = ["0px","5px"];
+        for(let i=0;i<childWidth.length;i++){
+          let dv = generateElement(pdiv,{type:"div",style:{
+            width:childWidth[i],padding:childPadng[i],overflow:"hidden"
+          }})
+          dvlist.push(dv);
+        }
+      }
+
+      // 画像の表示領域
+      let dv = dvlist[1];
+      let p = parent.geneTagImg("kaihatsuchara",imgsrc);
+      p.classList.add("CharaShadow");
+      dv.appendChild(p);
+      //this.imggg = p;
+      return [pdiv,dvlist[0],p];
     }
     switchPage(cc,type){
       cc.maindv.style.display = (type==0) ? "none" : "flex";
@@ -756,7 +773,14 @@
         parent.kmsgwnd.switchpage();
       }
     }
-    text8(a,b){
+    text8(a){
+      let l1 = a.length;
+      let l0 = 7 - l1;
+      let w0=a;
+      while(l0-->0){w0 += "　"}
+      return w0;
+    }
+    text82(a,b){
       let w1 = toFullWidth(a);
       let w2 = String(b);
       let l1 = w1.length;

@@ -109,8 +109,6 @@ class kturnclass{
     btndiv.onclick = this.cfunc.bind(this);
     this.drawdiv(div,"\\C[1]戦闘結果："+this.turn+"ターン",20,10,300,300)
     // 勇者・商人一覧
-    //let charlist = [0,1,2,4,5,7,8,9];
-    //let charlist = Object.keys(this.atklogs).map((x)=>{return Number(x)});
     for(let i of charlist){
       let n = 10;
       let par = [10+60*(i%n),60+75*Math.floor(i/n),i];
@@ -170,8 +168,7 @@ class kturnclass{
     };
     for(let k in ht){
       this.par.updateStrImg(k,ht[k]);
-    }
-    
+    }   
   }
   drawdiv(base,txt,x,y,w,h){
     let btndiv = generateElement(base, {type:"div",style:
@@ -215,75 +212,12 @@ class kturnclass{
       }
 
       //敵の能力を得る
-      /*
-      //let e = this.kmapdata.getenelist(a);
-      //console.log(a,h,e,e[h]);
-      let [area,enm,eimg,etype,epow] = this.kmapdata.getEneInfo(a,h);
-      //console.log(area,enm,eimg,etype,epow);
-      atklog["area"] = area;
-      atklog["enm"]  = enm;
-      */
       [atklog["area"],atklog["enm"],] = this.kmapdata.getEneInfo(a,h);
-
-      //敵の能力を得る
-      //let est = this.kmapdata.getEneStatus(a,h);
-      //console.log(est);
-
       // 味方の攻撃力を得る
       [atklog["atk"]] = this.turnendAtk(i,a,h,gekiha);
-      /*
-      if(1){
-        [atklog["atk"]] = this.turnendAtk(i,est,a,h);
-      }else{
-        let s0 = this.cdb.getStatus(i);
-        let s1 = this.getSkillExt(i);
-        console.log("st:",s0,s1);
-        let pb = this.getSkillWep(i);
-        let pbase = 1 + 0.1*pb[0]; // 武器効果
-        console.log(pb,pbase);
-        let wp = this.getWP(est.type);
-        // ダメージ計算
-        let pw=0;
-        for(let i=0;i<3;i++){
-          let pp = wp[i]*(s0[i]+s1[i]);
-          console.log(i,"pw:"+pp);
-          pw += pp;
-        }
-        // 実際の攻撃力（与ダメ）
-        atklog["atk"] = Math.floor(pw*pbase);
-        // 敵ＨＰ計算
-        let nhp = est.hp - atklog["atk"];
-        console.log("HP:",est.hp,nhp);
-        this.kmapdata.setEneStatus(a,h,"hp",(nhp>0)?nhp:0);
-        if(nhp <= 0){
-          nhp = 0;
-          let key = a+"_"+h;
-          gekiha[key] = [a,h];
-        }
-      }*/
-
       // 被ダメ(勇者がダメージを受ける)
       [atklog["dmg"],atklog["lhp"]] = this.turnendDef(i,a,h,aa,ah);
-      /*
-      if(1){
-        [atklog["dmg"],atklog["lhp"]] = this.turnendDef(i,est,a,h,aa,ah);
-      }else{
-        let partyNums = 0;
-        for(let ii in aa){
-          let [ai,hi] = [aa[ii],ah[ii]];
-          if(ai==a&&hi==h){partyNums++;}
-        }
-        let pn = rangeValue(partyNums,1,3,1,3); // 1or2or3
-        let c1 = this.cdb.getStatusHP(i);
-        let pb = this.getSkillWep(i);
-        let pbase = 1 + 0.1*pb[1]; // 防具効果
-        console.log(est.atk,c1,partyNums,pn);
-        let dmg = Math.floor((est.atk/pn)/pbase);
-        let dhp = c1-dmg;
-        atklog["dmg"] = dmg;//(50+10*i);
-        atklog["lhp"] = dhp;//(1000-50*i);
-        this.cdb.setStatusHP(i,dhp);
-      }*/
+
       this.atklogs[i] = atklog;
     } //===  for(let i in aa) ===
     for(let kk in gekiha){
@@ -305,23 +239,23 @@ class kturnclass{
     let est = this.kmapdata.getEneStatus(a,h);
     let s0 = this.cdb.getStatus(i);
     let s1 = this.getSkillExt(i);
-    console.log("st:",s0,s1);
+    //DBG//console.log("st:",s0,s1);
     let pb = this.getSkillWep(i);
     let pbase = 1 + 0.1*pb[0]; // 武器効果
-    console.log(pb,pbase);
+    //DBG//console.log(pb,pbase);
     let wp = this.getWP(est.type);
     // ダメージ計算
     let pw=0;
     for(let i=0;i<3;i++){
-      let pp = wp[i]*(s0[i]+s1[i]);
-      console.log(i,"pw:"+pp);
+      let pp = wp[i]*(s0[i]+s1[i])*(s0[i]+s1[i]);
+      //DBG//console.log(i,"pw:"+pp);
       pw += pp;
     }
     // 実際の攻撃力（与ダメ）
     let atk = Math.floor(pw*pbase);
     // 敵ＨＰ計算
     let nhp = est.hp - atk;//atklog["atk"];
-    console.log("HP:",est.hp,nhp);
+    //DBG//console.log("HP:",est.hp,nhp);
     this.kmapdata.setEneStatus(a,h,"hp",(nhp>0)?nhp:0);
     if(nhp <= 0){
       nhp = 0;
@@ -342,11 +276,9 @@ class kturnclass{
     let c1 = this.cdb.getStatusHP(i);
     let pb = this.getSkillWep(i);
     let pbase = 1 + 0.1*pb[1]; // 防具効果
-    console.log(est.atk,c1,partyNums,pn);
+    //DBG//console.log(est.atk,c1,partyNums,pn);
     let dmg = Math.floor((est.atk/pn)/pbase);
     let dhp = c1-dmg;
-    //atklog["dmg"] = dmg;//(50+10*i);
-    //atklog["lhp"] = dhp;//(1000-50*i);
     this.cdb.setStatusHP(i,dhp);
     return [dmg,dhp]
   }

@@ -51,8 +51,12 @@ class kmidwnd4{
     this.merchant = new merchantMenu();
   }
   init(pdiv){
-    this.maindv = this.kmidwnd.createDIV(pdiv);
-    this.newwnd4_0();
+    let [maindv,dv,p] = this.kmidwnd.createDIV2(pdiv,this.imgsrc);
+    this.maindv = maindv;
+    dv.id = "kwnd4base";
+    dv.style.position = "relative";
+    this.imggg = p;
+    this.newwnd4_0(dv);
     return 0;
   }
   initpage(type){
@@ -69,10 +73,7 @@ class kmidwnd4{
     //d.style.display = "block";
     d.classList.remove("kwnd2u1");
     this.selected = null;
-    let b = document.getElementById("kwnd4base3");
-    while( b && b.firstChild ){
-      b.removeChild( b.firstChild );
-    }
+    removeAllChildsByID("kwnd4base3");
     this.updatelist(document.getElementById("kwnd4_list"));
     this.ecan.txtlist = null;
     this.ecan.can.style.left = "500px";
@@ -81,9 +82,7 @@ class kmidwnd4{
     this.parent.switchexp("mid2");
   }
   updatelist(dv){
-    while( dv && dv.firstChild ){
-      dv.removeChild( dv.firstChild );
-    }
+    removeAllChilds(dv);
     let p = this.parent.geneStrImg("kwnd4_listxt", "商人一覧");
     dv.appendChild(p);
     // 商人一覧
@@ -95,40 +94,11 @@ class kmidwnd4{
       dv.append(tar);
     }
   }
-  newwnd4_0(){
-    let pdiv = this.maindv;
-    let parent = this.parent;
-    let dvlist = [];
-    {
-      let childWidth = ["400px","320px"];
-      let childPadng = ["0px","5px"];
-      for(let i=0;i<childWidth.length;i++){
-        let dv = generateElement(pdiv,{type:"div",style:{
-          width:childWidth[i],padding:childPadng[i],overflow:"hidden",position:"relative"
-        }})
-        dvlist.push(dv);
-      }
-    }
+  newwnd4_0(dv){
     // 領域
-    {
-      let dv = dvlist[0];
-      dv.id = "kwnd4base";
-      let dd = generateElement(dv,{type:"div",id:"kwnd4_list",style:{padding:"10px"}})
-      this.updatelist(dd);
-    }
-
-    // 画像の表示領域
-    {
-      let dv = dvlist[1];
-      let p = parent.geneTagImg("kaihatsuchara",this.imgsrc);
-      p.classList.add("CharaShadow");
-      dv.appendChild(p);
-      this.imggg = p;
-    }
-    // 選択コマンド
-    let list2 = this.gentable(dvlist[0],"ktbl4_2",2,2);
-    this.setblock(list2);
-
+    let dd = generateElement(dv,{type:"div",id:"kwnd4_list",style:{
+      padding:"10px"}})
+    this.updatelist(dd);
     // キャラステータス
     generateElement(this.maindv,{type:"div",id:"kwnd4base3",style:{padding:"10px"}});
 
@@ -141,7 +111,11 @@ class kmidwnd4{
       e.id = "kwnd4base4txt";
       p.append(e.can);
     }
+    // 選択コマンド
+    let list2 = this.gentable(dv,"ktbl4_2",2,2);
+    this.setblock(list2);
   }
+
   setMtxt(id){
     this.mmtxt = this.merchant.getMenu(id);
     return this.mmtxt;
@@ -175,11 +149,6 @@ class kmidwnd4{
         margin:"2px 5px",padding:"2px 10px",
         width:"104px",height:"36px",background:"#000"
       }});
-      /*
-      let timg = this.parent.geneStrImg("k4mn_"+(i+1),"XXX");//104(=26x4)x36
-      dbtn.appendChild(timg);
-      dbtn.appendChild(document.createElement("BR"));
-      */
     }
   }
   gentable(pdiv,prefix,nr,nc){
@@ -216,7 +185,7 @@ class kmidwnd4{
           position:"absolute",left:"400px",top:90+80*i+"px",width:"200px",height:"40px",background:"#008"}  
         }
       );
-      let menu = this.text8(mmtxt[i]);
+      let menu = this.kmidwnd.text8(mmtxt[i]);
       let tar = this.parent.geneStrImg(null,menu);
       tar.tarid = String(i);
       set3func(tar,this,this.cfunc2);
@@ -226,23 +195,13 @@ class kmidwnd4{
     let tar = this.parent.kmsgwnd;
     tar.BKwnd(this,this.resetpage);
   }
-  text8(a){
-    let l1 = a.length;
-    let l0 = 7 - l1;
-    let w0=a;
-    while(l0-->0){w0 += "　"}
-    return w0;
-  }
   chgmsg(ii){
     let tar = this.parent.kmsgwnd;
     tar.setText([this.mmtxt[ii]]);
   }
 
   viewpage0(type){
-    let b = document.getElementById("kwnd4base3");
-    while( b && b.firstChild ){
-      b.removeChild( b.firstChild );
-    }
+    let b = removeAllChildsByID("kwnd4base3");
     this.stview = new merchantView(this.parent,this.charatarget,this.cdb,b,type);
   }
   getMenu(ii,str){
@@ -325,10 +284,7 @@ class merchantView{
     this.reset(this.parent.kmsgwnd);
   }
   addSelectMember(dv){
-    while( dv && dv.firstChild ){
-      dv.removeChild( dv.firstChild );
-    }
-    //let txt = ["武器開発","メンバーを選んでください"];
+    removeAllChilds(dv);
     let txt = [this.tp.type,"メンバーを選んでください"];
     for(let i=0;i<txt.length;i++){
       let p = this.parent.geneStrImg("kwnd4mm_listtxt"+i, txt[i]);

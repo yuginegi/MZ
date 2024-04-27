@@ -115,18 +115,18 @@ class kmapdata{
     };
     this.enestatus =  {
       "rect3_1":[
-        {type:"武",hp:100,mhp:100,atk:100},
-        {type:"魅",hp:100,mhp:100,atk:100},
-        {type:"武",hp:100,mhp:100,atk:100},
-        {type:"魅",hp:100,mhp:100,atk:100},
-        {type:"知",hp:100,mhp:100,atk:100},  
+        {type:"武",hp:300,mhp:300,atk:100},
+        {type:"魅",hp:300,mhp:300,atk:100},
+        {type:"武",hp:300,mhp:300,atk:100},
+        {type:"魅",hp:300,mhp:300,atk:100},
+        {type:"知",hp:1000,mhp:1000,atk:150},  
       ]
     };
   }
   setEneStatus(name,id,key,val){
     let enedt = this.enestatus;
     if(enedt[name] && enedt[name][id]){
-      console.log(key,val,enedt[name][id],enedt[name][id][key])
+      //DBG//console.log(key,val,enedt[name][id],enedt[name][id][key])
       enedt[name][id][key] = val;
     }
   }
@@ -356,9 +356,13 @@ class charaDB{ // FROM kaihatsuclass
     this.attackhash[id] = h;
     this.attackarea[id] = a; 
   }
-  getAttachRhash(tar=null){
+  getAttachRhash(area=null,tar=null){
+    //DBG//console.log("getAttachRhash",area,tar);
     let h = {};
     for(let k in this.attackhash){
+      //DBG//console.log("getAttachRhash",k,this.attackhash[k],this.attackarea[k]);
+      // もし違うエリアならぬけていいんじゃないかな
+      if(area != this.attackarea[k]){continue;}
       let t = -1;
       if(tar==null){
         t = this.attackhash[k];
@@ -366,6 +370,7 @@ class charaDB{ // FROM kaihatsuclass
         t = tar;
       }else{continue;}
       if(h[t]==null){h[t]=[];}
+      //DBG//console.log("getAttachRhash",t,k);
       h[t].push(Number(k));
     }
     return h;
@@ -741,7 +746,8 @@ class skillData{
   }
 }
 class skillTree{
-  constructor(parent,skd,cdb,num){
+  constructor(base,parent,skd,cdb,num){
+    this.base = base;
     this.parent = parent;
     this.skd = skd;
     this.cdb = cdb;
@@ -783,16 +789,15 @@ class skillTree{
       );
       let ctx = cav.getContext("2d");
       this.clist.push(ctx);
-      // Event handler
-      cav.onclick      = this.cfunc.bind(this);
-      cav.onmouseover  = this.cfunc.bind(this);
-      cav.onmouseleave = this.cfunc.bind(this);
+      // Event handler set3func
+      set3func(cav,this,this.cfunc);
+      // Set 
+      this.base.appendChild(this.can);
     }
     this.draw();
     //=== 
     let par = [10,10,this.num];
-    console.log("kaihatsu.js:");
-    console.log(par);
+    console.log("kaihatsu.js:skillTree:",par);
     let e = new charaImg(this.cdb, par);
     this.can.append(e.can);
     //===
