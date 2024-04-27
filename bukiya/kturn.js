@@ -230,7 +230,7 @@ class kturnclass{
       //console.log(est);
 
       // 味方の攻撃力を得る
-      [atklog["atk"]] = this.turnendAtk(i,a,h);
+      [atklog["atk"]] = this.turnendAtk(i,a,h,gekiha);
       /*
       if(1){
         [atklog["atk"]] = this.turnendAtk(i,est,a,h);
@@ -300,7 +300,7 @@ class kturnclass{
     this.seisan();
     $gameVariables.setValue(this.par.ids[0], this.turn);
   }
-  turnendAtk(i,a,h){
+  turnendAtk(i,a,h,gekiha){
     //敵の能力を得る
     let est = this.kmapdata.getEneStatus(a,h);
     let s0 = this.cdb.getStatus(i);
