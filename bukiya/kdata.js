@@ -48,6 +48,29 @@ class kjyodata{
   }
 }
 
+// 基本的な切り出しクラス
+class maptip{
+  constructor(base,args,ii){
+    console.log(maptip);
+    this.img = new Image();
+    this.img.src = "img/tilesets/World_B.png"; // depend on args2
+    this.xyp = [0,15];
+    // Init 48x48
+    this.can = generateElement(base,{type:"canvas",id:"maptip_"+ii,enemyid:ii,width:48,height:48,
+      style:{"z-index":50,position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
+    this.ctx = this.can.getContext("2d");
+    this.img.onload = () => {
+      this.draw();
+    }
+  }
+  draw(){
+    const ctx = this.ctx;
+    ctx.clearRect(0,0,48,48);
+    let [x,y]=this.xyp;
+    ctx.drawImage(this.img,48*x,48*y,48,48,0,0,48,48);
+  }
+}
+
 class kmapdata{
   constructor(par){
     this.parent = par;

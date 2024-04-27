@@ -111,6 +111,7 @@ class newWnd3{
       }
     }
   }
+  // 
   newwnd(){
     let epar = {type:"div", id:"enseiwnd",classList_add:"fadeIn",style:{
         top:"0px",left:"0px",width:"736px",height:"544px",
@@ -131,9 +132,10 @@ class newWnd3{
       document.getElementById("enseiwnd").remove();
     }
     // 中身をせっと
-    this.newwnd1(d);
+    this.newwndContents(d);
   }
-  newwnd1(ele){
+  // 中身
+  newwndContents(ele){
     let imgsrc = 'img/0img/map.jpg';
     let canvasSize = 400;
     let parcan = {
@@ -150,6 +152,7 @@ class newWnd3{
     let [mapx,mapy,mapW,mapH] = this.kmapdata.getXYfromMAPName(this.tarmap);
     ctx.drawImage(img,mapx*v,mapy*v,mapW*v,mapH*v,0,0,cz,cz);
 
+    // 矢印を描くエリア
     let par1 = {type:'svg','id':'atkmap','viewbox':'0 0 500 450',"width":"500px","height":"450px"}
     let g1 = generateSVG(ele,par1);
     g1.style["z-index"] = 20;
@@ -166,11 +169,14 @@ class newWnd3{
     }
     console.log(hash);
 
+    // 街を出してみる
+    let mati = new maptip(ele,[100,100],0);
     // 画像を歩かせる
     let cdb = this.cdb;
+
     // 敵の画像を(indexで → Flexibleに)
     let enelist = this.enelist;
-    let ii=0;
+    //let ii=0;
     for(let i=0;i<enelist.length;i++){
       let hh = this.kmapdata.getEneStatus(this.tarmap,i);
       if(hh.hp<=0){
@@ -434,51 +440,6 @@ class kmidwnd3{
       pp.type = "rect";
       let p = generateSVG(svg,pp);
       set3func(p,this,this.mclick,this.mevent);
-    }
-  }
-  menu_org(pdiv,parent,kwnd){
-    let dvlist = [];
-    {
-      let childWidth = ["400px","320px"];
-      let childPadng = ["0px","5px"];
-      for(let i=0;i<childWidth.length;i++){
-        let dv = generateElement(pdiv,{type:"div",id:"kmidwnd3_"+(i+1),style:{
-          width:childWidth[i],padding:childPadng[i],overflow:"hidden"
-        }});
-        dvlist.push(dv);
-      }
-    }
-
-    let i=0;
-    // さいしょの表示領域 // SVG
-    // https://beamaker.jp/article/19
-    {
-      let dv = dvlist[i++];
-      let par = {type:'svg','id':'enseimap','viewbox':'0 0 400 300',"width":"400px","height":"300px"}
-      let svg = generateSVG(dv,par);
-      // 画像
-      {
-        let par = {type:'image',"href":'img/0img/map.jpg',"x":0,"y":0,"width":"400px","height":"300px"}
-        generateSVG(svg,par);
-      }
-      // 四角
-      {
-        let parlist = this.kmapdata.parlist;
-        for(let par of parlist){
-          par.type = "rect";
-          let p = generateSVG(svg,par);
-          set3func(p,this,this.mclick,this.mevent);
-        }
-      }
-    }
-
-    // 画像の表示領域
-    {
-      let dv = dvlist[i++];
-      let p = parent.geneTagImg("kaihatsuchara",this.imgsrc);
-      p.classList.add("CharaShadow");
-      dv.appendChild(p);
-      this.imggg = p;
     }
   }
   setrect(svg,arg){

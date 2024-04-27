@@ -93,6 +93,8 @@
       console.log("kmidwnd5 init invoke.");
       let [maindv,dv,p] = this.kmidwnd.createDIV2(pdiv,this.imgsrc);
       this.maindv = maindv;
+      dv.style.display = "flex";
+      //dv.style.padding = "4px";
       this.imggg = p;
       this.menu(dv);
       return 0;
@@ -180,8 +182,6 @@
       this.submenu(this.dvlist[1],this.getpstatus3());
     }
     menu(pdiv){
-      pdiv.style.display = "flex";
-      //pdiv.style.padding = "4px";
       this.dvlist = [];
       {
         let childWidth = ["200px","200px"];
@@ -194,31 +194,6 @@
         }
       }
       this.updatemenu();
-    }
-    menu_org(pdiv,parent,kwnd){
-      let dvlist = [];
-      {
-        let childWidth = ["200px","200px","320px"];
-        let childPadng = ["0px","0px","5px"];
-        for(let i=0;i<childWidth.length;i++){
-          let dv = generateElement(pdiv,{type:"div",id:"kmidwnd5_"+(i+1),style:{
-            width:childWidth[i],padding:childPadng[i],overflow:"hidden"
-          }});
-          dvlist.push(dv);
-        }
-      }
-      this.dvlist = dvlist;
-
-      this.updatemenu();
-
-      // 画像の表示領域
-      {
-        let dv = dvlist[2];
-        let p = parent.geneTagImg("kaihatsuchara",this.imgsrc);
-        p.classList.add("CharaShadow");
-        dv.appendChild(p);
-        this.imggg = p;
-      }
     }
   }
 
@@ -567,48 +542,6 @@
       let list2 = this.gentable(pdiv2,"ktbl2",2,2);
       this.setbtn2(list2);
       this.targetfunc = "";
-    }
-    kkk_org(){
-      let pdiv = this.maindv;
-      let parent = this.parent;
-      let dvlist = [];
-      {
-        let childWidth = ["400px","320px"];
-        let childPadng = ["0px","5px"];
-        for(let i=0;i<childWidth.length;i++){
-          let dv = generateElement(pdiv,{type:"div",style:{
-            width:childWidth[i],padding:childPadng[i],overflow:"hidden"
-          }})
-          dvlist.push(dv);
-        }
-      }
-      // Split ?
-      {
-        let dv = dvlist[0];
-        let pdiv = generateElement(dv,{type:"div",style:{
-          overflow:"hidden",height:"185px",backgroundColor:"#000"
-        }})
-        let pdiv2 = generateElement(dv,{type:"div",style:{
-          display:"flex",overflow:"hidden",height:"165px",backgroundColor:"#00FFFF40"
-        }})
-        // パラメータ
-        let list1 = this.gentable(pdiv,"kpsts",4,2);
-        this.setPsts(list1);
-
-        // 選択コマンド
-        let list2 = this.gentable(pdiv2,"ktbl2",2,2);
-        this.setbtn2(list2);
-        this.targetfunc = "";
-      }
-
-      // 画像の表示領域
-      {
-        let dv = dvlist[1];
-        let p = parent.geneTagImg("kaihatsuchara",this.imgsrc);
-        p.classList.add("CharaShadow");
-        dv.appendChild(p);
-        this.imggg = p;
-      }
     }
     resetPsts(){
       for(let i=0;i<8;i++){
