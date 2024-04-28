@@ -1059,6 +1059,12 @@
       p.src = src;
       return p;
     }
+    // テキスト画像をappendする
+    apStrImg(base,sid,inptxt){
+      let t = this.geneTagImg(sid,this.getImgSrcFromTEXT(inptxt));
+      base.append(t);
+      return t;
+    }
     // テキストを画像にする関数、IMG要素でもらえる
     geneStrImg(sid,inptxt){
       return this.geneTagImg(sid,this.getImgSrcFromTEXT(inptxt));

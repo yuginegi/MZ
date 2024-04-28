@@ -170,7 +170,7 @@ class newWnd3{
     console.log(hash);
 
     // 街を出してみる
-    let mati = new maptip(ele,[100,100],0);
+    let mati = new maptip(ele,[320,140],0);
     // 画像を歩かせる
     let cdb = this.cdb;
 
@@ -208,66 +208,6 @@ class newWnd3{
       }};
       generateElement(ele,par);
     }
-  }
-  text6(a){
-    let l1 = a.length;
-    let l0 = 6 - l1;
-    let w0=a;
-    while(l0-->0){w0 += "Ｘ"}
-    return w0;
-  }
-  // 敵の画面
-  updatePage(id){
-    if(this.currentenevieweid == id){return;}
-    this.currentenevieweid = id;
-    this.updatetarget(id);
-    this.usertarget(-1);
-    let dv0 = document.getElementById("ensei_div_txt");
-    dv0.innerHTML = "";
-    dv0.classList.add("fadeIn");
-    setTimeout(this.mmove.bind(this),600); // addとペア
-    let t;
-    let dv = generateElement(dv0, {type:"div",style:{position:"relative"}});
-    // パラメータ this.tarmap
-    let [area,enm,eimg,etype,epow] = this.kmapdata.getEneInfo(this.tarmap,id);
-    // エリア
-    let dv1 = generateElement(dv, {type:"div",style:{
-      position:"absolute", top:"0px"}});
-    t = this.parent.geneStrImg(null,"エリア："+area);
-    dv1.append(t);
-    // Info
-    if(etype==1){
-      //画像
-      let dv2 = generateElement(dv, {type:"div",style:{
-        position:"absolute", top:"50px"}});
-      this.kmapdata.getEneImg(dv2,eimg,etype);
-      let dv3 = generateElement(dv, {type:"div",style:{
-        position:"absolute", top:"285px",
-        background:"#00000080",width:"100%"}});
-      let txt = this.text6(enm) + " 戦力？？？";
-      t = this.parent.geneStrImg(null,txt);
-      dv3.append(t);
-    }else{
-      //画像
-      let dv2 = generateElement(dv, {type:"div",style:{
-        position:"absolute", top:"50px",left:"50px"}});
-      this.kmapdata.getEneImg(dv2,eimg,etype);
-      let dv3 = generateElement(dv, {type:"div",style:{
-        position:"absolute", top:"220px",left:"50px"}});
-      t = this.parent.geneStrImg(null,enm);
-      dv3.append(t);
-      generateElement(dv3, {type:"br"});
-      t = this.parent.geneStrImg(null,"戦力："+epow);
-      dv3.append(t);
-    }
-    //　攻め込むボタン
-    let par = {type:"div",style:{width:"124px",height:"46px",
-      position:"absolute", top:"320px", left:"70px",
-      paddingLeft:"18px",paddingTop:"8px",background:"#040"}};
-    let div = generateElement(dv,par);
-    t = this.parent.geneStrImg("eattack","　戦況　");//104x36
-    set3func(t,this,this.attackfunc);
-    div.append(t);
   }
 
   attackfunc(e){
@@ -337,32 +277,168 @@ class newWnd3{
     atkmap.style.display = "block";
   }
 
+  text6(a){
+    let l1 = a.length;
+    let l0 = 6 - l1;
+    let w0=a;
+    while(l0-->0){w0 += "Ｘ"}
+    return w0;
+  }
+
+  updTarget(eid,cid){
+    this.currentenevieweid = (eid >= 0)? eid : null;
+    this.updatetarget(eid);
+    this.usertarget(cid);
+  }
+  updInitView(){
+    let dv0 = document.getElementById("ensei_div_txt");
+    dv0.innerHTML = "";
+    dv0.classList.add("fadeIn");
+    setTimeout(this.mmove.bind(this),600); // addとペア
+    let dv = generateElement(dv0, {type:"div",style:{position:"relative"}});
+    return dv;
+  }
+  // 敵の画面
+  updatePage(id){
+    if(this.currentenevieweid == id){return;}
+    /*this.currentenevieweid = id;
+    this.updatetarget(id);
+    this.usertarget(-1);*/
+    this.updTarget(id,-1);
+    /*let dv0 = document.getElementById("ensei_div_txt");
+    dv0.innerHTML = "";
+    dv0.classList.add("fadeIn");
+    setTimeout(this.mmove.bind(this),600); // addとペア
+    let t;
+    let dv = generateElement(dv0, {type:"div",style:{position:"relative"}});*/
+    let t;
+    let dv = this.updInitView();
+    // パラメータ this.tarmap
+    let [area,enm,eimg,etype,epow] = this.kmapdata.getEneInfo(this.tarmap,id);
+    // エリア
+    let dv1 = generateElement(dv, {type:"div",style:{
+      position:"absolute", top:"0px"}});
+    t = this.parent.geneStrImg(null,"エリア："+area);
+    dv1.append(t);
+    // Info
+    if(etype==1){
+      //画像
+      let dv2 = generateElement(dv, {type:"div",style:{
+        position:"absolute", top:"50px"}});
+      this.kmapdata.getEneImg(dv2,eimg,etype);
+      let dv3 = generateElement(dv, {type:"div",style:{
+        position:"absolute", top:"285px",
+        background:"#00000080",width:"100%"}});
+      let txt = this.text6(enm) + " 戦力？？？";
+      t = this.parent.geneStrImg(null,txt);
+      dv3.append(t);
+    }else{
+      //画像
+      let dv2 = generateElement(dv, {type:"div",style:{
+        position:"absolute", top:"50px",left:"50px"}});
+      this.kmapdata.getEneImg(dv2,eimg,etype);
+      let dv3 = generateElement(dv, {type:"div",style:{
+        position:"absolute", top:"220px",left:"50px"}});
+      t = this.parent.geneStrImg(null,enm);
+      dv3.append(t);
+      generateElement(dv3, {type:"br"});
+      t = this.parent.geneStrImg(null,"戦力："+epow);
+      dv3.append(t);
+    }
+    //　攻め込むボタン
+    let par = {type:"div",style:{width:"124px",height:"46px",
+      position:"absolute", top:"320px", left:"70px",
+      paddingLeft:"18px",paddingTop:"8px",background:"#040"}};
+    let div = generateElement(dv,par);
+    t = this.parent.geneStrImg("eattack","　戦況　");//104x36
+    set3func(t,this,this.attackfunc);
+    div.append(t);
+  }
+  
+  updateMaptip(id){
+    console.log("maptip",id);
+    /*this.currentenevieweid = null;
+    this.updatetarget(-1);
+    this.usertarget(-1);*/
+    this.updTarget(-1,-1);
+    // 初期化
+    /*
+    let dv0 = document.getElementById("ensei_div_txt");
+    dv0.innerHTML = "";
+    dv0.classList.add("fadeIn");
+    setTimeout(this.mmove.bind(this),600); // addとペア
+    // 窓
+    let dv1 = generateElement(dv0, {type:"div",style:{position:"relative"}});
+    */    
+    let dv1 = this.updInitView();
+    // 説明テキスト
+    let dv2 = generateElement(dv1, {type:"div",style:{
+      position:"absolute", top:"0px"}});
+    dv2.append(this.parent.geneStrImg(null,"ノーマの街"));
+    //画像
+    let dv3 = generateElement(dv1, {type:"div",style:{
+      position:"absolute", top:"50px"}});
+    this.mapImg(dv3);
+    let dv4 = generateElement(dv1, {type:"div",style:{
+      position:"absolute", left:"5px", top:"270px",
+      background:"#00000080",width:"100%"}});
+    let txt = "この地方の主要な街";
+    dv4.append(this.parent.geneStrImg(null,txt));
+    //　攻め込むボタン
+    let par = {type:"div",style:{width:"124px",height:"46px",
+      position:"absolute", top:"320px", left:"70px",
+      paddingLeft:"18px",paddingTop:"8px",background:"#040"}};
+    let dv5 = generateElement(dv1,par);
+    let t =this.parent.geneStrImg("ehoumon","　訪問　");
+    dv5.append(t);
+    set3func(t,this,this.attackfunc);
+  }
+  mapImg(dv){
+    let sz = 280;
+    let par = {type:"div",style:{width:sz+"px",height:sz+"px",overflow:"hidden",padding:"0px 10px"}};
+    let div = generateElement(dv,par);
+    let im = document.createElement("img");
+    this.imgsize = sz;    
+    im.onload = () => {
+      if(im.width > this.imgsize){
+        im.width = this.imgsize;
+      } 
+    };
+    im.src = "img/titles1/Town1.png";
+    div.append(im);
+  }
+
   // 勇者画面
   updateCharaPage(id){
-    this.currentenevieweid = null;
+    /*this.currentenevieweid = null;
     this.updatetarget(-1);
-    this.usertarget(id);
+    this.usertarget(id);*/
+    this.updTarget(-1,id);
+    /*
     let dv = document.getElementById("ensei_div_txt");
     console.log("updateCharaPage:"+id)
     dv.innerHTML = "";
     dv.classList.add("fadeIn");
     setTimeout(this.mmove.bind(this),600); // addとペア
-    let t;
+    */
+    let dv = this.updInitView();
+    //let t;
     // エリア
-    t = this.parent.geneStrImg(null,"勇者");
-    dv.append(t);
+    /*t = this.parent.geneStrImg(null,"勇者");
+    dv.append(t);*/
+    this.parent.apStrImg(dv,null,"勇者");
     dv.append(document.createElement("br"));
     //画像
     let impar = {type:"img",classList_add:"CharaShadow",style:{paddingLeft:"50px"},
       src:"img/pictures/"+this.cdb.getPict(id)+".png",height:200};
-    let im = generateElement(dv,impar);
+    generateElement(dv,impar);
     dv.append(document.createElement("br"));
     // TEXT
     let aa = this.cdb.attackarea[id];
     let a2 = this.kmapdata.getNMfromMAPName(aa);
     let a3 = (a2)? a2+"で戦闘中" : null;
     let txt = (a3) ? a3 : "待機中";
-    t = this.parent.geneStrImg("k3attacktarget",txt);
+    let t = this.parent.geneStrImg("k3attacktarget",txt);
     if(a3){
       //t.onclick = this.cancelFunc.bind(this);
       set3func(t,this,this.cancelFunc);
@@ -371,8 +447,9 @@ class newWnd3{
     }
     dv.append(t);
     dv.append(document.createElement("br"));
-    t = this.parent.geneStrImg(null,"戦力：１００");
-    dv.append(t);
+    /*t = this.parent.geneStrImg(null,"戦力：１００");
+    dv.append(t);*/
+    this.parent.apStrImg(dv,null,"戦力：１００");
   }
   cancelFunc(e){
     if(e.type=="click"){
@@ -398,6 +475,9 @@ class newWnd3{
     let tid = e.target.id;
     if(tid.indexOf("enemy") == 0){
       this.updatePage(e.target.enemyid);
+    }
+    if(tid.indexOf("maptip") == 0){
+      this.updateMaptip(e.target.id);
     }
   }
   mmove(){

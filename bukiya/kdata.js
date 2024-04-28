@@ -52,9 +52,7 @@ class kjyodata{
 class maptip{
   constructor(base,args,ii){
     console.log(maptip);
-    this.img = new Image();
-    this.img.src = "img/tilesets/World_B.png"; // depend on args2
-    this.xyp = [0,15];
+    this.initpar(args[2]);
     // Init 48x48
     this.can = generateElement(base,{type:"canvas",id:"maptip_"+ii,enemyid:ii,width:48,height:48,
       style:{"z-index":50,position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
@@ -62,6 +60,11 @@ class maptip{
     this.img.onload = () => {
       this.draw();
     }
+  }
+  initpar(aa){
+    this.img = new Image();
+    this.img.src = "img/tilesets/World_B.png"; // depend on args2
+    this.xyp = [0,15]; // depend on args2
   }
   draw(){
     const ctx = this.ctx;
@@ -112,7 +115,9 @@ class kmapdata{
     /*** 敵の情報 ******/
     //[[20,20,1],[150,80,1],[270,140,1],[20,260,1]];
     this.enelist = {
-      "rect3_1":[[270,260,1],[150,80,1],[270,140,1],[20,260,1],[20,20,1]],
+      "rect3_1":[[20,260,1],[150,260,1],[270,260,1],[150,170,1],
+        [270,140,1],[150,80,1],[20,100,1],
+        [20,20,1]],
       "rect3_2":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]],
       "rect3_3":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]],
       "rect3_4":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]],
@@ -124,6 +129,9 @@ class kmapdata{
         ["草原 2","クロウ","Crow.png",0,110],
         ["草原 3","カニクラブ","Crab.png",0,120],
         ["草原 4","ホーネット","Machinerybee.png",0,130],
+        ["草原 5","カニクラブ","Crab.png",0,240],
+        ["草原 6","ホーネット","Machinerybee.png",0,260],
+        ["草原 7","ゴブリン","Goblin.png",0,300],
         ["ボスエリア","ドラゴン","Dragon.png",1,100],
       ],
     }
@@ -133,6 +141,9 @@ class kmapdata{
         {num:3,xx:[50,150,250],yy:[50,170,50],img:"Crow.png"},
         {num:3,xx:[50,100,50],yy:[50,170,290],img:"Crab.png"},
         {num:3,xx:[50,100,200],yy:[50,170,50],img:"Machinerybee.png"},
+        {num:6,xx:[50,100,50,200,250,200],yy:[50,170,290,50,170,290],img:"Crab.png"},
+        {num:6,xx:[50,100,150,200,250,300],yy:[50,170,50,170,50,170],img:"Machinerybee.png"},
+        {num:9,xx:[0,100,200,50,150,250,0,100,200],yy:[50,50,50,170,170,170,290,290,290],img:"Goblin.png"},
         {num:1,xx:[20],yy:[50],img:"Dragon.png"},
       ],
     };
@@ -142,7 +153,10 @@ class kmapdata{
         {type:"魅",hp:300,mhp:300,atk:100},
         {type:"武",hp:300,mhp:300,atk:100},
         {type:"魅",hp:300,mhp:300,atk:100},
-        {type:"知",hp:1000,mhp:1000,atk:150},  
+        {type:"武",hp:600,mhp:600,atk:200},
+        {type:"魅",hp:600,mhp:600,atk:200},
+        {type:"武",hp:900,mhp:900,atk:300},
+        {type:"知",hp:2000,mhp:2000,atk:300},  
       ]
     };
   }
