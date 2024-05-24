@@ -51,26 +51,36 @@ class kjyodata{
 // 基本的な切り出しクラス
 class maptip{
   constructor(base,args,ii){
-    console.log(maptip);
+    //console.log(maptip);
     this.initpar(args[2]);
     // Init 48x48
-    this.can = generateElement(base,{type:"canvas",id:"maptip_"+ii,enemyid:ii,width:48,height:48,
-      style:{"z-index":50,position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
+    this.can = generateElement(base,{type:"canvas",id:"maptip_"+ii,mapid:ii,width:48,height:48,
+      style:{"z-index":20,position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
     this.ctx = this.can.getContext("2d");
     this.img.onload = () => {
       this.draw();
     }
   }
   initpar(aa){
+    let par = [[0,15],[0,15],[2,15],[6,2],[8,9]]
     this.img = new Image();
     this.img.src = "img/tilesets/World_B.png"; // depend on args2
-    this.xyp = [0,15]; // depend on args2
+    this.xyp = par[aa]; // depend on args2
+    this.setflag = false;
+  }
+  setredraw(ff){
+    this.setflag = ff;
+    this.draw();
   }
   draw(){
     const ctx = this.ctx;
     ctx.clearRect(0,0,48,48);
     let [x,y]=this.xyp;
     ctx.drawImage(this.img,48*x,48*y,48,48,0,0,48,48);
+    if(this.setflag){
+      ctx.fillStyle = "#00FF0080";
+      ctx.fillRect(0,0,48,48);
+    }
   }
 }
 
@@ -81,7 +91,7 @@ class kmapdata{
     this.scl = ["rgba( 0,255,255,1 )","rgba( 255,0,255,1 )"];
     let cl = this.fcl[0];//"rgba( 33, 150, 234, 0.5 )";
     let st = this.scl[0];//"rgba( 0,255,255,1 )"
-    // MAP
+    //*** MAP関係（セットで引くからこのままでよい）***
     this.parlist = [
       {"id":"rect3_1","x":20, "y":10, "width":100,"height":100,"fill":cl},
       {"id":"rect3_2","x":40, "y":190,"width":100,"height":100,"fill":cl},
@@ -103,7 +113,8 @@ class kmapdata{
       "rect3_4":"シャイニングベイ",
       "rect3_5":"ダークキャッスル"
     }
-    this.mapopened = [1,1,1,1,1];
+    //*** 下で管理するべきかも  ***
+    this.mapopened = [1,0,0,0,0];
     // 開いていればデータ更新
     for(let i=0;i<5;i++){
       let key = "rect3_"+(i+1);
@@ -113,52 +124,25 @@ class kmapdata{
       }
     }
     /*** 敵の情報 ******/
-    //[[20,20,1],[150,80,1],[270,140,1],[20,260,1]];
     this.enelist = {
-      "rect3_1":[[20,260,1],[150,260,1],[270,260,1],[150,170,1],
-        [270,140,1],[150,80,1],[20,100,1],
-        [20,20,1]],
       "rect3_2":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]],
       "rect3_3":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]],
       "rect3_4":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]],
       "rect3_5":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]]
     }
-    this.enedata = {
-      "rect3_1":[
-        ["草原 1","ゴブリン","Goblin.png",0,100],
-        ["草原 2","クロウ","Crow.png",0,110],
-        ["草原 3","カニクラブ","Crab.png",0,120],
-        ["草原 4","ホーネット","Machinerybee.png",0,130],
-        ["草原 5","カニクラブ","Crab.png",0,240],
-        ["草原 6","ホーネット","Machinerybee.png",0,260],
-        ["草原 7","ゴブリン","Goblin.png",0,300],
-        ["ボスエリア","ドラゴン","Dragon.png",1,100],
-      ],
+    this.enedata = {}
+    this.edetail = {};
+    this.enestatus =  {};
+    // ここで詰める
+    console.log("kmapdata Initialize")
+    let alist = {"rect3_1":kd3_1};
+    for(let a in alist){
+      let p = new alist[a]();
+      this.enelist[a]=p.data["enelist"];
+      this.enedata[a]=p.data["edata"];
+      this.edetail[a]=p.data["edetail"];
+      this.enestatus[a]=p.data["estatus"];
     }
-    this.edetail = {
-      "rect3_1":[
-        {num:3,xx:[50,100,50],yy:[50,170,290],img:"Goblin.png"},
-        {num:3,xx:[50,150,250],yy:[50,170,50],img:"Crow.png"},
-        {num:3,xx:[50,100,50],yy:[50,170,290],img:"Crab.png"},
-        {num:3,xx:[50,100,200],yy:[50,170,50],img:"Machinerybee.png"},
-        {num:6,xx:[50,100,50,200,250,200],yy:[50,170,290,50,170,290],img:"Crab.png"},
-        {num:6,xx:[50,100,150,200,250,300],yy:[50,170,50,170,50,170],img:"Machinerybee.png"},
-        {num:9,xx:[0,100,200,50,150,250,0,100,200],yy:[50,50,50,170,170,170,290,290,290],img:"Goblin.png"},
-        {num:1,xx:[20],yy:[50],img:"Dragon.png"},
-      ],
-    };
-    this.enestatus =  {
-      "rect3_1":[
-        {type:"武",hp:300,mhp:300,atk:100},
-        {type:"魅",hp:300,mhp:300,atk:100},
-        {type:"武",hp:300,mhp:300,atk:100},
-        {type:"魅",hp:300,mhp:300,atk:100},
-        {type:"武",hp:600,mhp:600,atk:200},
-        {type:"魅",hp:600,mhp:600,atk:200},
-        {type:"武",hp:900,mhp:900,atk:300},
-        {type:"知",hp:2000,mhp:2000,atk:300},  
-      ]
-    };
   }
   setEneStatus(name,id,key,val){
     let enedt = this.enestatus;
@@ -443,11 +427,11 @@ class charaDB{ // FROM kaihatsuclass
     this.chapsts[id]["hp"] = hp;
   }
 }
-class charaAttackView{
-  constructor(){
 
-  }
+class charaAttackView{
+  constructor(){}
 }
+
 class charaImg{
   constructor(cdb,args,draggable=false,par=null){
     this.cdb = cdb;
@@ -549,147 +533,6 @@ class charaFace{
     ctx.drawImage(this.img,144*x,144*y,144,144,0,0,144,144);
   }
 }
-class charaStatusView{
-  constructor(parent,tar,cdb,base){
-    this.parent = parent;
-    this.tar = tar;
-    this.cdb = cdb;
-    this.base = base;
-    this.elist = [];
-    this.init();
-    // draw update controll.
-    setInterval(this.draw.bind(this),1000/60);
-  }
-  init(){
-    let id = this.tar;
-    let msts = this.getStatus(id);
-    let msts2 = this.getSkillExt(id);
-    let menu = (id<10)? ["武力","知力","魅力"] : ["経済","産出","技術"];
-    for(let i=0;i<3;i++){
-      let mtxt = this.textArrange(5, menu[i],msts[i],msts2[i]);
-      this.elist[i] = new charaStatus([350,80+50*i,msts[i],msts2[i],mtxt]);
-      this.base.appendChild(this.elist[i].can);
-    }
-    // 勇者用
-    if(id<10){
-      this.initBrave(id);
-    }
-  }
-  initBrave(id){
-    // 武器防具
-    //let bukibougu4 = ["武器LV4","アイスブリンガー","防具LV4","ドラゴンアーマー"]
-    let bukibougu4 = this.getWeapon(id);
-    for(let i=0;i<4;i++){
-      let mtxt = this.parent.geneStrImg(null,bukibougu4[i]);
-      mtxt.style.position = "absolute"; 
-      mtxt.style.left = (390+(i%2)*120)+"px"; 
-      mtxt.style.top  = (320+40*(i>=2))+"px";
-      this.base.appendChild(mtxt);
-    }
-
-    // ステータス
-    let status4 = [
-      "兵力　 17000",
-      "戦力　 15000",
-      "ＡＡ　 15000",
-      "ＢＢ　 15000",
-    ];
-    for(let i=0;i<4;i++){
-      //let mtxt = this.textArrange(10,"戦力",15000,0);
-      let mtxt = this.parent.geneStrImg(null,status4[i]);
-      mtxt.style.position = "absolute"; 
-      mtxt.style.left = (370+(i%2)*190)+"px"; 
-      mtxt.style.top  = (240+40*(i>=2))+"px";
-      this.base.appendChild(mtxt);
-    }
-  }
-  draw(){
-    for(let cc of this.elist){
-      cc.draw();
-    }
-  }
-  getStatus(id){
-    return this.cdb.getStatus(id);
-  }
-  getSkillExt(id){
-    let ulist = this.parent.chardata.skilldata.getulist(id);
-    let ret = [0,0,0];
-    for(let j=0;j<3;j++){
-    for(let i=10*j;i<10*(j+1);i++){
-      ret[j] += ulist[i];
-    }}
-    return ret;
-  }
-  getWeapon(id){
-    let [wep,def] = this.parent.chardata.skilldata.weaponlv[id];
-    let wname = ["剣","ロングソード","ミスリルソード","ルーンブレイド","アイスブリンガー","ブレイブカリバー"];
-    let dname = ["鎧","ブロンズアーマー","ミスリルアーマー","ゴールドアーマー","ドラゴンアーマー","クリスタルメイル"];
-    return ["武器LV"+wep,wname[wep],"防具LV"+def,dname[def]];
-  }
-  textArrange(n,a,b,c){
-    let w1 = toFullWidth(a);
-    let w2 = toFullWidth(b);
-    let l1 = w1.length;
-    let l2 = w2.length;
-    let l0 = n - l1 - l2;
-    let w0="";
-    while(l0-->0){w0 += "　"}
-    if(c > 0){
-      let w3 = toFullWidth(c);
-      return w1+w0+w2+"＋"+w3;
-    }else{
-      return w1+w0+w2;
-    }
-  }
-}
-
-class charaStatus{
-  constructor(args){
-    // Init
-    this.cansz = [300,40];
-    this.can = generateElement(null,{type:"canvas",id:"anitxt_"+args[2],width:this.cansz[0],height:this.cansz[1],
-      style:{position:"absolute",overflow:"hidden",left:args[0]+"px",top:args[1]+"px"}});
-    this.ctx = this.can.getContext("2d");
-    this.img = new Image();
-    // TEXT
-    this.txtidx = 0;
-    this.val1 = args[2];
-    this.val2 = args[3];
-    this.txtlist = args[4];
-    this.ext = 5;
-    // loop
-    this.tt = 0;
-    //setInterval(this.draw.bind(this),1000/60);
-  }
-  draw(){
-    let tt = (this.tt++)%120;
-    if(tt==0){
-      let aa = generateTextBmp(this.txtlist);
-      this.img.src = aa.context.canvas.toDataURL();
-    }
-    let [x,y,z] = [20,2,20];
-    let [v1,v2] = [this.val1,this.val2];
-    let v0 = v1+v2;
-    let w0 = ((this.cansz[0]-x)/20)*(v0);
-    let ww = (tt > z) ? w0 : w0*(tt/z);
-    // draw
-    let ctx = this.ctx;
-    ctx.clearRect(0,0,this.cansz[0],this.cansz[1]);
-    let mg = 5;
-    {
-      let [a1,a2]=[v1/v0,v2/v0];
-      ctx.fillStyle = "#008800C0";
-      let w1 = (ww > w0*a1) ? w0*a1 : ww; 
-      ctx.fillRect(x,mg,w1,this.cansz[1]-2*mg);
-      if(ww > w0*a1){
-        let w2 = ww-w0*a1;
-        ctx.fillStyle = "#FFFF00C0";
-        ctx.fillRect(x+w0*a1,mg,w2,this.cansz[1]-2*mg);
-      }
-    }
-    ctx.drawImage(this.img,x,y);
-  }
-}
 
 class skillData{
   constructor(){
@@ -700,8 +543,7 @@ class skillData{
       this.ulist[i] = Array(50).fill(0);
       this.weaponlv[i] = [0,0];//武器・防具
     }
-    
- 
+
     // SkillMap
     this.skillInit();
 
@@ -782,155 +624,6 @@ class skillData{
     return ret;
   }
 }
-class skillTree{
-  constructor(base,parent,skd,cdb,num){
-    this.base = base;
-    this.parent = parent;
-    this.skd = skd;
-    this.cdb = cdb;
-    this.num = num;
-    // For using MoneyFunc
-    this.parent.kjyodata.bindMoneyFunc(this);
-
-    // Init
-    let csz = [746,350];
-    this.dpar = {type:"div",id:"sktree_main",
-    style:{position:"absolute",overflow:"hidden",background:"#000022",
-    padding:"0px",margin:"5px","z-index":15,left:"0px",top:"60px",
-    width:csz[0]+"px",height:csz[1]+"px"}};
-    // INVOKE
-    this.can = generateElement(null,this.dpar);
-    this.ico = skd.ico;
-
-    // アイコンのキャンバスのサイズ
-    this.csize = 40;
-
-    // List
-    let id = this.num;
-    this.ulist = skd.getulist(id);
-    this.slist = skd.getslist(id);
-    console.log("skillTree Invoke. "+id);
-
-    this.clist = [];
-    let sz = this.csize;
-    let mm = 10;
-    let ofset = [50,80];
-    for(let i in this.slist){
-      let [x0,y0]=[i%10,Math.floor(i/10)];
-      let [xx,yy]=[ofset[0]+x0*(sz+mm),ofset[1]+y0*(sz+mm)];
-      let cav = generateElement(this.can,
-        {type:"canvas",id:"sktree_"+i,vid:i, width:sz, height:sz,
-          style:{position:"absolute",left:xx+"px",top:yy+"px",
-          width:sz+"px",height:sz+"px"}
-        }
-      );
-      let ctx = cav.getContext("2d");
-      this.clist.push(ctx);
-      // Event handler set3func
-      set3func(cav,this,this.cfunc);
-      // Set 
-      this.base.appendChild(this.can);
-    }
-    this.draw();
-    //=== 
-    let par = [10,10,this.num];
-    console.log("kaihatsu.js:skillTree:",par);
-    let e = new charaImg(this.cdb, par);
-    this.can.append(e.can);
-    //===
-    let at = new animationText([80,10,this.num]);
-    at.resettext([this.cdb.getName(this.num)]);
-    this.can.append(at.can);
-    let gindiv = generateElement(this.can, {type:"div", id:"gindiv",
-    style:{position:"absolute", left:"400px", top:"10px"}})
-    let mn = this.getMoney();
-    this.viewMoney(gindiv,mn);
-  }
-  viewMoney(gindiv,mn){
-    gindiv.innerHTML = "";
-    let gintxt = this.parent.geneStrImg("gintxt", this.viewSkillCost(mn));
-    gindiv.append(gintxt);
-  }
-  cfunc(e){
-    let p = e.target;
-    let ii = p.vid;
-    if(this.ulist[ii]){
-      console.log("skip "+ii);
-      return;
-    }
-    // クリック
-    if(e.type=="click"){
-      let mn = this.getMoney();
-      let mc = this.calcSkillCost();
-      if(mn > mc){
-        console.log("clicked "+ii+" "+[mn,mc]);
-        this.ulist[ii] = 1;
-        this.parent.kmsgwnd.setText(["パワーアップ！！"]);
-        audioInvoke("Item3");
-        this.updMoney(mn-mc);
-        let ele = document.getElementById("gindiv");
-        this.viewMoney(ele,(mn-mc));
-        this.draw();
-      }else{
-        this.parent.kmsgwnd.setText(["銀が足りない"]);
-        audioInvoke("Cancel2");
-      }
-      return;
-    }
-    // マウス移動
-    if(e.type=="mouseover"){
-      this.target = ii;
-      // メッセージ変更
-      let txtlist = this.skd.skiilmsg;
-      let id = this.slist[ii];
-      let txt = (txtlist[id]) ? txtlist[id] : "未設定"+id;
-      let val = this.calcSkillCost();
-      txt += "  "+this.viewSkillCost(val);
-      this.parent.kmsgwnd.setText([txt]);
-    }else{
-      this.target = null;
-    }
-    this.draw();
-  }
-  viewSkillCost(val){
-    if(val >= 10000){
-      return (val/10000)+"億";
-    }else{
-      return val+"万";
-    }
-  }
-  calcSkillCost(){
-    let v = this.ulist.reduce((sum, element) => sum + element, 0);
-    let val = 4**(((v+1)/10.0)-1.0) - 4**((v/10.0)-1.0);
-    val = Math.floor(val*10000);
-    return val;
-  }
-  drawIcon(kid,ctx,x,y){
-    let kkk = this.skd.iconpar;
-    let ico = this.ico;
-    let sz = 32;
-    let [ix,iy]=kkk[kid];
-    ctx.drawImage(ico,ix*sz,iy*sz,sz,sz,x,y,sz,sz);
-  }
-  draw(){
-    for(let i in this.slist){
-      let kid = this.slist[i];
-      let ctx = this.clist[i];
-      let csz = this.csize;
-      ctx.clearRect(0,0,csz,csz);
-      if(this.ulist[i]){
-        ctx.fillStyle = "#FFFF0080";
-        ctx.fillRect(0,0,csz,csz); 
-      }
-      else if(i == this.target){
-        ctx.fillStyle = "#FF000080";
-        ctx.fillRect(0,0,csz,csz);  
-      }
-      let mg = (csz-32)/2
-      this.drawIcon(kid,ctx,mg,mg);
-    }
-  }
-}
 
 class animationText{
   constructor(args){
@@ -990,35 +683,6 @@ class animationText{
     ctx.fillStyle = "#0000FF80";
     ctx.fillRect(0,y,this.cansz[0],this.cansz[1]);
     ctx.drawImage(this.img,x,y);
-  }
-}
-class enemyImg{
-  constructor(cdb,args,ii){
-    this.cdb = cdb;
-    this.img = cdb.getMonImg();
-    this.cid = 3;
-    // Init
-    this.can = generateElement(null,{type:"canvas",id:"enemy_"+ii,enemyid:ii,width:48,height:48,
-      style:{"z-index":50,position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
-    this.ctx = this.can.getContext("2d");
-    this.tt = 0;
-    // loop
-    setInterval(this.draw.bind(this),250);
-  }
-  setdraw(flag){
-    this.setflag=flag;
-  }
-  draw(){
-    const ctx = this.ctx;
-    ctx.clearRect(0,0,48,48);
-    if(this.setflag){
-      ctx.fillStyle = "#00FF0080";
-      ctx.fillRect(0,0,48,48);
-    }
-    let ii = this.cid-1;
-    let ll = [0,1,2,1]
-    let [x,y]=[3*(ii%4)+ll[(this.tt++)%4], 4*Math.floor(ii/4)];
-    ctx.drawImage(this.img,48*x,48*y,48,48,0,0,48,48);
   }
 }
 

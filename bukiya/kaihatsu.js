@@ -197,161 +197,6 @@
     }
   }
 
-  class kmidwnd2{
-    constructor(wnd){
-      this.kmidwnd = wnd;
-      this.parent = wnd.parent;
-      this.maindv;
-      this.imggg;
-      this.cdb = this.parent.cdb;
-      // SkillDB
-      this.skd = this.parent.chardata.skilldata;
-      // メニューテキスト
-      this.mtxt = ["ステータス","所有スキル","レベルアップ","ヒストリー"];
-    }
-    init(pdiv){
-      let [maindv,dv,p] = this.kmidwnd.createDIV2(pdiv,this.imgsrc);
-      this.maindv = maindv;
-      dv.id = "kwnd2base"; // For RightMove
-      dv.style.position = "relative";
-      this.imggg = p;
-      this.kaihatsutyu(dv);
-      return 0;
-    }
-    initpage(type){
-      console.log("kmidwnd0:initpage invoke. "+type);
-      if(type==0){return;}
-      this.parent.imgchange(this);
-      //Reset
-      this.resetpage();
-    }
-    resetpage(){
-      this.imggg.classList.add("fadeIn");
-      let d = document.getElementById("kwnd2base");
-      //d.style.display = "block";
-      d.classList.remove("kwnd2u1");
-      this.selected = null;
-      removeAllChildsByID("kwnd2base3");
-      this.updatelist(document.getElementById("kwnd2_list"));
-      this.ecan.txtlist = null;
-      this.ecan.can.style.left = "500px";
-      this.ecan.redraw();
-      // 説明表示変える
-      this.parent.switchexp("mid2");
-    }
-    updatelist(dv){
-      removeAllChilds(dv);
-      let p = this.parent.geneStrImg("kwnd2_listxt", "勇者一覧");
-      dv.appendChild(p);
-      // 勇者・商人一覧
-      for(let i of this.parent.chardata.getpcharlist()){
-        let par = [10+80*(i%5),60+75*Math.floor(i/5),i];
-        let e = new charaImg(this.cdb, par);
-        let tar = e.can;
-        set3func(tar,this,this.cfunc);
-        dv.append(tar);
-      }
-    }
-    kaihatsutyu(dv){
-      // キャラリスト
-      let dd = generateElement(dv,{type:"div",id:"kwnd2_list",style:{padding:"10px"}});
-      this.updatelist(dd);
-      // あとでここに入れるよう
-      generateElement(this.maindv,{type:"div",id:"kwnd2base3",style:{padding:"10px"}});
-
-      // キャラ名（cfuncで絶対位置移動）
-      {
-        let p = generateElement(this.maindv,{type:"div",id:"kwnd2base4"});
-        this.ecan = new animationText([500,370,0]);
-        let e = this.ecan;
-        e.txtlist = null;
-        e.id = "kwnd2base4txt";
-        p.append(e.can);
-      }
-    }
-
-    viewpage2(){
-      let b = removeAllChildsByID("kwnd2base3");
-      new skillTree(b,this.parent,this.skd,this.cdb,this.charatarget);
-    }
-
-    viewpage0(){
-      let b = removeAllChildsByID("kwnd2base3");
-      this.stview = new charaStatusView(this.parent,this.charatarget,this.cdb,b);
-    }
-    // cfuncのclickで呼ばれる
-    newwnd(){
-      let base = document.getElementById("kwnd2base3");
-      // メニューを設置する
-      for(let i=0;i<this.mtxt.length;i++){
-        let p = generateElement(base,{type:"div",classList_add:"kwnd2u2",id:"kwnd2base3m_"+i,
-          style:{"animation-duration":((1*i+5)/10)+"s",padding:"5px 5px 0px 40px","z-index":15,
-            position:"absolute",left:"400px",top:90+80*i+"px",width:"200px",height:"40px",background:"#008"}  
-          }
-        );
-        let menu = this.kmidwnd.text8(this.mtxt[i]);
-        let tar = this.parent.geneStrImg(null,menu);
-        tar.tarid = String(i);
-        set3func(tar,this,this.cfunc2);
-        p.append(tar);
-      }
-      // 戻る を出す
-      let tar = this.parent.kmsgwnd;
-      tar.BKwnd(this,this.resetpage);
-    }
-    chgmsg(ii){
-      let tar = this.parent.kmsgwnd;
-      tar.setText([this.mtxt[ii]]);
-    }
-    cfunc2(e){
-      let p = e.target;
-      if(e.type=="click"){
-        console.log("clicked "+p.tarid);
-        // menu
-        if(p.tarid==0){
-          this.viewpage0();
-        }
-        if(p.tarid==2){
-          this.viewpage2();
-        }
-        return;
-      }
-      if(e.type=="mouseover"){
-        p.parentNode.style.background="#00F";
-        this.chgmsg(p.tarid);
-      }else{
-        p.parentNode.style.background="#008";
-      } 
-    }
-    cfunc(e){
-      let p = e.target;
-      if(e.type=="click"){
-        let num = p.id.match(/\d+/g)[0];
-        this.charatarget = num;
-        this.selected = p;
-        this.imggg.classList.remove("fadeIn");
-        console.log("clicked");
-        let d = document.getElementById("kwnd2base");
-        //d.style.display = "none";
-        d.classList.add("kwnd2u1");
-        this.newwnd();
-        this.ecan.can.style.left = "50px";
-        this.ecan.redraw();
-        return;
-      }
-      if(this.selected){return;}
-      if(e.type=="mouseover"){
-        let num = p.id.match(/\d+/g)[0];
-        this.imggg.src = 'img/pictures/'+this.cdb.getPict(num)+'.png';
-        this.imggg.classList.add("fadeIn");
-        this.ecan.resettext([this.cdb.getName(num)]);
-        audioInvoke("Book1");
-      }else{
-        this.imggg.classList.remove("fadeIn");
-      } 
-    }
-  }
-
   class kmidwnd1{
     constructor(wnd){
       this.kmidwnd = wnd;
@@ -847,10 +692,6 @@
         margin:"10px 5px",padding:"10px 10px",width:"80px",height:"36px",background:"#000"
        }});
         let timg = parent.geneStrImg(sid,txt);
-        /*
-        timg.onclick = this.cfunc.bind(this);
-        timg.onmouseover = this.hfunc.bind(this);
-        timg.onmouseleave = this.hfunc.bind(this);*/
         set3func(timg,this,this.cfunc,this.hfunc);
         dbtn.appendChild(timg);
         dbtn.appendChild(document.createElement("BR"));
@@ -871,10 +712,6 @@
         margin:"10px 5px",padding:"10px 10px",width:"100px",height:"36px",background:"#000"
        }});
         let timg = parent.geneStrImg(sid,txt);
-        /*
-        timg.onclick = this.cfunc2.bind(this);
-        timg.onmouseover = this.hfunc.bind(this);
-        timg.onmouseleave = this.hfunc.bind(this);*/
         set3func(timg,this,this.cfunc2,this.hfunc);
         dbtn.appendChild(timg);
         dbtn.appendChild(document.createElement("BR"));
