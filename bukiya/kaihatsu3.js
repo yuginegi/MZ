@@ -16,6 +16,111 @@
 
 /* 相変わらずですけど、くそコードになってますm(__)m リファクタリング（ＴへＴ）*/
 
+class kmidwnd3{
+  constructor(wnd){
+    this.kmidwnd = wnd;
+    this.parent = wnd.parent;
+    this.maindv;
+    this.imggg;
+    this.imgsrc = 'img/pictures/Actor1_5.png';
+    this.cdb = this.parent.cdb;
+    // mapdata
+    this.kmapdata = this.parent.kmapdata;
+  }
+  init(pdiv){
+    let [maindv,dv,p] = this.kmidwnd.createDIV2(pdiv,this.imgsrc);
+    this.maindv = maindv;
+    this.imggg = p;
+    this.menu(dv);
+    return 0;
+  }
+  initpage(){
+    console.log("kmidwnd3 initpage invoke.");
+    this.reset();
+  }
+  menu(dv){
+    let par = {type:'svg','id':'enseimap','viewbox':'0 0 400 300',"width":"400px","height":"300px"}
+    let svg = generateSVG(dv,par);
+    // 地図の画像
+    let pmap = {type:'image',"href":'img/0img/map.jpg',"x":0,"y":0,"width":"400px","height":"300px"}
+    generateSVG(svg,pmap);
+    // 地図に置く四角
+    let parlist = this.kmapdata.parlist;
+    for(let pp of parlist){
+      pp.type = "rect";
+      let p = generateSVG(svg,pp);
+      set3func(p,this,this.mclick,this.mevent);
+    }
+  }
+  reset(){
+    this.kmapdata.initinvoke();
+    this.enseitarget = null;
+    for(let i=0;i<5;i++){
+      let rid = "rect3_"+(i+1);
+      let p = document.getElementById(rid);
+      // ここで対応してあげる、OPENのものには線をつける
+      if(this.kmapdata.mapopened[i] == 1){
+        p.setAttribute("stroke", this.kmapdata.scl[0]);
+      }
+      this.kmapdata.chgAttr(p,0);
+    }
+  }
+  newwnd(){
+    let e = new newWnd3(this,this.parent,this.enseitarget);
+    e.newwnd();
+  }
+
+  react1(ii){
+    console.log("react1 = "+ii);
+    let tar = this.parent.kmsgwnd;
+    let txt;//= (ii==0)? ["はいを押された"]:["いいえを押された"];
+    if(ii==0){
+      audioInvoke("Attack3");//Item3は成功音
+      txt = ["遠征討伐"];
+      this.newwnd();
+    }else{
+      audioInvoke("Cancel2");
+      txt = ["キャンセルしました"];
+    }
+    tar.setText(txt); 
+    this.reset();
+  }
+  mclick(e){
+    if(this.enseitarget){return;}
+    this.enseitarget = e.target.id;
+    audioInvoke("Cursor3");
+    let tar = this.parent.kmsgwnd;
+    let isopen = this.kmapdata.isopen(e.target.id);
+    if(!isopen){
+      let txt = ["遠征不可"];
+      tar.setText(txt); 
+      this.reset();
+      // はい・いいえ 消す
+      tar.switchpage();
+    }else{
+      let nm = this.kmapdata.getNMfromMAPName(e.target.id);
+      let txt = [nm+" に、遠征討伐しますか？"];
+      tar.setText(txt);
+      // はい・いいえ を出す
+      tar.YNwnd(this,this.react1,this.react1);
+    }
+  }
+  mevent(e){
+    if(this.enseitarget){return;}
+    //console.log("mevent:"+e.type);
+    let tp = (e.type=="mouseenter"||e.type=="mouseover")? 1:0; //これがバグってた。。いつも０のバグ
+    let p = e.target;
+    this.kmapdata.chgAttr(p,tp);
+    if(tp==1){
+      //let ptxt = this.kmapdata.maptext;
+      //let txt = ptxt[e.target.id];//["なにをしますか？","行動力 １００"];
+      let txt = this.kmapdata.getmaptext(e.target.id);
+      let tarwnd = this.parent.kmsgwnd;
+      tarwnd.setText(txt);
+    }
+  }
+}
+
 class newWnd3{
   constructor(wnd,parent,tarmap){
     this.wnd = wnd;
@@ -23,14 +128,32 @@ class newWnd3{
     this.cdb = wnd.cdb;
     this.parent = parent;
     this.tarmap = tarmap;
-    this.kd = new kd3_1();
+    console.log("newWnd3:",this.tarmap);
+    let cl = {
+      "rect3_1":kd3_1,"rect3_2":kd3_2,"rect3_3":kd3_1,
+      "rect3_4":kd3_1,"rect3_5":kd3_1
+    };
+    this.kd = new cl[tarmap](this);
     this.mres = new matiRes(tarmap,this.kd); 
+    this.mmcmd = new newWnd3_mati(this);
     this.kmapdata = this.parent.kmapdata;
     //敵の配置
     this.enelist = this.kmapdata.getenelist(tarmap);
     this.eimglist=[];
     //味方のリスト
     this.charlist=[null,null,null,null,null,null,null,null,null,null];
+
+    //======================================================================
+    // Style
+    this.closeStyle = {
+      position:"absolute",margin:"5px",padding:"2px 2px 2px 10px",left:"680px",top:"0px",
+      width:"46px",height:"24px",backgroundColor:"#00F"
+    };
+    // BasePar
+    this.basePar = {type:"div",id:"enseiattackwnd",style:{"z-index":55,
+      position:"absolute",margin:"5px",padding:"5px",left:"0px",top:"65px",
+      width:"736px",height:"480px",backgroundImage:"url(img/battlebacks1/Grassland.png)"
+    }};
   }
   eneid(id){
     return this.tarmap+"_"+id;
@@ -61,7 +184,7 @@ class newWnd3{
     g2.style.pointerEvents = "none";
   }
   settarget(id,xx,yy){
-    //console.log("settarget:"+[id,xx,yy]);
+    console.log("settarget:"+[id,xx,yy]);
     let mg=50; // 両方とも左上の点だけ考える
     let target = -1;
     for(let i in this.enelist){
@@ -112,7 +235,7 @@ class newWnd3{
       }
     }
   }
-  // あたらしいWindow
+  // あたらしいWindow：newwndContents を呼ぶ
   newwnd(){
     let epar = {type:"div", id:"enseiwnd",classList_add:"fadeIn",style:{
         top:"0px",left:"0px",width:"736px",height:"544px",
@@ -134,24 +257,23 @@ class newWnd3{
     let t = this.parent.apStrImg(dd,"newWnd3back","　開発に戻る　");
     // クリックすると消える
     set3func2(t,this,this.closeNewWnd3Btn);
-    //t.onclick = () => {document.getElementById("enseiwnd").remove();}
-    //t.onmouseenter = ()=>{document.getElementById("newwnd_bkb").style.backgroundColor = "#00FFFF";}
-    //t.onmouseleave = ()=>{document.getElementById("newwnd_bkb").style.backgroundColor = "#0000FF";}
-    this.mact2 = null;
+    this.mmcmd.mact2 = null;
     ele.append(document.createElement("HR"));
     // 中身をせっと
     let par1 = {type:"div", style:{position:"relative",display:"flex",margin:"0",padding:"0"}};
     let d = generateElement(ele,par1)
     this.newwndContents(d);
   }
+  // Closeボタン
   closeNewWnd3Btn(e){
-    if(this.mact2){return}
+    if(this.mmcmd.mact2){return}
     if(e.type=="click"){
       document.getElementById("enseiwnd").remove();
       return;
     }
     let ii = (e.type=="mouseenter") ? "#00FFFF":"#0000FF";
     document.getElementById("newwnd_bkb").style.backgroundColor = ii;
+    this.wnd.reset();
   }
   // 中身
   newwndContents(ele){
@@ -244,12 +366,7 @@ class newWnd3{
     // 無効化
     let atkmap = document.getElementById("atkmap");
     atkmap.style.display = "none";
-    //let e = document.getElementById("enseiwnd");//756x564
-    let par = {type:"div",id:"enseiattackwnd",style:{"z-index":55,
-      position:"absolute",margin:"5px",padding:"5px",left:"0px",top:"65px",
-      width:"736px",height:"480px",backgroundImage:"url(img/battlebacks1/Grassland.png)"
-    }};
-    let dv = generateElement(document.getElementById("enseiwnd"),par);
+    let dv = generateElement(document.getElementById("enseiwnd"),this.basePar);
     dv.classList.add("fadeIn");
 
     let eid = this.currentenevieweid;
@@ -286,10 +403,7 @@ class newWnd3{
       dv.append(e.can);
     }
     // Closeボタン
-    let ppp = {type:"div",id:"a3closebtn",textContent:"close",style:{
-      position:"absolute",margin:"5px",padding:"2px 2px 2px 10px",left:"680px",top:"0px",
-      width:"46px",height:"24px",backgroundColor:"#00F"
-    }};
+    let ppp = {type:"div",id:"a3closebtn",textContent:"close",style:this.closeStyle};
     let pdiv = generateElement(dv,ppp);
     pdiv.onclick = this.cfuncAClose.bind(this);
   }
@@ -308,7 +422,11 @@ class newWnd3{
 
   // 街系の実行（Clickでmaticlickfuncを実行）
   matifunc(e){
-    if(e.type=="click"){return this.maticlickfunc();}
+    if(e.type=="click"){
+      //return this.mmcmd.maticlickfunc();
+      this.matireset();
+      return;
+    }
     let ii = (e.type=="mouseover") ? 1:0;
     let cl = ["#040","#0F0"];
     e.target.parentNode.style.background = cl[ii];
@@ -319,177 +437,7 @@ class newWnd3{
     if(div){div.remove();}
     div = document.getElementById("enseiwnd_matiname");
     if(div){div.remove();}
-    this.maticlickfunc();
-  }
-  // 街系の表示（重要）
-  maticlickfunc(){
-    // 無効化
-    let atkmap = document.getElementById("atkmap");
-    atkmap.style.display = "none";
-    //let e = document.getElementById("enseiwnd");//756x564
-    let par = {type:"div",id:"enseiattackwnd",style:{"z-index":55,
-      position:"absolute",margin:"5px",padding:"5px",left:"0px",top:"65px",
-      width:"736px",height:"480px",backgroundImage:"url(img/battlebacks1/Grassland.png)"
-    }};
-    let dv = generateElement(document.getElementById("enseiwnd"),par);
-    dv.classList.add("fadeIn");
-
-    let pm = this.mres.mapres2(this.mativalueid);
-    this.mres.mapImg(this.updgen(dv,50),pm[0],560);
-
-    // 関数を呼ぶ
-    this.mres.mapfunc(0);
-
-    //=== 街名
-    let subd = document.getElementById("enseiwnd_subtitle");
-    let mapres2 = this.mres.mapres2(this.mativalueid);
-    let titletxt = "　：　"+mapres2[1];
-    this.parent.apStrImg(subd,"enseiwnd_matiname",titletxt);
-    //=== 選択肢を出す（関数の中かな？）
-    let base = dv;//document.getElementById("enseiattackwnd");
-    let mmtxt = ["街の人Ａ","街の人Ｂ","隅にいる旅人","赤い屋根の建物"]
-    for(let i=0;i<mmtxt.length;i++){
-      let p = generateElement(base,{type:"div",classList_add:"kwnd2u2",id:"kwnd3mati_"+i,
-        style:{"animation-duration":((1*i+5)/10)+"s",padding:"5px 5px 0px 40px","z-index":15,
-          position:"absolute",left:"50px",top:40+80*i+"px",width:"220px",height:"40px",background:"#008"}  
-        }
-      );
-      let menu = this.kmidwnd.text8(mmtxt[i]);
-      let tar = this.parent.geneStrImg(null,menu);
-      tar.tarid = mmtxt[i];//String(i);
-      tar.actid = i;
-      set3func(tar,this,this.cfunc2);
-      p.append(tar);
-    }
-    //=== キャラの顔グラ
-    let imgsrc = 'img/pictures/Actor2_1.png';
-    let dvp = generateElement(base,{type:"div",
-    style:{position:"absolute",left:"400px",top:"0px"}});
-    let p = this.parent.geneTagImg("matichara",imgsrc);
-    p.classList.add("CharaShadow");
-    p.classList.add("fadeIn3");
-    dvp.appendChild(p);
-    //=== 会話領域
-    let pmsg = {type:"div",style:{
-      bottom:"0px",width:"716px",height:"120px",backgroundColor:"#0000FFA0",
-      color:"#FFF",padding:"10px",position:"absolute"}};
-    this.talkwnd = generateElement(base,pmsg);
-    this.mact2 = null;
-    //=== Closeボタン
-    let ppp = {type:"div",id:"m3closebtn",textContent:"close",style:{
-      position:"absolute",margin:"5px",padding:"2px 2px 2px 10px",left:"680px",top:"0px",
-      width:"46px",height:"24px",backgroundColor:"#00F"
-    }};
-    let pdiv = generateElement(dv,ppp);
-    pdiv.onclick = this.cfuncAClose.bind(this);
-  }
-  cfunc2(e){
-    let p = e.target;
-    if(e.type=="click"){
-      let ai = p.actid;
-      let ii = p.tarid;
-      let aa = this.mres.mapres2(this.mativalueid);
-      console.log(this.mativalueid,aa[1],ai,ii);
-      //=== 街のアクション ===
-      // メニュー消す
-      for(let i=0;i<4;i++){
-        let id = "kwnd3mati_"+i;        
-        let etar = document.getElementById(id);
-        if(etar){etar.remove();}
-      }
-      // Close無効
-      let cbt = document.getElementById("m3closebtn");
-      console.log("cbt",cbt);
-      if(cbt){
-        cbt.style.backgroundColor = "#444";
-        cbt.onclick = null;
-      }
-      
-      this.talkpos = 0;
-      console.log("this.talkpos: "+this.talkpos)
-
-      let div = document.getElementById("enseiattackwnd");
-      this.mact2 = [this.mativalueid,ai];
-      this.mact2data = this.kd.getmact2(this.mativalueid,ai);
-      set3func(div,this,this.cfunc2A);
-      // 画像の位置
-      {
-        let dvp = this.drawdiv(div,0,10,0,300,300)
-        //let src = 'img/pictures/Actor2_1.png';
-        let list = ["People1_2.png","People1_3.png","People1_5.png","People1_6.png"];
-        let src = 'img/pictures/'+list[ai];
-        let p = this.parent.geneTagImg("enseichara0",src);
-        p.classList.add("CharaShadow");
-        p.classList.add("fadeInL");
-        dvp.appendChild(p);
-      }
-      return;
-    }
-    if(e.type=="mouseover"){
-      p.parentNode.style.background="#00F";
-      //this.chgmsg(p.tarid);
-    }else{
-      p.parentNode.style.background="#008";
-    } 
-  }
-  cfunc2A(e){
-    e.stopPropagation();
-    if(e.type!="click"){return;}
-    //console.log("clicked 2A")
-    this.updatetalkwnd();
-  }
-  updatetalkwnd(){
-    console.log(this.mact2,this.talkpos);
-    let tdata = this.mact2data;
-    // Break
-    if(this.talkpos == tdata.length){
-      this.matireset()
-      return;
-    }
-    let tarr = tdata[(this.talkpos)%(tdata.length)];
-    if(tarr[0]=="text"){
-      // Sound Effect
-      if(this.talkpos){
-        audioInvoke("Cursor3");
-      }
-      this.talkwnd.innerHTML = "";
-      for(let i=1;i<tarr.length;i++){
-        let txt = tarr[i];
-        let timg = this.parent.geneStrImg(null,txt);
-        this.talkwnd.appendChild(timg);
-        this.talkwnd.appendChild(document.createElement("BR"));
-      }
-    }else if(tarr[0]=="item"){
-      audioInvoke("Item3");
-      let txt = "\\C[3]"+tarr[1];
-      let timg = this.parent.geneStrImg(null,txt);
-      this.talkwnd.innerHTML = "";
-      this.talkwnd.appendChild(timg);
-    }else if(tarr[0]=="set"){
-      if(tarr[1] == "flag"){
-        //this.kd.flag[tarr[2]] = true;        
-        this.kd.setflag(tarr[2]);
-      }
-      this.talkpos++;
-      this.updatetalkwnd();
-    }else{
-      let txt = "未定義";
-      let timg = this.parent.geneStrImg(null,txt);
-      this.talkwnd.innerHTML = "";
-      this.talkwnd.appendChild(timg);
-    }
-    this.talkpos++;
-  }
-  // From KBAND
-  drawdiv(base,txt,x,y,w,h){
-    let btndiv = generateElement(base, {type:"div",style:
-    {position:"absolute",left:x+"px",top:y+"px",width:w+"px",height:h+"px"}
-    });
-    if(txt){ // 動かない
-      let timg = this.kaihatsu.geneStrImg(null,txt); //78x36
-      btndiv.appendChild(timg);
-    }
-    return btndiv;
+    this.mmcmd.maticlickfunc();
   }
 
   text6(a){
@@ -558,8 +506,6 @@ class newWnd3{
   // 街の画面
   updateMaptip(id){
     console.log("maptip",id);
-    //let res = this.mres.mapres2();//this.mapres2()
-    //let txres = res[id];
     let txres = this.mres.mapres2(id);
     this.updTarget(-1,-1,id);
     // 初期化 
@@ -567,7 +513,6 @@ class newWnd3{
     // 説明タイトル
     this.parent.apStrImg(this.updgen(dv1,0),null,txres[1]);
     // 画像
-    //this.mapImg(this.updgen(dv1,50),txres[0]);
     this.mres.mapImg(this.updgen(dv1,50),txres[0]);
     // 説明テキスト
     this.parent.apStrImg(this.updgen(dv1,270,5),null,txres[2]);
@@ -639,8 +584,19 @@ class newWnd3{
     if(tid.indexOf("enemy") == 0){
       this.updatePage(e.target.enemyid);
     }
-    if(tid.indexOf("maptip") == 0){
+    else if(tid.indexOf("maptip") == 0){
       this.updateMaptip(e.target.mapid);
+    }
+    else if(tid.indexOf("chara") == 0){
+      /* NOP : charaImg のクリックからsettargetを呼ぶ */
+    }
+    else if(tid=="newwnd1_enseimap"){
+      //DBG//console.log(tid)
+      this.updTarget(-1,-1);
+      let dv0 = document.getElementById("ensei_div_txt");
+      dv0.innerHTML = "";
+    }else{
+      console.log("cfunc",tid)
     }
   }
   mmove(){
@@ -649,109 +605,224 @@ class newWnd3{
   }
 }
 
-class kmidwnd3{
-  constructor(wnd){
-    this.kmidwnd = wnd;
-    this.parent = wnd.parent;
-    this.maindv;
-    this.imggg;
-    this.imgsrc = 'img/pictures/Actor1_5.png';
-    this.cdb = this.parent.cdb;
-    // mapdata
-    this.kmapdata = this.parent.kmapdata;
+class newWnd3_mati{
+  constructor(base){
+    this.base = base;
+    this.mres = base.mres;
+    this.kd = base.kd;
+    // Style
+    this.defStyle();
   }
-  init(pdiv){
-    let [maindv,dv,p] = this.kmidwnd.createDIV2(pdiv,this.imgsrc);
-    this.maindv = maindv;
-    this.imggg = p;
-    this.menu(dv);
-    return 0;
-  }
-  initpage(){
-    console.log("kmidwnd3 initpage invoke.");
-    this.reset();
-  }
-  menu(dv){
-    let par = {type:'svg','id':'enseimap','viewbox':'0 0 400 300',"width":"400px","height":"300px"}
-    let svg = generateSVG(dv,par);
-    // 地図の画像
-    let pmap = {type:'image',"href":'img/0img/map.jpg',"x":0,"y":0,"width":"400px","height":"300px"}
-    generateSVG(svg,pmap);
-    // 地図に置く四角
-    let parlist = this.kmapdata.parlist;
-    for(let pp of parlist){
-      pp.type = "rect";
-      let p = generateSVG(svg,pp);
-      set3func(p,this,this.mclick,this.mevent);
+  defStyle(){
+    this.kaiwaStyle = {
+      bottom:"0px",width:"716px",height:"120px",backgroundColor:"#0000FFA0",
+      color:"#FFF",padding:"10px",position:"absolute"
+    };
+    this.menuStyle = [];
+    for(let i=0;i<4;i++){
+      let ms = {"animation-duration":((1*i+5)/10)+"s",padding:"5px 5px 0px 40px","z-index":15,
+        position:"absolute",left:"50px",top:40+80*i+"px",width:"220px",height:"40px",background:"#008"
+      };
+      this.menuStyle[i] = {type:"div",classList_add:"kwnd2u2",id:"kwnd3mati_"+i,style:ms}
     }
   }
-  setrect(svg,arg){
-    let p = document.createElementNS('http://www.w3.org/2000/svg','rect');
-    for (let key in arg) {
-      p.setAttribute(key, arg[key]);
-    }
-    svg.appendChild(p); //追加して仮想SVGツリーに
-    return p;
+  // From KBAND
+  drawdiv(base,x,y,w,h){
+    let btndiv = generateElement(base, {type:"div",style:
+    {position:"absolute",left:x+"px",top:y+"px",width:w+"px",height:h+"px"}
+    });
+    return btndiv;
   }
-  reset(){
-    this.enseitarget = null;
-    for(let i=0;i<5;i++){
-      let rid = "rect3_"+(i+1);
-      let p = document.getElementById(rid);
-      this.kmapdata.chgAttr(p,0);
-    }
-  }
-  newwnd(){
-    let e = new newWnd3(this,this.parent,this.enseitarget);
-    e.newwnd();
-  }
+  // 重要な関数
+  maticlickfunc(){
+    let mid = this.base.mativalueid;
+    let base = this.base;
+    // 無効化
+    let atkmap = document.getElementById("atkmap");
+    atkmap.style.display = "none";
+    let dv = generateElement(document.getElementById("enseiwnd"),base.basePar);
+    dv.classList.add("fadeIn");
 
-  react1(ii){
-    console.log("react1 = "+ii);
-    let tar = this.parent.kmsgwnd;
-    let txt;//= (ii==0)? ["はいを押された"]:["いいえを押された"];
-    if(ii==0){
-      audioInvoke("Attack3");//Item3は成功音
-      txt = ["遠征討伐"];
-      this.newwnd();
-    }else{
-      audioInvoke("Cancel2");
-      txt = ["キャンセルしました"];
+    let pm = this.mres.mapres2(mid);
+    this.mres.mapImg(base.updgen(dv,50),pm[0],560);
+
+    // 関数を呼ぶ
+    this.mres.mapfunc(0);
+
+    //=== 街名
+    let subd = document.getElementById("enseiwnd_subtitle");
+    let mapres2 = this.mres.mapres2(mid);
+    let titletxt = "　：　"+mapres2[1];
+    base.parent.apStrImg(subd,"enseiwnd_matiname",titletxt);
+    //=== 選択肢を出す（関数の中かな？）
+    let basedv = dv;
+    let mmtxt = this.kd.getMMenu(mid);
+    for(let i=0;i<mmtxt.length;i++){
+      let p = generateElement(basedv,this.menuStyle[i]);
+      let menu = base.kmidwnd.text8(mmtxt[i]);
+      let tar = base.parent.geneStrImg(null,menu);
+      tar.tarid = mmtxt[i];//String(i);
+      tar.actid = i;
+      set3func(tar,this,this.cfunc2);
+      p.append(tar);
     }
-    tar.setText(txt); 
-    this.reset();
+    //=== キャラの顔グラ
+    let imgsrc = 'img/pictures/Actor2_1.png';
+    let dvp = generateElement(basedv,{type:"div",
+    style:{position:"absolute",left:"400px",top:"0px"}});
+    let p = base.parent.geneTagImg("matichara",imgsrc);
+    p.classList.add("CharaShadow");
+    p.classList.add("fadeIn3");
+    dvp.appendChild(p);
+    //=== 会話領域
+    let pmsg = {type:"div",style:this.kaiwaStyle};
+    this.talkwnd = generateElement(basedv,pmsg);
+    this.mact2 = null;
+    //=== Closeボタン
+    let ppp = {type:"div",id:"m3closebtn",textContent:"close",style:base.closeStyle};
+    let pdiv = generateElement(dv,ppp);
+    pdiv.onclick = base.cfuncAClose.bind(base);
   }
-  mclick(e){
-    if(this.enseitarget){return;}
-    this.enseitarget = e.target.id;
-    audioInvoke("Cursor3");
-    let tar = this.parent.kmsgwnd;
-    let isopen = this.kmapdata.isopen(e.target.id);
-    if(!isopen){
-      let txt = ["遠征不可"];
-      tar.setText(txt); 
-      this.reset();
-      // はい・いいえ 消す
-      tar.switchpage();
-    }else{
-      let nm = this.kmapdata.getNMfromMAPName(e.target.id);
-      let txt = [nm+" に、遠征討伐しますか？"];
-      tar.setText(txt);
-      // はい・いいえ を出す
-      tar.YNwnd(this,this.react1,this.react1);
-    }
-  }
-  mevent(e){
-    if(this.enseitarget){return;}
-    //console.log("mevent:"+e.type);
-    let tp = (e.type=="mouseenter"||e.type=="mouseover")? 1:0; //これがバグってた。。いつも０のバグ
+  // メニュークリック時
+  cfunc2(e){
+    let mid = this.base.mativalueid;
+    let base = this.base;
     let p = e.target;
-    this.kmapdata.chgAttr(p,tp);
-    if(tp==1){
-      let ptxt = this.kmapdata.maptext;
-      let txt = ptxt[e.target.id];//["なにをしますか？","行動力 １００"];
-      let tarwnd = this.parent.kmsgwnd;
-      tarwnd.setText(txt);
+    if(e.type=="click"){
+      let ai = p.actid;
+      let ii = p.tarid;
+      let aa = this.mres.mapres2(mid);
+      console.log(mid,aa[1],ai,ii);
+      //=== 街のアクション ===
+      // メニュー消す、最大４
+      for(let i=0;i<4;i++){
+        let id = "kwnd3mati_"+i;        
+        let etar = document.getElementById(id);
+        if(etar){etar.remove();}
+      }
+      // Close無効
+      let cbt = document.getElementById("m3closebtn");
+      console.log("cbt",cbt);
+      if(cbt){
+        //cbt.style.backgroundColor = "#444";
+        //cbt.onclick = null;
+        // 再作成されるから、消してよい
+        cbt.style.display = "none";
+      }
+      
+      this.talkpos = 0;
+      console.log("this.talkpos: "+this.talkpos)
+
+      let div = document.getElementById("enseiattackwnd");
+      this.mact2 = [mid,ai];
+      this.mact2data = this.kd.getmact2(mid,ai);
+      set3func(div,this,this.cfunc2A);
+      // 画像の位置
+      {
+        let dvp = this.drawdiv(div,10,0,300,300);
+        let src = this.kd.getImgSrc(mid,ai);
+        let p = base.parent.geneTagImg("enseichara0",src);
+        p.classList.add("CharaShadow");
+        p.classList.add("fadeInL");
+        dvp.appendChild(p);
+      }
+      return;
+    }
+    if(e.type=="mouseover"){
+      p.parentNode.style.background="#00F";
+      //this.chgmsg(p.tarid);
+    }else{
+      p.parentNode.style.background="#008";
+    } 
+  }
+  // 会話時のクリック
+  cfunc2A(e){
+    e.stopPropagation();
+    if(e.type!="click"){return;}
+    //console.log("clicked 2A")
+    this.updatetalkwnd();
+  }
+  // 会話処理ループの制御 ！重要！
+  updatetalkwnd(){
+    let base = this.base;
+    let callflag = 0; // true で 入力待ち無
+    console.log(this.mact2,this.talkpos);
+    let tdata = this.mact2data;
+    // Break
+    if(this.talkpos == tdata.length){
+      base.matireset()
+      return;
+    }
+    const txtfunc = (tarr,pp="") => {
+      this.talkwnd.innerHTML = "";
+      for(let i=1;i<tarr.length;i++){
+        if(tarr[i].length <= 0){break;}
+        let timg = base.parent.geneStrImg(null,pp+tarr[i]);
+        this.talkwnd.appendChild(timg);
+        this.talkwnd.appendChild(document.createElement("BR"));
+      }
+    } 
+    let tarr = tdata[(this.talkpos)%(tdata.length)];
+    if(tarr[0]=="text"){
+      // Sound Effect
+      if(this.talkpos){
+        audioInvoke("Cursor3");
+      }
+      txtfunc(tarr);
+    }else if(tarr[0]=="item"){
+      audioInvoke("Item3");
+      txtfunc(tarr, "\\C[3]");
+    }else if(tarr[0]=="set"){
+      console.log("SET",tarr[1],tarr[2])
+      if(tarr[1] == "flag"){     
+        this.kd.setflag(tarr[2]);
+      }
+      callflag = 1;
+    }else if(tarr[0]=="func"){
+      this.kd.callFunc(tarr[1]);
+      callflag = 1;
+    }else{
+      txtfunc(["","未定義"]);
+    }
+    this.talkpos++;
+    if(callflag){
+      this.updatetalkwnd();
+    }
+  }
+}
+
+// 基本的な切り出しクラス
+class maptip{
+  constructor(base,args,ii){
+    //console.log(maptip);
+    this.initpar(args[2]);
+    // Init 48x48
+    this.can = generateElement(base,{type:"canvas",id:"maptip_"+ii,mapid:ii,width:48,height:48,
+      style:{"z-index":20,position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
+    this.ctx = this.can.getContext("2d");
+    this.img.onload = () => {
+      this.draw();
+    }
+  }
+  initpar(aa){
+    let par = [[0,15],[0,15],[2,15],[6,2],[8,9]]
+    this.img = new Image();
+    this.img.src = "img/tilesets/World_B.png"; // depend on args2
+    this.xyp = par[aa]; // depend on args2
+    this.setflag = false;
+  }
+  setredraw(ff){
+    this.setflag = ff;
+    this.draw();
+  }
+  draw(){
+    const ctx = this.ctx;
+    ctx.clearRect(0,0,48,48);
+    let [x,y]=this.xyp;
+    ctx.drawImage(this.img,48*x,48*y,48,48,0,0,48,48);
+    if(this.setflag){
+      ctx.fillStyle = "#00FF0080";
+      ctx.fillRect(0,0,48,48);
     }
   }
 }
@@ -830,8 +901,9 @@ class enemyImg{
 }
 
 class kd3_1 {
-  constructor(){
+  constructor(base){
     this.cname = "kd3_1";
+    this.base = base;
     let hh = {};
     // 敵の表示
     hh["edata"] = [
@@ -879,75 +951,79 @@ class kd3_1 {
         [1,"山奥の村","山奥にある村"],[2,"ノーマの祭壇","物語上大事な要衝"],
         [3,"山岳地帯","なにか見つかるかも"],
       ],
-      //cond:[[4],[1],[2,5],[6,7],[0,3]]
-      cond:[[],[],[],[],[]]
+      cond:[[4],[1],[2,5],[6,7],[0,3]]
+      //cond:[[],[],[],[],[]]
     };
     hh["mfunc"] = [this.func1];
+    hh["mmenu"] = {
+      0:["街の人Ａ","街の人Ｂ","街の人Ｃ","赤い屋根の建物"],
+      1:["街の人Ａ","街の人Ｂ","街の人Ｃ"],
+      2:["街の人Ａ","街の人Ｂ","強そうな戦士"],
+      12:["街の人Ａ","街の人Ｂ"],
+      3:["巫女","妖精"]
+    };
+    hh["mmimg"] = {
+      0:["SF_People1_2.png","SF_People1_3.png","SF_People1_5.png","SF_People1_6.png"],
+      1:["People1_3.png","People1_6.png","Actor1_1.png"],
+      2:["People1_2.png","People1_2.png","Actor3_1.png"],
+      3:["People2_6.png","Nature_6.png"]
+    }
     this.data = hh;
 
-    //----------------------------------------
-    // 街の人データ
-    //----------------------------------------
-    /*let tk1 = [
-      ["talk","こんにちわ！"],
-      ["talk","元気？"],
-      ["talk","頑張ろうね！"]
-    ];
-    let tk2 = [
-      ["talk","こんにちわ！"],
-      ["talk","お薬上げる"],
-      ["talk","頑張ってね！"],
-      ["item","お薬を手に入れた"],
-    ];
-    let tk3 = [
-      ["talk","こんにちわ！"],
-      ["talk","会話のテスト"],
-      ["talk","開発がんばれ"]
-    ];
-    this.mm = {};
-    this.mm["data"] = {
-      "ノーマの街":{
-        0:{flag:5,defo:tk1}, // 最初だけ５を呼ぶ
-        1:{flag:0,defo:tk3},
-        5:{flag:0,defo:tk2} // 特別な会話
-      }
-    }*/
-    this.flag = null;
+    this.flagGameID = 19;
   }
+  callFunc(i){
+    console.log(i);
+    // 仲間加入
+    if(i==1){
+      $gameSwitches.setValue(24, true);
+    }
+    // この面クリア
+    if(i==2){
+      this.base.kmapdata.openmap(1);
+    }
+  }
+  getMMenu(i){
+    let hh = this.readflag();
+    // 特別対応：2,10 -> 12
+    if(i==2 && hh[10]){i = 12;}
+    return this.data["mmenu"][i];
+  }
+  //=== Common ===
   func1(){
     console.log("func1 involed.", this.cname);
   }
   getMatiName(a){
     return this.data["mapres"].res2[a][1]
   }
-  initflag(){
-    let hh = $gameVariables.value(19);
-    if(!hh){
-      hh = {};
-    }
-    this.flag = hh;
-    console.log("this.flag",this.flag)
+  readflag(){
+    let hh = $gameVariables.value(this.flagGameID);
+    if(!hh){hh = {};}
+    if(!hh[this.cname]){hh[this.cname] = {};}
+    console.log("readflag:",hh)
+    return hh[this.cname];
   }
   setflag(aa){
-    this.flag[aa] = true;
-    $gameVariables.setValue(19, this.flag);
+    let hh = $gameVariables.value(this.flagGameID);
+    if(!hh){hh = {};}
+    if(!hh[this.cname]){hh[this.cname] = {};}
+    hh[this.cname][aa] = true;
+    $gameVariables.setValue(this.flagGameID, hh);
+  }
+  getImgSrc(a,i){
+    return 'img/pictures/'+this.data["mmimg"][a][i];
   }
   getmact2(a,i){
-    if(!this.flag){
-      this.initflag();
-    }
-    // 今のところ
-    a = 0;
-    //i = (i==0)?0:1;
+    let hh = this.readflag();
     console.log(kmatidata);
     let mn = "c_"+a+"_"+i;
     let md = kmatidata[mn];
     if(md.cond){
       let cc = md.cond;
-      if(cc.flag && this.flag[cc.flag]){
+      if(cc.flag && hh[cc.flag]){
         i = cc.goto
       }
-      if(cc.nflag && !(this.flag[cc.nflag])){
+      if(cc.nflag && !(hh[cc.nflag])){
         i = cc.goto
       }
       mn = "c_"+a+"_"+i;
@@ -957,22 +1033,144 @@ class kd3_1 {
     return md.data;
   }
 
-  getmact2_old(a,i){
-    // 今のところ
-    a = 0;
-    i = (i==0)?0:1;
+}
 
-    let mati = this.getMatiName(a);
-    let mt = this.mm["data"][mati];
-    let md = mt[i]
-    if(md.flag > 0){
-      i = md.flag;
-      md.flag = 0; // １回だけ
-      md = mt[i];
+class kd3_2 {
+  constructor(base){
+    this.cname = "kd3_2";
+    this.base = base;
+    let hh = {};
+    // 敵の表示
+    hh["edata"] = [
+      ["草原 1","ウインド","SF_Kamaitachi.png",0,100],
+      ["草原 2","ウインド","SF_Kamaitachi.png",0,110],
+      ["草原 3","カニクラブ","Crab.png",0,120],
+      ["草原 4","シーデビル","SF_Kappa.png",0,130],
+      ["草原 5","ウンディーネ","Undine.png",0,120],
+      ["草原 6","ウンディーネ","Undine.png",0,120],
+      ["草原 7","レッドオーガ","SF_Redogre.png",0,130],
+      ["草原 8","ブルーオーガ","SF_Blueogre.png",0,130],
+      ["ボスエリア","クラーケン","Kraken.png",1,100],
+    ];
+    // 敵の詳細
+    hh["edetail"] = [
+      {num:3,xx:[50,150,250],yy:[50,150,250],img:"SF_Kamaitachi.png"},
+      {num:3,xx:[50,150,250],yy:[50,150,250],img:"SF_Kamaitachi.png"},
+      {num:6,xx:[50,100,50,200,250,200],yy:[50,170,290,50,170,290],img:"Crab.png"},
+      {num:3,xx:[50,100,200],yy:[100,220,100],img:"SF_Kappa.png"},
+      {num:3,xx:[50,150,50],yy:[50,170,290],img:"Undine.png"},
+      {num:3,xx:[50,150,50],yy:[50,170,290],img:"Undine.png"},
+      {num:2,xx:[-50,100],yy:[50,50],img:"SF_Redogre.png"},
+      {num:2,xx:[50,250],yy:[50,50],img:"SF_Blueogre.png"},
+      {num:1,xx:[50],yy:[50],ww:330,img:"Kraken.png"},
+    ];
+    // 敵の表示
+    hh["estatus"] = [
+      {type:"武",hp:300,mhp:300,atk:100},
+      {type:"魅",hp:300,mhp:300,atk:100},
+      {type:"武",hp:300,mhp:300,atk:100},
+      {type:"魅",hp:300,mhp:300,atk:100},
+      {type:"武",hp:300,mhp:300,atk:100},
+      {type:"武",hp:300,mhp:300,atk:100},
+      {type:"魅",hp:300,mhp:300,atk:100},
+      {type:"魅",hp:300,mhp:300,atk:100},
+      {type:"知",hp:2000,mhp:2000,atk:300},  
+    ];
+    // 敵の配置
+    hh["enelist"] = [
+      [170,160,1],[170,260,1],[320,190,1],[120,210,1],
+      [320,90,1],[270,140,1],[20,50,1],[70,0,1],
+      [60,330,1]];
+    // MAP
+    hh["mapres"] = {
+      res1:[[320,140,1],[170,210,1],[70,50,3],[10,340,3]],
+      res2:[
+        [1,"アストリアの街","この地方の主要な街"],
+        [1,"ミディアの街","この地方の主要な街"],
+        [2,"塔","探索すると？？？"],
+        [2,"アストリアの祭壇","物語上大事な要衝"],
+      ],
+      //cond:[[4],[1],[2,5],[6,7],[0,3]]
+      cond:[[],[],[],[],[]]
+    };
+    hh["mfunc"] = [this.func1];
+    hh["mmenu"] = {
+      0:["街の人Ａ","街の人Ｂ","街の人Ｃ","赤い屋根の建物"],
+      1:["街の人Ａ","街の人Ｂ","街の人Ｃ"],
+      2:["街の人Ａ"],
+      3:["巫女","妖精"]
+    };
+    hh["mmimg"] = {
+      0:["SF_People1_2.png","SF_People1_3.png","SF_People1_5.png","SF_People1_6.png"],
+      1:["People1_3.png","People1_6.png","Actor1_1.png"],
+      2:["People1_2.png","People1_2.png","People3_7.png"],
+      3:["People2_6.png","Nature_6.png"]
     }
-    return md.defo;
+    this.data = hh;
 
+    this.flagGameID = 19;
   }
+  callFunc(i){
+    console.log(i);
+    // 仲間加入
+    if(i==1){
+      $gameSwitches.setValue(25, true);
+    }
+    // この面クリア
+    if(i==2){
+      this.base.kmapdata.openmap(2);
+    }
+  }
+  getMMenu(i){
+    let hh = this.readflag();
+    // 特別対応：2,10 -> 12
+    if(i==2 && hh[10]){i = 12;}
+    return this.data["mmenu"][i];
+  }
+  //=== Common ===
+  func1(){
+    console.log("func1 involed.", this.cname);
+  }
+  getMatiName(a){
+    return this.data["mapres"].res2[a][1]
+  }
+  readflag(){
+    let hh = $gameVariables.value(this.flagGameID);
+    if(!hh){hh = {};}
+    if(!hh[this.cname]){hh[this.cname] = {};}
+    console.log("readflag:",hh)
+    return hh[this.cname];
+  }
+  setflag(aa){
+    let hh = $gameVariables.value(this.flagGameID);
+    if(!hh){hh = {};}
+    if(!hh[this.cname]){hh[this.cname] = {};}
+    hh[this.cname][aa] = true;
+    $gameVariables.setValue(this.flagGameID, hh);
+  }
+  getImgSrc(a,i){
+    return 'img/pictures/'+this.data["mmimg"][a][i];
+  }
+  getmact2(a,i){
+    let hh = this.readflag();
+    console.log(kmatidata);
+    let mn = "c_"+a+"_"+i;
+    let md = kmatidata[mn];
+    if(md.cond){
+      let cc = md.cond;
+      if(cc.flag && hh[cc.flag]){
+        i = cc.goto
+      }
+      if(cc.nflag && !(hh[cc.nflag])){
+        i = cc.goto
+      }
+      mn = "c_"+a+"_"+i;
+      md = kmatidata[mn];
+    }
+    console.log(md.data)
+    return md.data;
+  }
+
 }
 
 //=====================================================================

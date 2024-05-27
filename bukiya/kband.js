@@ -26,7 +26,7 @@
  * @text バンド前ツクール表示用
  * @desc 
  * ループ変数に入れてください
- * ２１，２２，２３，２４ に必要なものを返す
+ * ２１，２２，２３，２４，２５ に必要なものを返す
  * 
  * @command kbandcmd
  * @text バンドコマンド
@@ -79,6 +79,7 @@ function setClass2kband(par){
       }
     }
   }
+
   class kbandclass{
     constructor(){
       this.name = "kbandclass";
@@ -87,11 +88,29 @@ function setClass2kband(par){
       setClass2kband = this.setclass.bind(this);
       // DATA
       this.dhash = kbanddata;
-      this.testinitval = [
+    }
+    load20(){
+      return $gameVariables.value(20);
+    }
+    save20(hh){
+      $gameVariables.setValue(20, hh);
+    }
+    init20(){
+      // テスト（初期値詰め）
+      let testinitval = [
         {name:"ユウ",exp:12,lv:3},
         {name:"セシリア",exp:23,lv:0},
         {name:"アイリン",exp:11,lv:1},
       ];
+      let s = testinitval.length;
+      let e = 20;
+      for(let i=s;i<e;i++){
+        //let nm = this.cdb.getName(i);
+        //let hh = {name:this.cdb.getName(i),exp:0,lv:0};
+        testinitval.push({name:this.cdb.getName(i),exp:0,lv:0});
+      }
+      //$gameVariables.setValue(20, {ap:100,band:this.testinitval});
+      this.save20({ap:100,band:testinitval});
     }
 
     //=== バンドコマンド実施前判定 ====
@@ -99,7 +118,8 @@ function setClass2kband(par){
       let vid = this.kaihatsu.ids[0];//ループ変数
       let id = $gameVariables.value(vid);
       console.log("getband:",id);
-      let hh = $gameVariables.value(20);
+      //let hh = $gameVariables.value(20);
+      let hh = this.load20();
       let bd = hh.band[id];
       $gameVariables.setValue(21, hh.ap);
       $gameVariables.setValue(22, bd.lv);
@@ -123,7 +143,8 @@ function setClass2kband(par){
     // バンドコマンド実態
     kbandexec(tarid){
       if(tarid<0){return 1;}
-      let hh = $gameVariables.value(20);
+      //let hh = $gameVariables.value(20);
+      let hh = this.load20();
       hh.ap -= 30;
       console.log("kbandexec",tarid);
 
@@ -131,7 +152,7 @@ function setClass2kband(par){
       let bd = hh.band[tarid];
       if(this.lvupcheck(tarid,bd)){
         bd.lv += 1;
-        $gameVariables.setValue(20, hh);
+        //$gameVariables.setValue(20, hh);
         rtn = 2;
         // 演出アリ
         if(this.getCheck(tarid,bd.lv)){
@@ -140,6 +161,7 @@ function setClass2kband(par){
           rtn = 0;
         }  
       }
+      this.save20(hh);
       return rtn;
     }
     lvupcheck(id,bd){
@@ -282,23 +304,17 @@ function setClass2kband(par){
     }
     // 初期化
     init(){
-      console.log("init invoke.");
-      // テスト（初期値詰め）
-      let s = this.testinitval.length;
-      let e = 20;
-      for(let i=s;i<e;i++){
-        let nm = this.cdb.getName(i);
-        let hh = {name:nm,exp:0,lv:0};
-        this.testinitval.push(hh);
-      }
-      $gameVariables.setValue(20, {ap:100,band:this.testinitval});
+      console.log("kband init invoke.");
+      this.init20();
     }
     // ターンエンド時の処理
     turnend(){
       console.log("kband turnend.");
-      let hh = $gameVariables.value(20);
+      //let hh = $gameVariables.value(20);
+      let hh = this.load20();
       hh.ap = 100; // 特殊効果なし時 １００。
-      $gameVariables.setValue(20, hh);
+      //$gameVariables.setValue(20, hh);
+      this.save20(hh);
       let atxt = "行動力が回復した。("+hh.ap+")";
       $gameVariables.setValue(25, atxt); // 行動力テキスト
     }

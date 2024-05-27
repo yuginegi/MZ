@@ -64,14 +64,11 @@
       this.imgsrc = 'img/pictures/Actor2_1.png';
       this.cdb = this.parent.cdb;
       this.invoke = 0;
-      // 城データ
-      let tar = this.parent.kjyodata;
-      this.psts = tar.psts;
-      this.psname = tar.psname;
       // 関数
       let tar2 = this.parent.chardata;
       this.getpstatus1 = tar2.getpstatusAll.bind(tar2);
-      this.getpstatus = tar2.getpstatus.bind(tar2);
+      //this.getpstatus = tar2.getpstatus.bind(tar2);
+      this.getpcharlist = tar2.getpcharlist.bind(tar2);
     }
     getpstatus2(){
       let p = {};
@@ -86,10 +83,15 @@
     }
     getpstatus3(){
       let p = this.getpstatus1();
-      p["糧"] = this.parent.kjyodata.kome;
+      p["糧"] = this.parent.kjyodata.psts[8];
       return p;
     }
     init(pdiv){
+      // 城データ
+      let tar = this.parent.kjyodata;
+      this.psts = tar.psts;
+      this.psname = tar.psname;
+      // 初期化処理
       console.log("kmidwnd5 init invoke.");
       let [maindv,dv,p] = this.kmidwnd.createDIV2(pdiv,this.imgsrc);
       this.maindv = maindv;
@@ -115,10 +117,13 @@
     }
     notification(tar){
       let list2 = this.parent.gentable(tar,"ktbl2",1,2);
-      let nn = this.getpstatus("勇者");
+      //let nn = this.getpstatus("勇者");
+      let ll = this.getpcharlist(0,10);
+      let nn = ll.length;
+      //console.log(nn,ll.length,ll);
       let id = (nn+this.noteinfo++)%nn;
       // list2[0]
-      let e = new charaFace(this.cdb, [20,20,id]);
+      let e = new charaFace(this.cdb, [20,20,ll[id]]);
       list2[0].append(e.can);
       list2[0].style.width ="25%";
       // list2[1]
@@ -203,10 +208,6 @@
       this.parent = wnd.parent;
       this.maindv;
       this.imggg;
-      // 城データ
-      let tar = this.parent.kjyodata;
-      this.psts = tar.psts;
-      this.psname = tar.psname;
       // Role
       this.rolepp ={
         "kaitaku":{t1:2,t2:3,t3:4,a1:100,a2:20,a3:10,maxV:999},
@@ -258,6 +259,11 @@
       tar.setText(txt);  
     }
     init(pdiv){
+      // 城データ
+      let tar = this.parent.kjyodata;
+      this.psts = tar.psts;
+      this.psname = tar.psname;
+      // 初期化処理
       let [maindv,dv,p] = this.kmidwnd.createDIV2(pdiv,this.imgsrc);
       this.maindv = maindv;
       this.imggg = p;
@@ -753,15 +759,15 @@
       //console.log(this.name+"::isArray="+Array.isArray(this.ids)+":"+this.ids);
       //＝＝＝ 数字の配列かどうかチェック
       if(this.ids.length < 7){
-          alert("NeneSystem.js::Given parameter is wrong. \""+ids+"\"\nPlease check plugin parameter. ");
+          alert("kaihatsu.js::Given parameter is wrong. \""+ids+"\"\nPlease check plugin parameter. ");
           // 起動時、ワザとエラーにする
-          NeneSystemClass_initERROR1 = "ERROR";
+          kaihatsuclass_initERROR1 = "ERROR";
       }
       for(let cc of this.ids){
         if(typeof cc != "number"){
-          alert("NeneSystem.js::Given parameter is wrong. \""+ids+"\"\nPlease check plugin parameter. ");
+          alert("kaihatsu.js::Given parameter is wrong. \""+ids+"\"\nPlease check plugin parameter. ");
           // 起動時、ワザとエラーにする
-          NeneSystemClass_initERROR2 = "ERROR";
+          kaihatsuclass_initERROR2 = "ERROR";
         }
       }
       console.log(this.name+", Init Success. "+this.ids);
@@ -771,11 +777,8 @@
     }
     init(){
       // DB準備（Initよりも前に）
-      this.cdb = new charaDB(this);
-      this.kjyodata = new kjyodata(); // 城
-      this.kmapdata = new kmapdata(this); // マップデータ
-      this.chardata = new chardata(); // 勇者商人データ
-      //this.kturn  = new kturn(this);
+      this.dbm = new DataBaseManager(this);
+      this.dbm.init(this,1);
       // Init処理
       this.mode = 0;
       this.menFunc = TouchInput.update; // 確保する。関数定義を持ってきた方が良いかもだが・・・
@@ -835,12 +838,13 @@
       }
       // リサイズ呼んでおく
       resizeKaihatsu();
-      this.initdatashow();
       // 入るときの初期化、(inp==1)の時だけ！！
       if(inp==1){
-        this.kjyodata.initActivePower();
+        this.kjyodata.Initialize();
       }
-      // 入るときの初期化
+      // 表示の初期化
+      this.initdatashow();
+      // 入るときの初期化（各ページの状態の初期化）
       this.kmidwnd.initpage();
     }
     // 一回だけ呼ばれる（初期化のタイミングでは $gameParty とか理由で呼べない）
@@ -937,6 +941,7 @@
       this.kturn.turnrepo();
     }
     initfunction(){
+      console.log("=== kaihatsu initfunction ===");
       // セット
       this.kband = setClass2kband(this);
       setClass2kband = {}; // 使い終わったので無効化

@@ -48,27 +48,29 @@ class kturnclass{
   setclass(par){
     console.log("setClass2kturn.");
     this.par = par;
-    this.cdb = par.cdb; // キャラDB
-    this.kmapdata = par.kmapdata; // マップデータ
-    this.kjyodata = par.kjyodata;
-    this.turn = 0;//読み込み必要
     return this;
   }
   // 初期化
   init(){
     console.log("init invoke.");
+    let par = this.par;
+    this.retVal = par.ids[0];
+    this.skilldata = par.chardata.skilldata; // スキルデータ（参照専用）
+    this.cdb = par.cdb; // キャラDB：setStatusHP、setAttackData
+    this.kmapdata = par.kmapdata; // マップデータ
+    this.kjyodata = par.kjyodata; // 城データ
   }
-  seisan(){
+  seisan(tar){
     console.log("seisan invoke.");
-    let s = this.kjyodata.psts;
+    let s = tar.psts;
     console.log("gin",s[2],"農業",s[4],"商業",s[5]);
     // 加算
-    this.kjyodata.kome += s[4];
+    s[8] += s[4];
     s[2] += s[5];
     // 表示
     let gtxt = "銀："+s[2];
     let gtxt2 = "(＋"+s[5]+")";
-    let ktxt = "糧："+this.kjyodata.kome;
+    let ktxt = "糧："+s[8];
     let ktxt2 = "(＋"+s[4]+")";
     $gameVariables.setValue(21, gtxt); // 銀のテキスト
     $gameVariables.setValue(22, gtxt2); // 銀のテキスト
@@ -77,14 +79,16 @@ class kturnclass{
   }
   // 結果表示
   turnrepo(){
+    this.turn = this.kjyodata.loadturn();
+    console.log("turnrepo:",this.retVal)
     //初期化
-    $gameVariables.setValue(this.par.ids[0], 0);
+    $gameVariables.setValue(this.retVal, 0);
     //表示
     let charlist = Object.keys(this.atklogs).map((x)=>{return Number(x)});
     if(charlist.length > 0){
       this.initCanvas(charlist);
     }else{
-      $gameVariables.setValue(this.par.ids[0], this.turn);
+      $gameVariables.setValue(this.retVal, this.turn);
     }
   }
   initCanvas(charlist){
@@ -178,7 +182,7 @@ class kturnclass{
     btndiv.appendChild(timg);
   }
   cfunc(event){
-    $gameVariables.setValue(this.par.ids[0], this.turn);
+    $gameVariables.setValue(this.retVal, this.turn);
     document.getElementById("turnrepo").remove();
   }
   cfunc2(event){
@@ -196,9 +200,23 @@ class kturnclass{
       this.imggg.classList.remove("fadeIn");
     }
   }
+
   //　ターン終了
   turnend(){
+    this.turn = this.kjyodata.loadturn();
     console.log("turn end.");
+    // 戦闘処理
+    this.turnAttackFunc();
+    this.turn++;
+    // seisan で 計算して、saveturn で SAVE する
+    this.seisan(this.kjyodata);
+    this.kjyodata.saveturn( this.turn );
+    // メッセージ用に、ターン数を返す
+    $gameVariables.setValue(this.retVal, this.turn);
+  }
+  // kmapdata で挟む
+  turnAttackFunc(){
+    this.kmapdata.loadValue();
     let gekiha={};
     this.atklogs = {};
     let [ah,aa] = this.cdb.getAttackAll();//有効なものがあるか調べるため
@@ -225,15 +243,14 @@ class kturnclass{
       for(let i in aa){
         if(gekiha[kk][0]==aa[i] && gekiha[kk][1]==ah[i]){
           console.log(i,"setAttackData Reset")
-          this.cdb.setAttackData(i,null,null);
+          this.cdb.setAttackData(i,null,null); // 更新
           this.atklogs[i].gekiha = true;
         }
       }
     }
-    this.turn++;
-    this.seisan();
-    $gameVariables.setValue(this.par.ids[0], this.turn);
+    this.kmapdata.saveValue();
   }
+  // 味方の攻撃力を得る計算
   turnendAtk(i,a,h,gekiha){
     //敵の能力を得る
     let est = this.kmapdata.getEneStatus(a,h);
@@ -264,6 +281,7 @@ class kturnclass{
     }
     return [atk];
   }
+  // 味方の被ダメの計算
   turnendDef(i,a,h,aa,ah){
     //敵の能力を得る
     let est = this.kmapdata.getEneStatus(a,h);
@@ -279,7 +297,7 @@ class kturnclass{
     //DBG//console.log(est.atk,c1,partyNums,pn);
     let dmg = Math.floor((est.atk/pn)/pbase);
     let dhp = c1-dmg;
-    this.cdb.setStatusHP(i,dhp);
+    this.cdb.setStatusHP(i,dhp); // 更新
     return [dmg,dhp]
   }
   // アタック表
@@ -294,7 +312,7 @@ class kturnclass{
   }
   // スキルで増えた能力を得る
   getSkillExt(id){
-    let ulist = this.par.chardata.skilldata.getulist(id);
+    let ulist = this.skilldata.getulist(id);
     let ret = [0,0,0];
     for(let j=0;j<3;j++){
     for(let i=10*j;i<10*(j+1);i++){
@@ -304,17 +322,7 @@ class kturnclass{
   }
   // スキルで増えた能力を得る
   getSkillWep(id){
-    return this.par.chardata.skilldata.weaponlv[id];
-  }
-  getSkillWep_old(id){
-    let ulist = this.par.chardata.skilldata.getulist(id);
-    let ret = [0,0];
-    for(let j=0;j<2;j++){
-      let st = 30+5*j;
-    for(let i=st;i<st+5;i++){
-      ret[j] += ulist[i];
-    }}
-    return ret;
+    return this.skilldata.weaponlv[id];
   }
 }
 

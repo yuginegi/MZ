@@ -16,16 +16,44 @@
 
 /* 相変わらずですけど、くそコードになってますm(__)m リファクタリング（ＴへＴ）*/
 
+class DataBaseManager{
+  constructor(owner){
+    this.owner = owner;
+  }
+  // 静的データ
+  init(tar,type){
+    if(type==1){
+      /*
+      this.cdb = new charaDB(this);
+      this.kjyodata = new kjyodata(); // 城
+      this.kmapdata = new kmapdata(this); // マップデータ
+      this.chardata = new chardata(); // 勇者商人データ
+      */
+      tar.cdb = new charaDB(this);
+      tar.chardata = new chardata(); // 勇者商人データ
+      
+      // １８：呼ぶときに初期化しているかどうか
+      tar.kjyodata = new kjyodata(); // 城
+      // １９：使うときにinitinvoke → loadValue
+      tar.kmapdata = new kmapdata(this); // マップデータ
+    }
+  }
+}
+
+// １８：城のデータ
+// ２０：絆・BAND
 class kjyodata{
   constructor(){
     // ＜行動力は外部の数字＞
     this.psname = [
       "街・拠点","人口","銀","行動力",
       "農業","商業","技術","施設"
-    ];
-    this.psts = [20,10000,10000,100,110,120,130,140];
-    this.kome = 10000;
+    ]; // (0-7)、米(8)、ターン(9)
+    this.jyodataID = 18; 
     console.log("kjyodata constructor");
+    this.pstsInit = [20,10000,10000,100,110,120,130,140];
+    this.pstsInit.push(10000); //Kome
+    this.pstsInit.push(0); //Turn
   }
   bindMoneyFunc(tar){
     bindFuncListInit(tar,this,["getMoney","updMoney"]);
@@ -35,6 +63,7 @@ class kjyodata{
   }
   updMoney(val){
     this.psts[2] = val;
+    this.saveValue();
   }
   ReflectActivePower(){
     let hh = $gameVariables.value(20);
@@ -42,48 +71,38 @@ class kjyodata{
     hh.ap  = this.psts[3]; // Update
     $gameVariables.setValue(20, hh); // Write
   }
-  initActivePower(){
+  Initialize(){ // initActivePower
+    this.InitValue();
     let hh = $gameVariables.value(20);
     this.psts[3] = hh.ap; // Read
   }
-}
-
-// 基本的な切り出しクラス
-class maptip{
-  constructor(base,args,ii){
-    //console.log(maptip);
-    this.initpar(args[2]);
-    // Init 48x48
-    this.can = generateElement(base,{type:"canvas",id:"maptip_"+ii,mapid:ii,width:48,height:48,
-      style:{"z-index":20,position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
-    this.ctx = this.can.getContext("2d");
-    this.img.onload = () => {
-      this.draw();
-    }
+  InitValue(){
+    if(this.psts){return;}
+    let hh = $gameVariables.value(this.jyodataID);
+    if(!hh){hh = {};}
+    if(!hh["psts"]){hh["psts"] = this.pstsInit;}
+    $gameVariables.setValue(this.jyodataID, hh);
+    console.log("InitValue:",hh);
+    this.psts = hh["psts"];
   }
-  initpar(aa){
-    let par = [[0,15],[0,15],[2,15],[6,2],[8,9]]
-    this.img = new Image();
-    this.img.src = "img/tilesets/World_B.png"; // depend on args2
-    this.xyp = par[aa]; // depend on args2
-    this.setflag = false;
+  saveValue(){
+    let hh = $gameVariables.value(this.jyodataID);
+    hh["psts"] = this.psts;
+    console.log("savevalue:",hh);
+    $gameVariables.setValue(this.jyodataID, hh);
   }
-  setredraw(ff){
-    this.setflag = ff;
-    this.draw();
+  loadturn(){
+    this.InitValue();
+    return this.psts[9];
   }
-  draw(){
-    const ctx = this.ctx;
-    ctx.clearRect(0,0,48,48);
-    let [x,y]=this.xyp;
-    ctx.drawImage(this.img,48*x,48*y,48,48,0,0,48,48);
-    if(this.setflag){
-      ctx.fillStyle = "#00FF0080";
-      ctx.fillRect(0,0,48,48);
-    }
+  saveturn(tn){
+    this.psts[9] = tn;
+    this.saveValue();
   }
 }
 
+// １９：敵＋MAPデータ
+// それぞれのマップの情報は、マップで制御する
 class kmapdata{
   constructor(par){
     this.parent = par;
@@ -114,18 +133,11 @@ class kmapdata{
       "rect3_5":"ダークキャッスル"
     }
     //*** 下で管理するべきかも  ***
-    this.mapopened = [1,0,0,0,0];
-    // 開いていればデータ更新
-    for(let i=0;i<5;i++){
-      let key = "rect3_"+(i+1);
-      if(this.mapopened[i]==1){
-        this.maptext[key][1] = "解放済　１０　未開放　１０";
-        this.parlist[i]["stroke"] = st;
-      }
-    }
+    this.mapopenInit = [1,1,0,0,0];
+    this.flagGameID = 19;
+    
     /*** 敵の情報 ******/
     this.enelist = {
-      "rect3_2":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]],
       "rect3_3":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]],
       "rect3_4":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]],
       "rect3_5":[[20,20,1],[150,80,1],[270,140,1],[20,260,1]]
@@ -133,16 +145,69 @@ class kmapdata{
     this.enedata = {}
     this.edetail = {};
     this.enestatus =  {};
+    this.enestinit = {};
     // ここで詰める
     console.log("kmapdata Initialize")
-    let alist = {"rect3_1":kd3_1};
+    let alist = {"rect3_1":kd3_1,"rect3_2":kd3_2};
     for(let a in alist){
-      let p = new alist[a]();
+      let p = new alist[a](); // this.exxx に詰めたら不要
       this.enelist[a]=p.data["enelist"];
       this.enedata[a]=p.data["edata"];
       this.edetail[a]=p.data["edetail"];
-      this.enestatus[a]=p.data["estatus"];
+      //this.enestatus[a]=p.data["estatus"];
+      this.enestinit[a]=p.data["estatus"];
     }
+  }
+  initinvoke(){
+    //DBG//console.log("kmapdata initinvoke");
+    //this.mapidhash = {};
+    let hh = $gameVariables.value(this.flagGameID);
+    if(!hh){hh = {};}
+    if(!hh["opened"]){hh["opened"] = this.mapopenInit;}
+    this.mapopened = hh["opened"];
+    // 開いていればデータ更新
+    for(let i=0;i<5;i++){
+      //let key = "rect3_"+(i+1);
+      //this.mapidhash[key] = i;
+      //DBG//console.log("this.mapopened[i]",i,this.mapopened[i]);
+      if(this.mapopened[i]==1){       
+        this.parlist[i]["stroke"] = this.scl[0];
+        //DBG//console.log("this.parlist[i]",i,this.parlist[i]);
+      }
+    }
+    this.loadValue();
+  }
+  openmap(i){
+    console.log("openmap:", i);
+    let hh = $gameVariables.value(this.flagGameID);
+    if(!hh){hh = {};}
+    if(!hh["opened"]){hh["opened"] = this.mapopenInit;}
+    hh["opened"][i] = 1;
+    $gameVariables.setValue(this.flagGameID, hh);
+    this.mapopened = hh["opened"];
+  }
+  loadValue(){
+    console.log("loadValue");
+    if(!this.enestatus){return;}
+    let hh = $gameVariables.value(this.flagGameID);
+    if(!hh){hh = {};}
+    if(!hh["enest"]){hh["enest"] = this.enestinit;}
+    this.enestatus = hh["enest"];
+  }
+  saveValue(){
+    console.log("saveValue");
+    let hh = $gameVariables.value(this.flagGameID);
+    if(!hh){hh = {};}
+    if(!hh["enest"]){hh["enest"] = this.enestinit;}
+    hh["enest"] = this.enestatus;
+    $gameVariables.setValue(this.flagGameID, hh);
+  }
+  getmaptext(id){
+    let arr = this.maptext[id];
+    // 上書きする、街の数で
+    let i = this.getidfromname(id);
+    if(this.mapopened[i]==1){arr[1] = "解放済　１０　未開放　１０　"};
+    return arr;
   }
   setEneStatus(name,id,key,val){
     let enedt = this.enestatus;
@@ -151,8 +216,11 @@ class kmapdata{
       enedt[name][id][key] = val;
     }
   }
-  getEneImg(dv,eimg){
-    let sz = ("Dragon.png"==eimg) ? 300:150;
+  getEneImg(dv,eimg,etype){
+    let sz = 150;
+    //if("Dragon.png"==eimg){ sz = 300; }
+    //if("Kraken.png"==eimg){ sz = 300; }
+    if(etype){sz = 300;}
     let par = {type:"div",style:{width:sz+"px",height:sz+"px",overflow:"hidden"}};
     let div = generateElement(dv,par);
     let im = document.createElement("img");
@@ -168,12 +236,12 @@ class kmapdata{
   getEneStatus(name,id){
     let enedt = this.enestatus;
     if(enedt[name] && enedt[name][id]){return enedt[name][id];}
-    return {type:"武",hp:100,mhp:100,atk:100};
+    //XXX//return {type:"武",hp:100,mhp:100,atk:100};
   }
   getEneInfo(name,id){
     let enedt = this.enedata;
     if(enedt[name] && enedt[name][id]){return enedt[name][id];}
-    return ["草原 "+id,"ゴブリン","Goblin.png",100];
+    //XXX//return ["草原 "+id,"ゴブリン","Goblin.png",100];
   }
   getEnePicts(dv,name,id){
     console.log("getEnePicts:"+[name,id]);
@@ -182,6 +250,7 @@ class kmapdata{
     for(let i=0;i<dt.num;i++){
       let [x,y] = [dt.xx[i],dt.yy[i]];
       let par = {type:"img",src:"img/enemies/"+dt.img,style:{position:"absolute",left:x+"px",top:y+"px"}};
+      if(dt.ww){par.style.width = dt.ww+"px";}
       generateElement(dv,par);
     }
     let est = this.getEneStatus(name,id);
@@ -228,7 +297,8 @@ class kmapdata{
     let ii = this.getidfromname(id);
     return this.mapopened[ii];
   }
-  chgAttr(p,tp){
+  chgAttr(p,tp){ // tp=0;初期値, tp!=0;ターゲット中
+    //console.log(p,tp)
     p.setAttribute("fill", this.fcl[tp]);
     if(p.getAttribute("stroke")){
       p.setAttribute("stroke", this.scl[tp]);
@@ -236,6 +306,7 @@ class kmapdata{
   }
 }
 
+// 仲間フラグ：：$gameSwitches 21-40
 class chardata{ // FROM kaihatsuclass
   constructor(){
     this.skilldata = new skillData();
