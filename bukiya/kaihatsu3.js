@@ -302,6 +302,10 @@ class newWnd3{
     let g2 = generateSVG(g1,par2);
     g2.style.pointerEvents = "none";
     this.atkmapsvg = g2; 
+    let par3 = {type:"g", classList_add:"enemyMline"};
+    let g3 = generateSVG(g1,par3);
+    g3.style.pointerEvents = "none";
+    this.emlmapsvg = g3; 
     // 矢印初期値
     let [hash,area] = this.cdb.getAttackAll();//有効なものがあれば描く
     for (let key in hash) {
@@ -449,6 +453,8 @@ class newWnd3{
   }
   // upd系のUtil関数
   updTarget(eid,cid,mid=-1){
+    // 先に消しておく
+    this.resetArrowM();
     this.currentenevieweid = (eid >= 0)? eid : null;
     this.updatetarget(eid);
     this.usertarget(cid);
@@ -503,6 +509,43 @@ class newWnd3{
     // 攻め込むボタン
     this.updButton(dv,"eattack","　戦況　",this.attackfunc);
   }
+  // 線を引く 関係関数
+  drawarrowM(id,target){
+    console.log("drawarrowM:"+[id,target]);
+    if(!(target>=0)){return;}
+    // ID
+    let arrowid = "drawarrowM"+id;
+    // 敵の位置
+    let hh = this.kmapdata.getEneStatus(this.tarmap,target);
+    // MAPの位置
+    let marr = this.mres.mapres1(id);
+    // 位置の計算
+    let mm = 24;// = size/2
+    let [cx,cy] = [marr[0]+mm,marr[1]+mm]//[10+50*id+mm,420+mm];
+    let cc = this.enelist[target];
+    let [ex,ey] = [cc[0]+mm,cc[1]+mm];
+    let postxt = `M${cx},${cy} L${ex},${ey}`;//"M10,420 L50,10"
+    // アローを 「enemyMline」でセット
+    let g = this.emlmapsvg;
+    let par2 = {type:"path", id:arrowid,d:postxt};
+    let g2 = generateSVG(g,par2);
+    g2.style.pointerEvents = "none";
+  }
+  resetArrowM(){
+    let g = this.emlmapsvg;
+    let list = []
+    for(let cc of g.childNodes){
+      console.log(cc);
+      if(cc.id.indexOf("drawarrowM") === 0){
+        // 前方一致のときの処理
+        list.push(cc.id);
+      }
+    }
+    for(let aid of list){
+      let e =document.getElementById(aid);
+      if(e){e.remove();}
+    }
+  }
   // 街の画面
   updateMaptip(id){
     console.log("maptip",id);
@@ -516,20 +559,26 @@ class newWnd3{
     this.mres.mapImg(this.updgen(dv1,50),txres[0]);
     // 説明テキスト
     this.parent.apStrImg(this.updgen(dv1,270,5),null,txres[2]);
-    // 確認
+    // 確認（敵の配置影響）
     let cflag = 0;
     let cond = this.mres.mapresC(id);
     console.log(cond);
+    // 先に消しておく
+    this.resetArrowM();
     for(let cc of cond){
       let hh = this.kmapdata.getEneStatus(this.tarmap,cc);
       if(hh.hp>0){
         cflag=1;
+        this.drawarrowM(id,cc);
       }
     }
     // 訪問ボタン
     this.mativalueid = id;
     let matifunc = (cflag==0)? this.matifunc : null;
     this.updButton(dv1,"ehoumon","　訪問　", matifunc);
+    if(cflag==1){
+      this.maptlist[id].setredraw(2);
+    }
   }
   // 勇者画面
   updateCharaPage(id){
@@ -821,7 +870,11 @@ class maptip{
     let [x,y]=this.xyp;
     ctx.drawImage(this.img,48*x,48*y,48,48,0,0,48,48);
     if(this.setflag){
-      ctx.fillStyle = "#00FF0080";
+      if(this.setflag==2){
+        ctx.fillStyle = "#FF000080";
+      }else{
+        ctx.fillStyle = "#00FF0080";
+      }
       ctx.fillRect(0,0,48,48);
     }
   }
@@ -951,7 +1004,7 @@ class kd3_1 {
         [1,"山奥の村","山奥にある村"],[2,"ノーマの祭壇","物語上大事な要衝"],
         [3,"山岳地帯","なにか見つかるかも"],
       ],
-      cond:[[4],[1],[2,5],[6,7],[0,3]]
+      cond:[[2,4],[1],[5],[6,7],[0,3]]
       //cond:[[],[],[],[],[]]
     };
     hh["mfunc"] = [this.func1];

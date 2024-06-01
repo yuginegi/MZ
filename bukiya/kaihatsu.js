@@ -18,9 +18,12 @@
  * （例）2,15,16,17,18,19,20
  *
 * @command init
- * @text 初期化テスト用
+ * @text ニューゲームのとき、どこかで絶対１回呼ぶ
  * @desc 
- * テスト用に変数などの内部データを書き換えるタイミングとして使う
+ * 初期化関数。
+ * これ呼ばないとターン処理とバンド処理で死ぬ。
+ * NewGameしてから絶対一回は呼ぶこと。
+ * ロードされたタイミングで１回呼ばれる。
  * 
  * @command enter
  * @text 玉座コマンド
@@ -30,13 +33,13 @@
  * ループ変数を１にして返します
  * 
  * @command turnend
- * @text ターンエンド
+ * @text ターンエンド（turnend）
  * @desc 
  * 戦闘処理をします
  * ループ変数にターン数を返します
  * 
  * @command turnrepo
- * @text ターンエンド結果
+ * @text ターンエンド結果（turnrepo）
  * @desc 
  * 戦闘処理の結果表示
  * ループ変数を０にして実行します
@@ -63,34 +66,52 @@
       this.imggg;
       this.imgsrc = 'img/pictures/Actor2_1.png';
       this.cdb = this.parent.cdb;
+      this.kjyodata = this.parent.kjyodata;
       this.invoke = 0;
       // 関数
       let tar2 = this.parent.chardata;
-      this.getpstatus1 = tar2.getpstatusAll.bind(tar2);
-      //this.getpstatus = tar2.getpstatus.bind(tar2);
-      this.getpcharlist = tar2.getpcharlist.bind(tar2);
+      this.getpstatus1 = tar2.getpstatusAll.bind(tar2); // 勇者と商人の数を得る
+      this.getpcharlist = tar2.getpcharlist.bind(tar2); // キャラの配列をとる
+      // 表示項目
+      this.nlist =[
+        ["勇者","商人","街・拠点","人口","農業","商業","技術","施設"],
+        ["ターン","行動力","銀","糧"]
+      ];
+      // Style
+      this.k5notePar = {type:"div",id:"kmidwnd5note",classList_add:"fadeInX1",style:{"z-index":15,
+          position:"absolute",left:"5px",top:"375px",width:"720px",height:"160px",
+          background:"#008",padding:"10px"}};
     }
+    /*
     getpstatus2(){
       let p = {};
-      let tar = this;//this.kmidwnd.divlist[0]; // From kmidwnd1
+      let tar = this;
       for(let i=0;i<8;i++){
-        let key =  tar.psname[i];
+        let key =  tar.psname[i]; // init
         let val =  tar.psts[i];
         p[key] = val;
       }
-      //DBG//console.log("getpstatus2",p);
       return p;
     }
     getpstatus3(){
-      let p = this.getpstatus1();
-      p["糧"] = this.parent.kjyodata.psts[8];
+      let p = this.getpstatus1(); // 勇者と商人の数
+      p["糧"] = this.psts[8];
+      return p;
+    }*/
+    getpstatusX(){
+      let p = this.getpstatus1(); // 勇者と商人の数
+      let tar = this.kjyodata;
+      let n = tar.psname.length;
+      for(let i=0;i<n;i++){
+        p[tar.psname[i]] = tar.psts[i];
+      }
       return p;
     }
     init(pdiv){
       // 城データ
-      let tar = this.parent.kjyodata;
-      this.psts = tar.psts;
-      this.psname = tar.psname;
+      //let tar = this.kjyodata;
+      //this.psts = tar.psts;
+      //this.psname = tar.psname;
       // 初期化処理
       console.log("kmidwnd5 init invoke.");
       let [maindv,dv,p] = this.kmidwnd.createDIV2(pdiv,this.imgsrc);
@@ -117,10 +138,8 @@
     }
     notification(tar){
       let list2 = this.parent.gentable(tar,"ktbl2",1,2);
-      //let nn = this.getpstatus("勇者");
-      let ll = this.getpcharlist(0,10);
+      let ll = this.getpcharlist(0,10); // フラグ立ってる勇者のリスト
       let nn = ll.length;
-      //console.log(nn,ll.length,ll);
       let id = (nn+this.noteinfo++)%nn;
       // list2[0]
       let e = new charaFace(this.cdb, [20,20,ll[id]]);
@@ -152,10 +171,7 @@
       let n=6;
       let lt = this.looptime%n;
       if(lt==0){
-        let par = {type:"div",id:"kmidwnd5note",classList_add:"fadeInX1",style:{"z-index":15,
-          position:"absolute",left:"5px",top:"375px",width:"720px",height:"160px",
-          background:"#008",padding:"10px"}};
-        this.k5note = generateElement(this.maindv,par);
+        this.k5note = generateElement(this.maindv,this.k5notePar);
         this.notification(this.k5note);
       }
       if(lt==Math.ceil(1000/intval)){
@@ -170,7 +186,7 @@
       this.looptime++;
       setTimeout(this.loopfunc.bind(this), intval,vvv);
     }
-    submenu(dv,psts){
+    submenu_org(dv,psts){
       dv.innerHTML = "";
       let parent = this.parent;
       let kwnd = this.kmidwnd;
@@ -182,9 +198,24 @@
         dv.appendChild(document.createElement("BR"));
       }
     }
+    submenu(dv,nlist,psts){
+      dv.innerHTML = "";
+      let parent = this.parent;
+      let kwnd = this.kmidwnd;
+      let i=1;
+      for(let key of nlist){
+        let str = kwnd.text82(key,psts[key]);
+        let p = parent.geneStrImg("st"+(i++), str);
+        dv.appendChild(p);
+        dv.appendChild(document.createElement("BR"));
+      }
+    }
     updatemenu(){
-      this.submenu(this.dvlist[0],this.getpstatus2());
-      this.submenu(this.dvlist[1],this.getpstatus3());
+      //this.submenu(this.dvlist[0],this.getpstatus2());
+      //this.submenu(this.dvlist[1],this.getpstatus3());
+      let p = this.getpstatusX();
+      this.submenu(this.dvlist[0],this.nlist[0],p);
+      this.submenu(this.dvlist[1],this.nlist[1],p);
     }
     menu(pdiv){
       this.dvlist = [];
@@ -840,7 +871,9 @@
       resizeKaihatsu();
       // 入るときの初期化、(inp==1)の時だけ！！
       if(inp==1){
-        this.kjyodata.Initialize();
+        this.kmapdata.Initialize();//19
+        this.kjyodata.Initialize();//18（絶対必要、２０からコピーする）
+        this.chardata.Initialize();//17
       }
       // 表示の初期化
       this.initdatashow();
@@ -943,13 +976,21 @@
     initfunction(){
       console.log("=== kaihatsu initfunction ===");
       // セット
-      this.kband = setClass2kband(this);
-      setClass2kband = {}; // 使い終わったので無効化
-      this.kband.init();
+      if(setClass2kband){
+        this.kband = setClass2kband(this);
+        setClass2kband = null; // 使い終わったので無効化
+        this.kband.init();//20
+      }
       // セット
-      this.kturn = setClass2kturn(this);
-      setClass2kturn = {}; // 使い終わったので無効化
-      this.kturn.init();
+      if(setClass2kturn){
+        this.kturn = setClass2kturn(this);
+        setClass2kturn = null; // 使い終わったので無効化
+        this.kturn.init();
+      }
+      // セット (初期値を詰める) OR (変数を読み込む)
+      this.kmapdata.Initialize();//19
+      this.kjyodata.Initialize();//18
+      this.chardata.Initialize();//17
     }
   }
 
@@ -1012,6 +1053,25 @@
     }
   };
 
+  // DataManager.loadGame を実行する前に関数を呼ぶ。
+  const loadfunc = DataManager.loadGame.bind(DataManager)
+  DataManager.loadGame = function(savefileId) {
+    kaihatsu.initfunction(1); // ここを追加
+    return loadfunc(savefileId);
+  };
+/*
+  // 1.7.0 コードに追加したものを上書きする
+  DataManager.loadGame = function(savefileId) {
+    kaihatsu.initfunction(1); // ここを追加
+    const saveName = this.makeSavename(savefileId);
+    return StorageManager.loadObject(saveName).then(contents => {
+        this.createGameObjects();
+        this.extractSaveContents(contents);
+        this.correctDataErrors();
+        return 0;
+    });
+  };
+*/
   /* PluginManager.registerCommand： 第１引数 は ファイル名！！ */
   /* FUNC0 */
   PluginManager.registerCommand(modname, "init", args => {

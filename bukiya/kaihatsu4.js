@@ -588,6 +588,8 @@ class skillTree{
     this.ulist = skd.getulist(id);
     this.slist = skd.getslist(id);
     console.log("skillTree Invoke. "+id);
+    console.log("this.ulist: "+this.ulist);
+    console.log("this.slist: "+this.slist);
 
     this.clist = [];
     let sz = this.csize;

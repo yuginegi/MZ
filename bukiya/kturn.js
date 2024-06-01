@@ -62,7 +62,7 @@ class kturnclass{
   }
   seisan(tar){
     console.log("seisan invoke.");
-    let s = tar.psts;
+    let s = tar.psts; // リファレンス：短くしただけ
     console.log("gin",s[2],"農業",s[4],"商業",s[5]);
     // 加算
     s[8] += s[4];
@@ -72,6 +72,7 @@ class kturnclass{
     let gtxt2 = "(＋"+s[5]+")";
     let ktxt = "糧："+s[8];
     let ktxt2 = "(＋"+s[4]+")";
+    // 出力用の箱に入れる
     $gameVariables.setValue(21, gtxt); // 銀のテキスト
     $gameVariables.setValue(22, gtxt2); // 銀のテキスト
     $gameVariables.setValue(23, ktxt); // 糧のテキスト
@@ -79,19 +80,20 @@ class kturnclass{
   }
   // 結果表示
   turnrepo(){
-    this.turn = this.kjyodata.loadturn();
+    let t = this.kjyodata.loadturn();
+    let turn = t - 1; // すでに加算しているため
     console.log("turnrepo:",this.retVal)
     //初期化
     $gameVariables.setValue(this.retVal, 0);
     //表示
     let charlist = Object.keys(this.atklogs).map((x)=>{return Number(x)});
     if(charlist.length > 0){
-      this.initCanvas(charlist);
+      this.initCanvas(turn,charlist);
     }else{
-      $gameVariables.setValue(this.retVal, this.turn);
+      $gameVariables.setValue(this.retVal, turn);
     }
   }
-  initCanvas(charlist){
+  initCanvas(turn,charlist){
     //let [gcw,gch] = [window.innerWidth,window.innerHeight];
     let gwnd = document.getElementById("gameCanvas");
     //gwnd = window;
@@ -111,7 +113,7 @@ class kturnclass{
     let timg = this.par.geneStrImg("btnX","閉じる"); //78x36
     btndiv.appendChild(timg);
     btndiv.onclick = this.cfunc.bind(this);
-    this.drawdiv(div,"\\C[1]戦闘結果："+this.turn+"ターン",20,10,300,300)
+    this.drawdiv(div,"\\C[1]戦闘結果："+turn+"ターン",20,10,300,300)
     // 勇者・商人一覧
     for(let i of charlist){
       let n = 10;
@@ -204,19 +206,19 @@ class kturnclass{
   //　ターン終了
   turnend(){
     this.turn = this.kjyodata.loadturn();
-    console.log("turn end.");
+    console.log("turn end.",this.turn);
     // 戦闘処理
     this.turnAttackFunc();
-    this.turn++;
     // seisan で 計算して、saveturn で SAVE する
     this.seisan(this.kjyodata);
-    this.kjyodata.saveturn( this.turn );
+    // ターン経過　this.turn++;
+    this.kjyodata.saveturn( this.turn+1 );
     // メッセージ用に、ターン数を返す
     $gameVariables.setValue(this.retVal, this.turn);
   }
   // kmapdata で挟む
   turnAttackFunc(){
-    this.kmapdata.loadValue();
+    //this.kmapdata.loadValue();
     let gekiha={};
     this.atklogs = {};
     let [ah,aa] = this.cdb.getAttackAll();//有効なものがあるか調べるため
@@ -248,7 +250,7 @@ class kturnclass{
         }
       }
     }
-    this.kmapdata.saveValue();
+    //this.kmapdata.saveValue();
   }
   // 味方の攻撃力を得る計算
   turnendAtk(i,a,h,gekiha){

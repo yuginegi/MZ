@@ -125,7 +125,7 @@ function setClass2kband(par){
       $gameVariables.setValue(22, bd.lv);
       $gameVariables.setValue(23, bd.exp);
       $gameVariables.setValue(24, bd.name);
-      let res = (hh.ap>30)?id:-1; // 行動力の条件
+      let res = (hh.ap>=30)?id:-1; // 行動力の条件
       //res = (id%2==0)?res:-1; // メンバーの条件
       $gameVariables.setValue(25, res);
     }
