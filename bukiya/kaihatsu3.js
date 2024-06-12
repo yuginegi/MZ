@@ -154,6 +154,19 @@ class newWnd3{
       position:"absolute",margin:"5px",padding:"5px",left:"0px",top:"65px",
       width:"736px",height:"480px",backgroundImage:"url(img/battlebacks1/Grassland.png)"
     }};
+    this.newwnd_epar = {type:"div", id:"enseiwnd",classList_add:"fadeIn",style:{
+        top:"0px",left:"0px",width:"736px",height:"544px",
+        background:"#004", position:"absolute",padding:"10px"}
+    };
+    this.newwnd_ep0 = {type:"div", id:"enseiwnd_subtitle",
+      style:{display:"flex", padding:"0px",marging:"0px"}
+    };
+    let canvasSize = 400;
+    this.newwnd_parcan = {
+      type:"canvas", id:"newwnd1_enseimap",width:canvasSize,height:canvasSize,
+      style:{position:"absolute",top:"0px",left:"0px"}
+    };
+    this.canvasSize = canvasSize;
   }
   eneid(id){
     return this.tarmap+"_"+id;
@@ -237,15 +250,8 @@ class newWnd3{
   }
   // あたらしいWindow：newwndContents を呼ぶ
   newwnd(){
-    let epar = {type:"div", id:"enseiwnd",classList_add:"fadeIn",style:{
-        top:"0px",left:"0px",width:"736px",height:"544px",
-        background:"#004", position:"absolute",padding:"10px"}
-    };
-    let ele = generateElement(document.getElementById("kaihatsumap"),epar);
-
-    let ep0 = {type:"div", id:"enseiwnd_subtitle",
-      style:{display:"flex", padding:"0px",marging:"0px"}};
-    let el0 = generateElement(ele,ep0);
+    let ele = generateElement(document.getElementById("kaihatsumap"),this.newwnd_epar);
+    let el0 = generateElement(ele,this.newwnd_ep0);
     let titletxt = "NEW画面:ココをクリックすると消える";
     titletxt = this.kmapdata.getNMfromMAPName(this.tarmap);
     this.parent.apStrImg(el0,"enseiwnd_txt1",titletxt);
@@ -278,16 +284,12 @@ class newWnd3{
   // 中身
   newwndContents(ele){
     let imgsrc = 'img/0img/map.jpg';
-    let canvasSize = 400;
-    let parcan = {
-      type:"canvas", id:"newwnd1_enseimap",width:canvasSize,height:canvasSize,
-      style:{position:"absolute",top:"0px",left:"0px"}};
-    let t2 = generateElement(ele,parcan);
+    let t2 = generateElement(ele,this.newwnd_parcan);
     // Canvas: MAP
     const ctx = t2.getContext("2d");
     let img = new Image();
     img.src = imgsrc;
-    let cz = canvasSize;
+    let cz = this.canvasSize;
     let v = 2048/cz;
     console.log("map target = "+this.tarmap);
     let [mapx,mapy,mapW,mapH] = this.kmapdata.getXYfromMAPName(this.tarmap);
@@ -667,13 +669,13 @@ class newWnd3_mati{
       bottom:"0px",width:"716px",height:"120px",backgroundColor:"#0000FFA0",
       color:"#FFF",padding:"10px",position:"absolute"
     };
-    this.menuStyle = [];
+    /*this.menuStyle = [];
     for(let i=0;i<4;i++){
       let ms = {"animation-duration":((1*i+5)/10)+"s",padding:"5px 5px 0px 40px","z-index":15,
         position:"absolute",left:"50px",top:40+80*i+"px",width:"220px",height:"40px",background:"#008"
       };
       this.menuStyle[i] = {type:"div",classList_add:"kwnd2u2",id:"kwnd3mati_"+i,style:ms}
-    }
+    }*/
   }
   // From KBAND
   drawdiv(base,x,y,w,h){
@@ -706,6 +708,13 @@ class newWnd3_mati{
     //=== 選択肢を出す（関数の中かな？）
     let basedv = dv;
     let mmtxt = this.kd.getMMenu(mid);
+    menuFunc({
+      base:basedv,menu:mmtxt,divid:"kwnd3mati_",
+      strid:"kwnd3txt",lt:[50,0,40,80],
+      thisbase:this,thisfunc:this.cfunc2,
+      parent:this.base.parent,
+    });
+    /*
     for(let i=0;i<mmtxt.length;i++){
       let p = generateElement(basedv,this.menuStyle[i]);
       let menu = base.kmidwnd.text8(mmtxt[i]);
@@ -714,7 +723,7 @@ class newWnd3_mati{
       tar.actid = i;
       set3func(tar,this,this.cfunc2);
       p.append(tar);
-    }
+    }*/
     //=== キャラの顔グラ
     let imgsrc = 'img/pictures/Actor2_1.png';
     let dvp = generateElement(basedv,{type:"div",
@@ -739,7 +748,7 @@ class newWnd3_mati{
     let p = e.target;
     if(e.type=="click"){
       let ai = p.actid;
-      let ii = p.tarid;
+      let ii = p.tartxt;//p.tarid;
       let aa = this.mres.mapres2(mid);
       console.log(mid,aa[1],ai,ii);
       //=== 街のアクション ===
@@ -1004,8 +1013,8 @@ class kd3_1 {
         [1,"山奥の村","山奥にある村"],[2,"ノーマの祭壇","物語上大事な要衝"],
         [3,"山岳地帯","なにか見つかるかも"],
       ],
-      cond:[[2,4],[1],[5],[6,7],[0,3]]
-      //cond:[[],[],[],[],[]]
+      //cond:[[2,4],[1],[5],[6,7],[0,3]]
+      cond:[[],[],[],[],[]]
     };
     hh["mfunc"] = [this.func1];
     hh["mmenu"] = {

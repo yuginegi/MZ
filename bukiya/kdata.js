@@ -61,16 +61,18 @@ class kjyodata{
   }
   updMoney(val){
     this.psts[2] = val;
-    //this.saveValue();
+  }
+  getFood(){
+    return this.psts[8];
+  }
+  updFood(val){
+    this.psts[8] = val;
   }
   // 画面抜けるときにリフレクト。画面抜ける前にセーブされない。
   ReflectActivePower(){
     let hh = $gameVariables.value(20);
     console.log("ReflectActivePower:",this.psts[3], hh);
-    //DBG//console.log($gameVariables.value(20))
     hh.ap  = this.psts[3]; // Update
-    //DBG//console.log($gameVariables.value(20))
-    //$gameVariables.setValue(20, hh); // Write 不要
   }
   Initialize(){ // initActivePower
     this.InitValue();
@@ -87,13 +89,6 @@ class kjyodata{
     console.log("InitValue:",hh);
     this.psts = hh["psts"]; // ここで勝手にポインタでつながっている
   }
-  /* 必要ない。勝手にSaveしてくれる。
-  saveValue(){
-    let hh = $gameVariables.value(this.jyodataID);
-    hh["psts"] = this.psts;
-    console.log("savevalue:",hh);
-    $gameVariables.setValue(this.jyodataID, hh);
-  }*/
   loadturn(){
     this.InitValue();
     return this.psts[9];
@@ -136,7 +131,7 @@ class kmapdata{
       "rect3_5":"ダークキャッスル"
     }
     //*** 下で管理するべきかも  ***
-    this.mapopenInit = [1,1,0,0,0];
+    this.mapopenInit = [1,0,0,0,0];
     this.flagGameID = 19;
     
     /*** 敵の情報 ******/
@@ -172,12 +167,6 @@ class kmapdata{
   }
   // opened
   initinvoke(){
-    /*
-    let hh = $gameVariables.value(this.flagGameID);
-    if(!hh){hh = {};}
-    if(!hh["opened"]){hh["opened"] = this.mapopenInit;}
-    this.mapopened = hh["opened"];
-    */
     // 開いていればデータ更新
     for(let i=0;i<5;i++){
       if(this.mapopened[i]==1){       
@@ -188,33 +177,14 @@ class kmapdata{
   }
   openmap(i){
     console.log("openmap:", i);
-    /*
-    let hh = $gameVariables.value(this.flagGameID);
-    if(!hh){hh = {};}
-    if(!hh["opened"]){hh["opened"] = this.mapopenInit;}
-    hh["opened"][i] = 1;
-    $gameVariables.setValue(this.flagGameID, hh);
-    this.mapopened = hh["opened"];*/
     this.mapopened[i] = 1;
   }
   // enest
   loadValue(){
     console.log("loadValue",this.enestatus);
-    /*
-    if(!this.enestatus){return;}
-    let hh = $gameVariables.value(this.flagGameID);
-    if(!hh){hh = {};}
-    if(!hh["enest"]){hh["enest"] = this.enestinit;}
-    this.enestatus = hh["enest"];*/
   }
   saveValue(){
     console.log("saveValue",this.enestatus);
-    /*
-    let hh = $gameVariables.value(this.flagGameID);
-    if(!hh){hh = {};}
-    if(!hh["enest"]){hh["enest"] = this.enestinit;}
-    hh["enest"] = this.enestatus;
-    $gameVariables.setValue(this.flagGameID, hh);*/
   }
   getmaptext(id){
     let arr = this.maptext[id];
@@ -246,13 +216,9 @@ class kmapdata{
     div.append(im);
   }
   getEneStatus(name,id){
-    //let enedt = this.enestatus;
-    //if(enedt[name] && enedt[name][id]){return enedt[name][id];}
     return this.enestatus[name][id];
   }
   getEneInfo(name,id){
-    //let enedt = this.enedata;
-    //if(enedt[name] && enedt[name][id]){return enedt[name][id];}
     return this.enedata[name][id];
   }
   getEnePicts(dv,name,id){

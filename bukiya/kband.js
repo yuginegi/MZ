@@ -96,21 +96,13 @@ function setClass2kband(par){
       $gameVariables.setValue(20, hh);
     }
     init20(){
-      // テスト（初期値詰め）
-      let testinitval = [
-        {name:"ユウ",exp:12,lv:3},
-        {name:"セシリア",exp:23,lv:0},
-        {name:"アイリン",exp:11,lv:1},
-      ];
-      let s = testinitval.length;
-      let e = 20;
-      for(let i=s;i<e;i++){
-        //let nm = this.cdb.getName(i);
-        //let hh = {name:this.cdb.getName(i),exp:0,lv:0};
+      let testinitval = [];
+      for(let i=0;i<20;i++){
         testinitval.push({name:this.cdb.getName(i),exp:0,lv:0});
       }
-      //$gameVariables.setValue(20, {ap:100,band:this.testinitval});
       this.save20({ap:100,band:testinitval});
+      // merchantMenu
+      this.merchant = new merchantMenu();
     }
 
     //=== バンドコマンド実施前判定 ====
@@ -260,6 +252,23 @@ function setClass2kband(par){
           }
           if(this.kaiwacur3){ // 初回は鳴らさない（特別）
             audioInvoke("Cursor3");
+          }else{
+            this.kaiwacur3 = true;
+          }
+          return;
+        }
+        if(ttt[0]=="perf"){
+          this.merchant.setMenu(tar,ttt[1]);
+          let mmenu = this.merchant.getMenu(tar);
+          let mm = mmenu[ttt[1]-1];
+          console.log(tar,mm,mmenu);
+          let txt = ["商人メニュー "+mm+" が可能になった","",""]; 
+          for(let i=0;i<txt.length;i++){
+            let tx = (txt[i].length > 0)?"\\C[1]"+txt[i]:"";
+            this.kaihatsu.updateStrImg("kbandtxt"+(i+1), tx);
+          }
+          if(this.kaiwacur3){ // 初回は鳴らさない（特別）
+            audioInvoke("Item3");
           }else{
             this.kaiwacur3 = true;
           }

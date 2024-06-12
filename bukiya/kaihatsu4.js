@@ -19,9 +19,9 @@
 class merchantMenu{
   constructor(){
     //最大6文字
-    this.defaultMenu = ["商メニュー１","商メニュー２","商メニュー３","＞６文字制約"];
+    this.defaultMenu = ["メニューなし"];//["商メニュー１","商メニュー２","商メニュー３","＞６文字制約"];
     this.mermenu ={
-      10:["糧の売却","糧の購入","素材の換金","地域間貿易"],
+      10:["兵士の回復","糧食の売買","素材の換金","地域間貿易"],
       11:["武器の開発"],
       12:["防具の開発"],
       13:["魔法の開発"],
@@ -31,10 +31,29 @@ class merchantMenu{
       18:["闇生成"],
       //19:["神速の布陣"],
     }
+    this.mmst = null;
+    // 最初のスキル（０にするとメニューなし）
+    this.mmstInit =[2,1,1,1,1,1,1,1,1,1];
+    this.merchantID = 17;
+  }
+  Initialize(){
+    if(this.mmst){return;}
+    let hh = $gameVariables.value(this.merchantID);
+    if(!hh){hh = {};}
+    if(!hh["mmst"]){hh["mmst"] = this.mmstInit;}
+    $gameVariables.setValue(this.merchantID, hh);
+    this.mmst = hh["mmst"];
   }
   getMenu(id){
+    this.Initialize();
     let h = this.mermenu[id];
-    return (h&&h.length > 0)? h : this.defaultMenu;
+    let n = this.mmst[id-10];
+    console.log(h,n);
+    return (h&&n)? h.slice(0,n) : [];
+  }
+  setMenu(id,ii){
+    this.Initialize();
+    this.mmst[id-10] = ii;
   }
 }
 
@@ -174,23 +193,42 @@ class kmidwnd4{
     }
     return list;
   }
+  newwnd_par(i,t){
+    let bcl = ["#008","#444"]; 
+    return {
+      type:"div",classList_add:"kwnd2u2",id:"kwnd4base3m_"+i,style:{
+        "animation-duration":((1*i+5)/10)+"s",padding:"5px 5px 0px 40px","z-index":15,
+        position:"absolute",left:"400px",top:90+80*i+"px",width:"200px",height:"40px",background:bcl[t]
+      }
+    };
+  }
   newwnd(){
     //this.maindv
     let base = document.getElementById("kwnd4base3");
     console.log("newwnd:"+this.charatarget);
     let mmtxt = this.setMtxt(this.charatarget);
+    console.log(mmtxt.length,mmtxt);
+    /*if(mmtxt.length == 0){
+      let i = 0;
+      let p = generateElement(base,this.newwnd_par(i,1));
+      let tar = this.parent.geneStrImg(null,"メニューなし");
+      p.append(tar);
+    }*/
+    menuFunc({
+      base:base,menu:mmtxt,divid:"kwnd4base3m_",
+      strid:"kwnd4txt",lt:[400,0,90,80],
+      thisbase:this,thisfunc:this.cfunc2,
+      parent:this.parent,
+    });
+    /*
     for(let i=0;i<mmtxt.length;i++){
-      let p = generateElement(base,{type:"div",classList_add:"kwnd2u2",id:"kwnd4base3m_"+i,
-        style:{"animation-duration":((1*i+5)/10)+"s",padding:"5px 5px 0px 40px","z-index":15,
-          position:"absolute",left:"400px",top:90+80*i+"px",width:"200px",height:"40px",background:"#008"}  
-        }
-      );
+      let p = generateElement(base,this.newwnd_par(i,0));
       let menu = this.kmidwnd.text8(mmtxt[i]);
       let tar = this.parent.geneStrImg(null,menu);
       tar.tarid = String(i);
       set3func(tar,this,this.cfunc2);
       p.append(tar);
-    }
+    }*/
     // 戻る を出す
     let tar = this.parent.kmsgwnd;
     tar.BKwnd(this,this.resetpage);
@@ -204,6 +242,10 @@ class kmidwnd4{
     let b = removeAllChildsByID("kwnd4base3");
     this.stview = new merchantView(this.parent,this.charatarget,this.cdb,b,type);
   }
+  viewpage1(type){
+    let b = removeAllChildsByID("kwnd4base3");
+    this.stview = new merchantView2(this.parent,this.charatarget,this.cdb,b,type);
+  }
   getMenu(ii,str){
     console.log("clicked "+[ii,str]);
     if(str=="武器の開発"){
@@ -211,6 +253,12 @@ class kmidwnd4{
     }
     else if(str=="防具の開発"){
       this.viewpage0(1);
+    }
+    else if(str=="兵士の回復"){
+      this.viewpage0(2);
+    }
+    else if(str=="糧食の売買"){
+      this.viewpage1(0);
     }
   }
   cfunc2(e){
@@ -268,19 +316,18 @@ class merchantView{
     this.type = type;
     this.charlist={};
     this.init(type);
-    // draw update controll.
-    //setInterval(this.draw.bind(this),1000/60);
   }
   init(type){
     let tp = {
       0:{type:"武器開発",wlv:"武器レベル"},
       1:{type:"防具開発",wlv:"防具レベル"},
+      2:{type:"兵士回復",wlv:"兵士の数"},
     }
     this.tp = tp[type];
-    //this.addMenu(this.base, 90);
     this.addSelectMember(this.base);
     this.reset(this.parent.kmsgwnd);
   }
+  // メンバーを開くタイプのコマンド
   addSelectMember(dv){
     removeAllChilds(dv);
     let txt = [this.tp.type,"メンバーを選んでください"];
@@ -302,7 +349,6 @@ class merchantView{
       base.append(tar);
     }
     //menu
-    //txt = ["武器LV",""];
     txt = [this.tp.wlv,""];
     for(let i=0;i<txt.length;i++){
       let p = this.parent.geneStrImg("kwnd4mm_tar"+i, txt[i]);
@@ -310,22 +356,193 @@ class merchantView{
       dv.appendChild(p);
     }
   }
-  addMenu(base,ypos){
-    let mmtxt = ["あああ","いいい"];
-    for(let i=0;i<mmtxt.length;i++){
-      let p = generateElement(base,{type:"div",classList_add:"kwnd2u2",id:"kwnd4mermenu_"+i,
-        style:{"animation-duration":((1*i+5)/10)+"s",padding:"5px 5px 0px 40px","z-index":15,
-          position:"absolute",left:"400px",top:ypos+80*i+"px",width:"200px",height:"40px",background:"#008"}  
-        }
-      );
-      let menu = mmtxt[i];
-      let tar = this.parent.geneStrImg(null,menu);
-      tar.tarid = String(i);
-      set3func(tar,this,this.cfunc2);
-      p.append(tar);
+  // Reset
+  reset(tar){
+    this.selected = -1;
+    for(let kk in this.charlist){
+      let etar = this.charlist[kk];
+      etar.setdraw(0);
+    }
+    tar.bkWnd.style.display = "block";
+  }
+  // 勇者選択時のクリックイベント
+  cfunc(e){
+    if(this.selected>=0){return;}
+    let etar = this.charlist[e.target.id];
+    //let weptype = this.type;//武器
+    if(e.type=="click"){
+      this.selected = etar.charaid;
+      this.cfunclogic(this.parent.kmsgwnd,etar.charaid,this.type);
+      return;
+    }
+    //let flag = 0; // 0:mouseleave
+    if(e.type=="mouseover"){
+      //flag = 1;
+      let [tarr,txt] = this.movertext(etar.charaid,this.type);
+      this.parent.kmsgwnd.setText(tarr);
+      this.parent.updateStrImg("kwnd4mm_tar1", txt);
+    }
+    //etar.setdraw(flag);
+    etar.setdraw((e.type=="mouseover"));
+  }
+  // リアクション
+  reactmain(tar,rtn,txt){
+    tar.setText(txt);
+    audioInvoke((rtn)?"Item3":"Cancel2");
+    this.reset(tar);
+  }
+  react2(){
+    this.reactmain(this.parent.kmsgwnd,0,["キャンセル"]);
+  }
+  react1(){
+    let [rtn,txt] = this.wepreact(this.selected,this.type);
+    this.reactmain(this.parent.kmsgwnd,rtn,txt);
+  }
+  // CfuncMain
+  cfunclogic(tar,id,type){
+    if(type == 2){
+      this.komerecover(tar,id);
+    }else{
+      this.wepconfirm(tar,id,type);
     }
   }
-  cfunc2(){}
+  movertext(id,type){
+    let [tarr,txt] = ["",""];
+    if(type == 2){
+      txt = ""+this.cdb.getStatusHP(id);
+      console.log("etar.HP:"+txt);
+      let kome = this.parent.kjyodata.getFood();
+      tarr = ["\\C[1]糧を使って"+this.tp.type+"をします。",this.tp.wlv+"を糧で回復します。","糧："+kome];
+    }else{
+      let [rtn,clv] = this.weplvcheck(id,type)
+      txt = clv + ((rtn) ? "→"+(clv+1) : "");
+      tarr = ["\\C[1]銀を使って"+this.tp.type+"をします。",this.tp.wlv+"スキルのレベルアップを","事前にしている必要があります"];
+    }
+    return [tarr,txt];
+  }
+  //=== ロジック =======
+  wepreact(id,type){
+    console.log("wepreact",id,type);
+    let [rtn,clv] = this.weplvcheck(id,type);
+    let txt = ["失敗した"];
+    if(rtn){
+      clv = this.weplvup(id,type);
+      txt = [this.tp.wlv+"が上がった。\\C[1]"+this.tp.wlv+clv];
+    }
+    return [rtn,txt];
+  }
+  weplvup(id,ii){
+    this.skd.weaponlv[id][ii] += 1;
+    return this.skd.weaponlv[id][ii];
+  }
+  weplvcheck(id,ii){
+    let wlv = this.skd.weaponlv[id][ii];
+    let ulv = this.skd.getWeaponSkillLV(id)[ii];
+    //console.log("wep:"+[wlv,ulv]);
+    return [(wlv < ulv),wlv];
+  }
+  wepconfirm(tar,id,type){
+    let [rtn,clv] = this.weplvcheck(id,type);
+    if(rtn){
+      tar.setText(["\\C[1]"+this.tp.wlv+"をあげますか？"]);
+      tar.bkWnd.style.display = "none";
+      tar.YNwnd(this,this.react1,this.react2);
+    }else{
+      tar.setText(["\\C[2]"+this.tp.wlv+"をあげられない"]);
+      this.reset(tar);
+    }
+    audioInvoke("Cursor3");
+  }
+  // ロジック 米・回復
+  komecalc(id){
+    let nhp = this.cdb.getStatusHP(id);
+    let mhp = 10000;
+    let kome = this.parent.kjyodata.getFood();
+    kome -= (mhp-nhp);
+    return [kome,mhp,nhp];
+  }
+  komerecover(tar,id){
+    let [kome,mhp,nhp] = this.komecalc(id);
+    if(nhp==mhp){
+      tar.setText(["兵士は最大"]);
+      audioInvoke("Cursor3");
+    }else if(kome < 0){
+      tar.setText(["\\C[2]糧が足りない"]);
+      audioInvoke("Cancel2");
+    }else{
+      // データの更新
+      this.cdb.setStatusHP(id,mhp);
+      this.parent.kjyodata.updFood(kome);
+      // 表示の更新
+      tar.setText(["\\C[1]回復した。\\C[0]糧："+kome+"\\C[2](-"+(mhp-nhp)+")"]);
+      audioInvoke("Item3");
+      // 表示部も更新
+      let txt = "\\C[1]"+mhp;
+      this.parent.updateStrImg("kwnd4mm_tar1", txt);
+    }
+    this.reset(tar);
+  }
+}
+
+class merchantView2{
+  constructor(parent,tar,cdb,base,type){
+    this.parent = parent;
+    this.tar = tar;
+    this.cdb = cdb;
+    this.skd = this.parent.chardata.skilldata;
+    this.base = base;
+    this.type = type;
+    this.charlist={};
+    this.init(type);
+  }
+  init(type){
+    this.addSelectMember(this.base);
+    this.reset(this.parent.kmsgwnd);
+  }
+  addSelectMember(dv){
+    removeAllChilds(dv);
+    let txt = ["糧を売り買いします"];
+    for(let i=0;i<txt.length;i++){
+      let p = this.parent.geneStrImg("kwnd4mm_listtxt"+i, txt[i]);
+      dv.appendChild(p);
+      generateElement(dv, {type:"br"});
+    }
+    let base = generateElement(dv, {type:"div",id:"kwnd4mm_listdiv",
+      style:{position:"relative",width:"100%",height:"160px"}});
+    let menutext = ["こめかね","かねこめ"]
+    menuFunc({
+      base:base,menu:menutext,divid:"kwnd4basekk_",
+      strid:"kwnd4txt2",lt:[20,0,10,80],
+      thisbase:this,thisfunc:this.cfunc2,
+      parent:this.parent,
+    });
+    /*
+    for(let i=0;i<2;i++){
+      let bcl = ["#008","#444"]; 
+      let par = {
+        type:"div",classList_add:"kwnd2u2",id:"kwnd4basekk_"+i,tarid:(i+1),style:{
+          "animation-duration":((1*i+5)/10)+"s",padding:"5px 5px 0px 40px","z-index":15,
+          position:"absolute",left:"20px",top:10+80*i+"px",width:"200px",height:"40px",background:bcl[0]
+        }
+      };
+      //{type:"div",tarid:(i+1),style:{margin:10,background:"#008"}}
+      let tar = generateElement(base,par);
+      //set3func(tar,this,this.cfunc);
+      base.append(tar);
+      let p = this.parent.geneStrImg("kwnd4mm_kk"+i, menutext[i]);
+      tar.append(p);
+      set3func(p,this,this.cfunc2);      
+    }
+    */
+    //下の文字
+    txt = ["こめうり",""];
+    for(let i=0;i<txt.length;i++){
+      let p = this.parent.geneStrImg("kwnd4mm_tar"+i, txt[i]);
+      p.style.padding = "10px 20px";
+      dv.appendChild(p);
+    }
+  }
+
   reset(tar){
     this.selected = -1;
     for(let kk in this.charlist){
@@ -343,77 +560,56 @@ class merchantView{
     this.reactmain(this.parent.kmsgwnd,0,["キャンセル"]);
   }
   react1(){
-    let tar = this.parent.kmsgwnd;
-    let [rtn,clv] = this.weplvcheck(this.selected,this.seltype);
-    let txt = ["失敗した"];
-    if(rtn){
-      clv = this.weplvup(this.selected,this.seltype);
-      txt = [this.tp.wlv+"が上がった。\\C[1]"+this.tp.wlv+clv];
+    this.reactmain(this.parent.kmsgwnd,0,["YES"]);
+  }
+
+  // これが素晴らしい
+  cfunc2(e){
+    let p = e.target;
+    if(e.type=="click"){
+      let tarid = p.tarid;
+      let kane = this.parent.kjyodata.getMoney();
+      let kome = this.parent.kjyodata.getFood();
+      return;
     }
-    this.reactmain(this.parent.kmsgwnd,rtn,txt);
-  }
-  weplvup(id,ii){
-    this.skd.weaponlv[id][ii] += 1;
-    return this.skd.weaponlv[id][ii];
-  }
-  weplvcheck(id,ii){
-    let wlv = this.skd.weaponlv[id][ii];
-    let ulv = this.skd.getWeaponSkillLV(id)[ii];
-    //console.log("wep:"+[wlv,ulv]);
-    return [(wlv < ulv),wlv];
+    if(e.type=="mouseover"){
+      p.parentNode.style.background="#00F";
+    }else{
+      p.parentNode.style.background="#008";
+    } 
   }
   cfunc(e){
-    let etar = this.charlist[e.target.id];
-    let weptype = this.type;//武器
+    console.log(e.target.type);
+    let tarid = e.target.tarid;
+    if(!tarid){return};
+    let kane = this.parent.kjyodata.getMoney();
+    let kome = this.parent.kjyodata.getFood();
     if(e.type=="click"){
-      this.selected = etar.charaid;
-      this.seltype = weptype;
       let tar = this.parent.kmsgwnd;
-      let [rtn,clv] = this.weplvcheck(this.selected,this.seltype);
+      let rtn = 1;
       if(rtn){
-        tar.setText(["\\C[1]"+this.tp.wlv+"をあげますか？"]);
+        tar.setText(["\\C[1]をあげますか？"]);
         tar.bkWnd.style.display = "none";
         tar.YNwnd(this,this.react1,this.react2);
       }else{
-        tar.setText(["\\C[2]"+this.tp.wlv+"をあげられない"]);
+        tar.setText(["\\C[2]をあげられない"]);
         this.reset(tar);
       }
       audioInvoke("Cursor3");
       return;
     }
     if(this.selected>=0){return;}
-    //console.log(e.target.id);
-    let flag = 0;
     let tar = this.parent.kmsgwnd;
-    let txt = "";
+    // マウスオーバー
     if(e.type=="mouseover"){
-      flag = 1;
-      console.log("etar.charaid:"+etar.charaid);
-      let [rtn,clv] = this.weplvcheck(etar.charaid,weptype)
-      if(rtn){
-        txt += clv + "→"+(clv+1);
-      }else{
-        txt += clv;
-      }
+      let txt = "ｍｍｍ"+tarid;
       this.parent.updateStrImg("kwnd4mm_tar1", txt);
+      e.target.style.background = "#00F";
     }
-    tar.setText(["\\C[1]銀を使って"+this.tp.type+"をします。",this.tp.wlv+"スキルのレベルアップを","事前にしている必要があります"]);
-    etar.setdraw(flag);
-  }
-  textArrange(n,a,b,c){
-    let w1 = toFullWidth(a);
-    let w2 = toFullWidth(b);
-    let l1 = w1.length;
-    let l2 = w2.length;
-    let l0 = n - l1 - l2;
-    let w0="";
-    while(l0-->0){w0 += "　"}
-    if(c > 0){
-      let w3 = toFullWidth(c);
-      return w1+w0+w2+"＋"+w3;
-    }else{
-      return w1+w0+w2;
+    if(e.type=="mouseleave"){
+      e.target.style.background = "#008";
     }
+    tar.setText(["\\C[1]糧を使います。","糧："+kome]);
   }
 }
 
@@ -798,6 +994,13 @@ class kmidwnd2{
   newwnd(){
     let base = document.getElementById("kwnd2base3");
     // メニューを設置する
+    menuFunc({
+      base:base,menu:this.mtxt,divid:"kwnd2base3m_",
+      strid:"kwnd2txt",lt:[400,0,90,80],
+      thisbase:this,thisfunc:this.cfunc2,
+      parent:this.parent,
+    });
+    /*
     for(let i=0;i<this.mtxt.length;i++){
       let p = generateElement(base,{type:"div",classList_add:"kwnd2u2",id:"kwnd2base3m_"+i,
         style:{"animation-duration":((1*i+5)/10)+"s",padding:"5px 5px 0px 40px","z-index":15,
@@ -810,6 +1013,7 @@ class kmidwnd2{
       set3func(tar,this,this.cfunc2);
       p.append(tar);
     }
+    */
     // 戻る を出す
     let tar = this.parent.kmsgwnd;
     tar.BKwnd(this,this.resetpage);

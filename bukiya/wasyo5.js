@@ -33,6 +33,61 @@
 * Utility Functions. (this funcs are global. take care impact)
 ***************************************************************/
 
+function menuFunc(par){
+  /*
+  let menutext = ["こめかね","かねこめ"];
+  let n = menutext.length;
+  let divid = "kwnd4basekk_";
+  let strid = "kwnd4mm_kk";
+  let [la,ta,tb] = [20,10,80];
+  let thisbase     = this;
+  let thisbasefunc = this.cfunc2;
+  let base;
+  */
+  console.log(par.base)
+  let base = par.base;
+  console.log(par)
+  let menutext = par.menu;
+  let n = menutext.length;
+  let divid = par.divid;
+  let strid = par.strid;
+  let [la,lb,ta,tb] = par.lt;
+  let thisbase = par.thisbase;
+  let thisfunc = par.thisfunc;
+  let parent = par.parent;
+  let type = 0;
+  if(menutext.length == 0){
+    menutext[0] = "メニューなし";
+    type = 1;
+  }
+  for(let i=0;i<n;i++){
+    let [left,top] = [la+lb*i,ta+tb*i];
+    let bcl = ["#008","#444"]; 
+    let pstyle = {
+      type:"div",
+      classList_add:"kwnd2u2",
+      id:divid+i,
+      tarid:(i+1),
+      style:{
+        "animation-duration":((1*i+5)/10)+"s",
+        padding:"5px 5px 0px 40px",
+        "z-index":15,
+        position:"absolute",
+        left:left+"px",top: top+ "px",width:"200px",height:"40px",
+        background:bcl[type]
+      }
+    };
+    let tar = generateElement(base,pstyle);  //base->tar->p->menutext[i]
+    base.append(tar);
+    let p = parent.geneStrImg(strid+i, menutext[i]);
+    p.tartxt = menutext[i];
+    p.tarid = String(i);
+    p.actid = i;
+    if(type==0){set3func(p,thisbase,thisfunc);}
+    tar.append(p);
+  }
+}
+
 function rangeValue(r,r1,r2,v0,v1){
   if(r1 > r2){
     return rangeValue(r,r2,r1,v1,v0)
