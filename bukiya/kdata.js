@@ -333,7 +333,7 @@ class chardata{ // FROM kaihatsuclass
       }}
       this.prernd1 = rnd;
       tar.imggg.src = 'img/pictures/'+imglist[rnd]+'.png';
-      return rnd;
+      return rnd; // いまのところ使うことはない
     }
   }
   getpstatusAll(){
