@@ -173,6 +173,7 @@ class kmidwnd5{
   }
 }
 
+// 内政コマンド（完成）
 class kmidwnd1{
   constructor(wnd){
     this.kmidwnd = wnd;
@@ -711,5 +712,144 @@ class kmsgwnd{
     let ynWnd = this.ynWnd;
     ynWnd.style.display = "block";
     this.ynwndbtn = [yfunc.bind(clss),nfunc.bind(clss)];
+  }
+}
+
+// For kmidwnd2 & kmidwnd4
+class kmidwnd2core{
+  constructor(pclass,wnd,corefunc){
+    this.pclass = pclass;
+    //this.kmidwnd = wnd;
+    this.parent = wnd.parent;
+    //this.maindv;
+    this.imggg;
+    this.cdb = this.parent.cdb;
+
+    this.corefunc = new corefunc(this);
+  }
+  init(maindv,dv,p){
+    this.imggg = p;
+    this.mainfunc(dv,maindv);
+    return 0;
+  }
+  initpage(type){
+    console.log("kmidwnd0:initpage invoke. "+type);
+    if(type==0){return;}
+    let num = this.parent.imgchange(this.pclass);
+    console.log("initpage",num)
+    if(this.corefunc.updblock){
+      this.corefunc.updblock(num);
+    }
+    //Reset
+    this.resetpage();
+  }
+  resetpage(){
+    this.imggg.classList.add("fadeIn");
+    let d = document.getElementById(this.kbid);
+    d.classList.remove("kwnd2u1");
+    this.selected = null;
+    removeAllChildsByID(this.mainid);
+    this.updatelist(document.getElementById(this.listid));
+    this.ecan.txtlist = null;
+    this.ecan.can.style.left = "500px";
+    this.ecan.redraw();
+    // 説明表示変える
+    this.parent.switchexp("mid2");
+  }
+  updatelist(dv){
+    let [id,txt,list,baseY] = this.corefunc.getUpdatelist();
+    removeAllChilds(dv);
+    let p = this.parent.geneStrImg(id,txt);
+    dv.appendChild(p);
+    // 勇者・商人一覧
+    for(let i of list){
+      let par = [10+80*(i%5),baseY+75*Math.floor(i/5),i];
+      let e = new charaImg(this.cdb, par);
+      let tar = e.can;
+      set3func(tar,this,this.cfunc);
+      dv.append(tar);
+    }
+  }
+  mainfunc(dv,maindv){
+    dv.id = this.kbid; // For RightMove
+    dv.style.position = "relative";
+    // キャラリスト
+    let dd = generateElement(dv,{type:"div",id:this.listid,style:{padding:"10px"}});
+    this.updatelist(dd);
+    // あとでここに入れるよう
+    generateElement(maindv,{type:"div",id:this.mainid,style:{padding:"10px"}});
+
+    // キャラ名（cfuncで絶対位置移動）
+    {
+      let p = generateElement(maindv,{type:"div",id:this.kbid+"4"});
+      this.ecan = new animationText([500,370,0]);
+      let e = this.ecan;
+      e.txtlist = null;
+      e.id = this.kbid+"4txt";
+      p.append(e.can);
+    }
+    if(this.corefunc.mainfuncex){
+      this.corefunc.mainfuncex(dv);
+    }
+  }
+  cfunc2(e){ // click時は異なる
+    let p = e.target;
+    if(e.type=="click"){
+      this.corefunc.cfunc2click(p,this.charatarget)
+      return;
+    }
+    if(e.type=="mouseover"){
+      p.parentNode.style.background="#00F";
+      this.chgmsg(p.tarid);
+    }else{
+      p.parentNode.style.background="#008";
+    } 
+  }
+  cfunc(e){
+    let p = e.target;
+    if(e.type=="click"){
+      let num = p.id.match(/\d+/g)[0];
+      this.charatarget = num;
+      this.selected = p;
+      this.imggg.classList.remove("fadeIn");
+      console.log("clicked");
+      let d = document.getElementById(this.kbid);
+      //d.style.display = "none";
+      d.classList.add("kwnd2u1");
+      this.newwnd();
+      this.ecan.can.style.left = "50px";
+      this.ecan.redraw();
+      return;
+    }
+    if(this.selected){return;}
+    if(e.type=="mouseover"){
+      let num = p.id.match(/\d+/g)[0];
+      this.imggg.src = 'img/pictures/'+this.cdb.getPict(num)+'.png';
+      this.imggg.classList.add("fadeIn");
+      this.ecan.resettext([this.cdb.getName(num)]);
+      audioInvoke("Book1");
+      if(this.corefunc.updblock){
+        this.corefunc.updblock(num);
+      }
+    }else{
+      this.imggg.classList.remove("fadeIn");
+    } 
+  }
+  // cfuncのclickで呼ばれる
+  newwnd(){
+    let base = document.getElementById(this.mainid);
+    if(this.corefunc.setMtxt){
+      this.mtxt = this.corefunc.setMtxt(this.charatarget);
+      console.log(this.charatarget,this.mtxt)
+    }
+    // メニューを設置する
+    menuFunc(this.menupar,base,this.mtxt);
+    // 戻る を出す
+    let tar = this.parent.kmsgwnd;
+    tar.BKwnd(this,this.resetpage);
+  }
+  chgmsg(ii){
+    let tar = this.parent.kmsgwnd;
+    tar.setText([this.mtxt[ii]]);
   }
 }
