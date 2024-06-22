@@ -669,13 +669,18 @@ class newWnd3_mati{
       bottom:"0px",width:"716px",height:"120px",backgroundColor:"#0000FFA0",
       color:"#FFF",padding:"10px",position:"absolute"
     };
-    /*this.menuStyle = [];
-    for(let i=0;i<4;i++){
-      let ms = {"animation-duration":((1*i+5)/10)+"s",padding:"5px 5px 0px 40px","z-index":15,
-        position:"absolute",left:"50px",top:40+80*i+"px",width:"220px",height:"40px",background:"#008"
-      };
-      this.menuStyle[i] = {type:"div",classList_add:"kwnd2u2",id:"kwnd3mati_"+i,style:ms}
-    }*/
+    this.matipar = {divid:"kwnd3mati_",
+    strid:"kwnd3txt",lt:[50,0,40,80],
+    thisbase:this,thisfunc:this.cfunc2,
+    parent:this.base.parent,} 
+  }
+  getMatiPar(basedv,mmtxt){
+    return {
+      base:basedv,menu:mmtxt,divid:"kwnd3mati_",
+      strid:"kwnd3txt",lt:[50,0,40,80],
+      thisbase:this,thisfunc:this.cfunc2,
+      parent:this.base.parent,
+    }
   }
   // From KBAND
   drawdiv(base,x,y,w,h){
@@ -708,22 +713,8 @@ class newWnd3_mati{
     //=== 選択肢を出す（関数の中かな？）
     let basedv = dv;
     let mmtxt = this.kd.getMMenu(mid);
-    menuFunc({
-      base:basedv,menu:mmtxt,divid:"kwnd3mati_",
-      strid:"kwnd3txt",lt:[50,0,40,80],
-      thisbase:this,thisfunc:this.cfunc2,
-      parent:this.base.parent,
-    });
-    /*
-    for(let i=0;i<mmtxt.length;i++){
-      let p = generateElement(basedv,this.menuStyle[i]);
-      let menu = base.kmidwnd.text8(mmtxt[i]);
-      let tar = base.parent.geneStrImg(null,menu);
-      tar.tarid = mmtxt[i];//String(i);
-      tar.actid = i;
-      set3func(tar,this,this.cfunc2);
-      p.append(tar);
-    }*/
+    menuFunc(this.matipar,basedv,mmtxt);
+
     //=== キャラの顔グラ
     let imgsrc = 'img/pictures/Actor2_1.png';
     let dvp = generateElement(basedv,{type:"div",

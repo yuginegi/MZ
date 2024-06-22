@@ -33,17 +33,12 @@
 * Utility Functions. (this funcs are global. take care impact)
 ***************************************************************/
 
-function menuFunc(par){
-  /*
-  let menutext = ["こめかね","かねこめ"];
-  let n = menutext.length;
-  let divid = "kwnd4basekk_";
-  let strid = "kwnd4mm_kk";
-  let [la,ta,tb] = [20,10,80];
-  let thisbase     = this;
-  let thisbasefunc = this.cfunc2;
-  let base;
-  */
+function menuFunc(par,base,mtxt){
+  par.base = base;
+  par.menu = mtxt;
+  menuFuncMain(par)
+}
+function menuFuncMain(par){
   console.log(par.base)
   let base = par.base;
   console.log(par)
