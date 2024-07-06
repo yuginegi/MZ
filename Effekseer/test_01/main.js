@@ -1,13 +1,10 @@
-//console.log(getDevice())
-//var isSp = getDevice()=="sp";
-//var isSp = false;
 
 var tarctx;
 var effects = {};
 
+//=== main =======
 var main = function () {
 console.log("main start")
-// /var _app = document.getElementById("app");
 var canvas = document.getElementById("canvas");
 var width  = canvas.width;
 var height = canvas.height;
@@ -63,6 +60,7 @@ console.log("main end")
 //console.log(tarctx , effekseer);
 tarctx = xxx
 };
+//=== main =======
 
 var mainCore = function () {
   console.log("mainCore invoke");
@@ -77,15 +75,10 @@ function playEffect(effect) {
 		console.log("playEffect Failed")
 		return
 	}
-	//stopAll();
 	console.log("playEffect invoke")
 	tarctx.play(effects[effect], 0, 0, 0);
 }
-function stopAll() {}
-function togglePause (){}
-function toggleRotate (){}
-function capture () {}
-  
+
 var canvas = document.getElementById('canvas');
 var container = document.getElementById('app');
 sizing();
