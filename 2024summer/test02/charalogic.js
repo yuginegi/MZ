@@ -122,16 +122,29 @@ class characlass {
 	}
 
 	//--- draw function ---
-	draw(ctx) {
+	move(){
 		if (this.waittime > 0) {
 			this.waittime--;
 			return;
 		}
-		// draw
-		this.stsdraw(ctx);
+
 		// Next
 		let [s, t] = this.sts;
 		this.nextsts(s, t);
+	}
+	effe(ctx,type,tt){
+		if(this.dr!=type){return;}
+		if(this.deadflag){return;}
+		let [x, y] = this.pos;
+		let [mx, my] = this.mvpos;
+		let [w, h] = this.psz;
+		let a = tt/90.0;
+		ctx.fillStyle = 'rgba(255,255,0,0.5)'; //塗りつぶしの色
+		ctx.fillRect(x + mx, y + my + a*h, w, h - a*h);
+	}
+	draw(ctx) {
+		// draw
+		this.stsdraw(ctx);
 	}
 	// 状態・動き方のコントロール
 	stsdraw(ctx) {
