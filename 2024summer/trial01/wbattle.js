@@ -1,3 +1,10 @@
+// BODYのCSSを書き換える。CSSファイル用意でも良い。
+function xxx() {
+  document.body.style.margin = "0px"; // HTML重ねる為
+  document.body.style.overflow = "hidden"; // スクロールバー抑制
+}
+window.addEventListener("load", xxx);
+
 // HTML append
 function generateElement(target, par) {
   let ele = document.createElement(par.type);
@@ -16,25 +23,32 @@ function generateElement(target, par) {
   return ele;
 }
 
-function xxx() {
-  //console.log(document.body.style.margin);
-  document.body.style.margin = "0px";
-  document.body.style.overflow = "hidden";
-}
-window.addEventListener("load", xxx);
-
 class test0 {
   constructor() {
     this.name = "test0";
     console.log("test0 new construct");
     this.endfunc = () => { console.log("endfunc(): Please Override if you need."); }
     window.addEventListener('resize', this.resizeFunc.bind(this));
+    this.initflag = 0;
   }
   invoke() {
     console.log("invoke()");
-    setTimeout(this.cfunc.bind(this), 30000);
-    //test
-    let [w, h] = [816 - 20, 624 - 20];//[window.innerWidth, window.innerHeight];
+    const element = document.getElementById('WRAPTOP');
+    if(element){
+      element.style.display = "block";
+    }else{
+      this.initHTML();
+    }
+  }
+  endinvoke() {
+    console.log("endinvoke");
+    const element = document.getElementById('WRAPTOP');
+    //element.remove();
+    element.style.display = "none";
+    this.endfunc();
+  }
+  initHTML(){
+    let [w, h] = [816 - 20, 624 - 20];
     let par = {
       type: "div", id: "WRAPTOP",
       style: { /* Left,Top,scale are CHANGED */
@@ -42,8 +56,13 @@ class test0 {
         width: w + "px", height: h + "px" /* W & H are FIXED */
       }
     };
-    generateElement(document.body, par);
+    let base = generateElement(document.body, par);
     this.resizeFunc();
+    let btn = generateElement(base, {
+      type:"button",textContent:"btn",
+      style:{position:"absolute",right:"5px",top:"5px"}
+    });
+    btn.addEventListener("click",this.endinvoke.bind(this));
   }
   resizeFunc() {
     let km = document.getElementById("WRAPTOP");
@@ -59,11 +78,5 @@ class test0 {
       km.style.transform = "scale(" + aa + "," + aa + ")";
     }
     console.log(this.name,"RESIZE!");
-  }
-  cfunc() {
-    console.log("cfunc");
-    const element = document.getElementById('WRAPTOP');
-    element.remove();
-    this.endfunc();
   }
 }
