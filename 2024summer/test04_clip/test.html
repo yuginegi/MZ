@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    .btn {
+      position: absolute;
+      z-index: 100;
+    }
+  </style>
+  <title>TEST</title>
+</head>
+
+<body style="background-color: gray">
+
+  <canvas id="cc" width="400" height="400"></canvas>
+<script>
+
+function UtilmultiMoveLine(ctx,arg){
+  ctx.moveTo(arg[0][0],arg[0][1]);// 最初にMOVEして、
+  for(let i=1;i<arg.length;i++){
+    ctx.lineTo(arg[i][0],arg[i][1]);// 以降はLINEする
+  }
+}
+
+function clipdraw(ctx,arg,style){
+  ctx.save();
+  ctx.beginPath();//Reset
+  UtilmultiMoveLine(ctx,arg);
+  ctx.closePath();//開始地点につなぎます
+  ctx.clip();
+  ctx.fillStyle = style;
+  ctx.fillRect(0,0,400,400);// ★全面に描いてもClipされる
+  ctx.restore();
+}
+
+  function init(){
+    console.log("init");
+    let e = document.getElementById("cc");
+    let ctx = e.getContext("2d");
+    let arg = [];
+    let style;
+    //0
+    arg = [[0,0],[220,0],[150,400],[0,400]];
+    style = 'rgb(255,200,200)';
+    clipdraw(ctx,arg,style);
+    //1
+    arg = [[400,0],[250,0],[180,400],[400,400]];
+    style = 'rgb(200,200,255)';
+    clipdraw(ctx,arg,style);
+    //2
+    arg = [[100,100],[350,100],[300,300],[50,300]];
+    style = 'rgb(200,255,200)';
+    clipdraw(ctx,arg,style);
+  }
+  window.onload = init;
+</script>
+
+</body>
+
+</html>
