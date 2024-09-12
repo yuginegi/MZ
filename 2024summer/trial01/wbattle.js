@@ -263,25 +263,11 @@ class backgroundClass {
     return arg;
   }
   bgdraw(ctx, base, type, id){
-    {
+    // 黒いギザギザ
+    let args =[[40,0],[40,40],[40,40-604]]
+    for(let aa of args){
       ctx.beginPath();
-      let arg = this.calcarg(type,base,40);
-      UtilmultiMoveLine(ctx,arg);
-      ctx.closePath();
-      ctx.fillStyle = "#000"
-      ctx.fill();
-    }
-    {
-      ctx.beginPath();
-      let arg = this.calcarg(type,base,40,+40);
-      UtilmultiMoveLine(ctx,arg);
-      ctx.closePath();
-      ctx.fillStyle = "#000"
-      ctx.fill();
-    }
-    {
-      ctx.beginPath();
-      let arg = this.calcarg(type,base,40,+40-604);
+      let arg = this.calcarg(type,base,aa[0],aa[1]);
       UtilmultiMoveLine(ctx,arg);
       ctx.closePath();
       ctx.fillStyle = "#000"
@@ -403,7 +389,6 @@ class battleMain {
       this.sts = 3;
       this.initcnt = 60;
       this.sts3 = 0;
-      //this.bgc.sts3 = 0;
     }
     //立ち絵
     this.ch.drawInit(ctx);
@@ -454,49 +439,17 @@ class battleMain {
     if (this.initcnt-- <= 0) {
       this.initcnt = 80;
       this.sts3+=1;
-      //this.bgc.sts3+=1;
     }
     let [gCVX, gCVY] = this.gsize; // [796,604]
     //----
     let p = [];
     let ypos = gCVY-159;//10
-    /*
-    let mm = 80;
-    let ybar = gCVY-10-mm;//10;
-    let wbar = gCVX/2-10;
-    */
     // バー描画
     if(1){
       ctx.fillStyle = 'rgb(255,0,0)'; //塗りつぶしの色
       this.bardraw2(ctx,0);
       ctx.fillStyle = 'rgb(0,0,255)'; //塗りつぶしの色
       this.bardraw2(ctx,1);
-    }else{
-      ctx.fillStyle = 'rgb(255,0,0)'; //塗りつぶしの色
-      ctx.fillRect(10,ybar,wbar,mm);
-      ctx.fillStyle = 'rgb(0,0,255)'; //塗りつぶしの色
-      ctx.fillRect(gCVX/2,ybar,wbar,mm);
-      // きらりん
-      let nn = 10;
-      if(this.initcnt<=2*nn){
-        ctx.fillStyle = 'rgba(255,255,255,0.5)'; //塗りつぶしの色
-        let tt = 2*nn-this.initcnt;//0-19
-        let dw = wbar/nn;
-        let xx = 10+wbar-dw*(2*nn-tt);
-        let ww = wbar;
-        let xe = xx+ww;
-        if(xe > gCVX/2){
-          ww = gCVX/2-xx;
-        }
-        if(xx <= 10){
-          xx = 10;
-          ww = xe-xx;
-        }
-        ctx.fillRect(xx,ybar,ww,mm);
-        //逆向き
-        xx = gCVX - xx - ww;
-        ctx.fillRect(xx,ybar,ww,mm);
-      }
     }
     // キャラ描画
     ctx.save();
@@ -510,15 +463,6 @@ class battleMain {
     p = [this.img2,0,144,144,144];
     ctx.drawImage(p[0],p[1],p[2],p[3],p[4],gCVX-159,ypos,144,144);
     ctx.restore();
-    
-    // 描画(上の黄色)
-    //ctx.fillStyle = 'rgb(255,255,0)'; //塗りつぶしの色
-    //ctx.fillRect(10,10,wbar*2,30);
-
-    /* this.memberDraw(ctx) */
-
-    //ctx.fillStyle = 'rgb(0,0,0)'; //塗りつぶしの色
-    //ctx.fillText("戦闘中",220,550);
   }
   memberDraw(ctx){
     ctx.strokeStyle = 'rgb(0,0,0)'; //塗りつぶしの色
@@ -561,6 +505,7 @@ class battleMain {
     let base = this.basecalc(this.sts,this.initcnt);
     this.bgc.draw(ctx,base);
 
+    // カットイン中：４
     if(this.sts==3 && base > 796-200){
       let dx = (base-(796-100)); // dx 0-100
       this.en.drawCutin(ctx,dx);
