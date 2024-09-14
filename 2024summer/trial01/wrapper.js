@@ -33,6 +33,7 @@
       let aa = ids.split(',');
       this.ids = aa.map(Number);
       //＝＝＝ 通知の箱
+      console.log(this.ids);
       this.idx = this.ids[0];
       //＝＝＝ 必要なクラスを生成
       this.rootclass = new test0();
@@ -41,8 +42,9 @@
     initcall(){
       //＝＝＝ 通常運転
       $gameVariables.setValue(this.idx,0);
+      let val = $gameVariables.value(this.ids[1]);
       // 処理
-      this.rootclass.invoke();
+      this.rootclass.invoke(val[0],val[1]);
     }
     endcall(){
       // 上に通知
