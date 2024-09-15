@@ -44,6 +44,23 @@ function utilclippath(ctx,arg){
   ctx.clip()
 }
 
+// For SE
+function audioInvokeSE(name,vol=90,pitch=100,pan=0){
+  let par = [{"name":name,"volume":vol,"pitch":pitch,"pan":pan}]
+  //Game_Interpreter.prototype.command251();
+  Game_Interpreter.prototype.command250(par);
+}
+// For BGS
+function audioPlayBGS(name,vol=90,pitch=100,pan=0){
+  let par = [{"name":name,"volume":vol,"pitch":pitch,"pan":pan}]
+  Game_Interpreter.prototype.command245(par);
+}
+// For BGS
+function audioStopBGS(sec=0){
+  let par = [sec]
+  Game_Interpreter.prototype.command246(par);
+}
+
 class test0 {
   constructor() {
     this.name = "test0";
@@ -177,14 +194,15 @@ class backgroundClass {
     ctx.drawImage(this.img[b],p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7]);
     ctx.restore()
   }
-  draw(ctx,base){
+  draw(ctx,base,flag){
     ctx.save()
     ctx.filter = 'grayscale(100%)'
     let p = [100,740-604,796,604,0,0,796,604];/* 1000x740 */
     ctx.drawImage(this.img[2],p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7]);
-    ctx.restore()
+    if(!flag){ctx.restore()}
     this.bgdraw(ctx, base, 0, "grass"); // 左
     this.bgdraw(ctx, base, 1, "ruins"); // 右
+    if(flag){ctx.restore()}
   }
 }
 // バトル
@@ -196,6 +214,27 @@ class battleMain {
     this.flag = 1;
     this.cutin = false;
     this.bgc = new backgroundClass(this);
+    // TEST
+    this.img = new Image();
+    this.img.src = "img/add/title2.png";
+    this.img1 = new Image();
+    this.img1.src = "img/add/title3.png";
+    this.img2 = new Image();
+    this.img2.src = "img/add/bkaishi.png";
+    this.img3 = new Image();
+    this.img3.src = "img/add/keiryaku.png";
+    this.img3a = new Image();
+    this.img3a.src = "img/add/keiryaku3.png";
+    this.img4 = new Image();
+    this.img4.src = "img/add/gamenfire.png";
+    this.imgE1 = new Image();
+    this.imgE1.src = "img/add/k0078_1.png";
+    this.imgE2 = new Image();
+    this.imgE2.src = "img/add/k0078_4.png";
+    this.imgE3 = new Image();
+    this.imgE3.src = "img/add/ma134_7_9.png";
+    this.imgEa = new Image();
+    this.imgEa.src = "img/add/gion2.png";
   }
   keycont(e){
     let k = e.key;
@@ -260,16 +299,23 @@ class battleMain {
         }
       }
     }
+    if(sts==5){
+      base = this.sts5base;
+    }
+    if(sts==6){
+      base = this.sts6base;
+    }
     return base;
   }
 
   draw0(ctx){
     if (this.initcnt-- <= 0) {
       this.sts = 2;
-      this.initcnt = 120;
+      this.initcnt = 150;
     }
     return;
   }
+
   draw1(ctx){
     if (this.initcnt-- <= 0) {
       this.sts = 3;
@@ -278,6 +324,8 @@ class battleMain {
     //立ち絵
     this.ch.drawInit(ctx);
     this.en.drawInit(ctx);
+    //演出（１２０）
+    this.draw1x(ctx,140)
   }
 
   draw2(ctx){
@@ -294,16 +342,220 @@ class battleMain {
     }
     this.ch.commondraw2(ctx,1);
     this.en.commondraw2(ctx,0);
-    // カットイン中：４ (baseで決めるべきか・・・)
+    // カットイン中：４ (baseで決めるべきか？？？)
+    let dx = -1;
     if(base > 796-200){
-      let dx = (base-(796-100)); // dx 0-100
+      dx = (base-(796-100)); // dx 0-100
       this.en.drawCutin(ctx,dx,this.initcnt);
     }
     if(base < 200){
-      let dx = (base-(100)); // dx 0-100
+      dx = (base-(100)); // dx 0-100
       this.ch.drawCutin(ctx,dx,this.initcnt);
     }
+    // セリフが80-20
+    // 80 の時にちょっと寄り道
+    if(this.initcnt == 100){
+      this.sts=5;
+      this.sts5tm = 150;
+      this.sts5base = base;
+      this.sts5dx = dx;
+      this.sts5type = this.sts4type;
+      this.sts5ch = (this.sts4type==1)? this.en : this.ch;
+    }
+    if(this.initcnt == 20 && this.sts4next > 0){
+      this.sts = 6;
+      //業火
+      if(this.sts4next == 3){
+        this.sts6type = this.sts4next;
+        this.sts6tm = 180;
+        this.sts6base = -100; // 相手側
+      }
+      if(this.sts4next == 7){
+        this.sts6type = this.sts4next;
+        this.sts6tm = 180;
+        this.sts6base = -100; // 自分側
+      }
+    }
   }
+
+  draw4(ctx){
+    if (this.sts5tm-- <= 0) {
+      console.log(this.sts5ch.teamID); // 3
+      this.sts = 4
+      this.sts4next = 0;
+      if(this.sts5ch.teamID==3){
+        this.sts4next = 3;
+      }
+      if(this.sts5ch.teamID==7){
+        this.sts4next = 7;
+      }
+    }
+    this.ch.commondraw2(ctx,1);
+    this.en.commondraw2(ctx,0);
+    this.sts5ch.drawCutin(ctx,this.sts5dx,this.initcnt);
+    //演出（１４０）
+    this.draw4x(ctx,160)
+    if(this.sts5tm < 60){
+      if(this.sts5type==1){
+        ctx.drawImage(this.imgE1,-100,-300);
+        ctx.drawImage(this.imgE2,600,0);
+        ctx.drawImage(this.imgE2,200,350);
+        ctx.drawImage(this.imgE3,0,0);
+      }else{
+        //お試しで [796,604]
+        ctx.fillStyle = "#FFFF0080";
+        ctx.beginPath();
+        UtilmultiMoveLine(ctx,[[100,0],[796,350],[796,100],[450,0]]);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        UtilmultiMoveLine(ctx,[[300,0],[0,100],[0,350],[750,0]]);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        UtilmultiMoveLine(ctx,[[0,100],[696,604],[386,604],[0,300]]);
+        ctx.closePath();
+        ctx.fill();
+        // カッ！！
+        ctx.drawImage(this.imgEa,170,220,155,200,400,20,155,200);
+        ctx.drawImage(this.imgEa,170,878,150,145,500,100,150,145);
+        ctx.drawImage(this.imgEa,550,860,100,150,650,120,100,150);
+      }
+    }
+    if(this.sts5tm == 60){
+      let se = (this.sts5type==1)?"Bite":"Skill3";
+      audioInvokeSE(se);
+    }
+  }
+
+  draw5(ctx){
+    if(this.sts6tm-- <= 0) {
+      this.sts = 3;
+      audioStopBGS();
+    }
+    if(this.sts6type == 3){
+      //640x2400 = 640,480 x 5
+      let [w,h] = [640,480];
+      let ix = Math.floor(this.sts6tm/4)%5;
+      //[796,604]
+      ctx.drawImage(this.img4,0,h*ix,w,h,0,0,796,604);
+      if(this.sts6tm==175){
+        audioPlayBGS("Fire1");
+      }
+    }
+    if(this.sts6type == 7){//796,604
+      
+    }
+  }
+  //------------------------------------------------------------------
+  draw1cmn(ctx,tt,tm,yy,ang,img){
+    if(tt < tm){ 
+      ctx.save();
+      let [w,h] = [512,119]//512x119
+      let [dw,dh] = [1.5*w,1.5*h]
+      let [x,y] = [(796-dw)/2,yy]//書きたいところ
+      // 回転の中心に中心点を移動する
+      ctx.translate(796/2,604/2);
+      // canvasを回転する
+      ctx.rotate(Math.PI*(ang/180));
+      let [dx,dy] = [x-796/2,y-604/2];
+      ctx.drawImage(img,0,0,w,h,dx,dy,dw,dh);
+      ctx.restore();
+    }
+    if(tt==tm){
+      audioInvokeSE("Sword4");
+    }
+  }
+  draw1cmn0(ctx,tb,tt,img,imgK,shc,x,y,dlist,h){
+    this.draw1cmn(ctx,tt,tb-20*1,100,10,img);
+    this.draw1cmn(ctx,tt,tb-20*2,200,360-10,img);
+    this.draw1cmn(ctx,tt,tb-20*3,300,10,img);
+    let tb2 = tb-20*2;
+    if(tt < tb2){ //667x259
+      ctx.save();
+      ctx.shadowOffsetX=2;
+      ctx.shadowOffsetY=2;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor=shc;
+      let nn = 40/dlist.length;
+      let ii = Math.floor((tb2-tt)/nn);
+      ii = (ii >= dlist.length)? dlist.length-1 : ii;
+      let dw = dlist[ii];
+      ctx.drawImage(imgK,0,0,dw,h,x,y,dw,h);
+      ctx.restore();
+    }
+  }
+  draw4x(ctx,tb){
+    let tt = this.sts5tm;
+    let img = (this.sts5type==1)? this.img:this.img1;
+    let imgK = (this.sts5type==1)? this.img3:this.img3a;
+    let shc = (this.sts5type==1)? '#880000':'#000088';
+    let [x,y,w,h]=[220,150,381,240];
+    let dlist = [184,w];
+    this.draw1cmn0(ctx,tb,tt,img,imgK,shc,x,y,dlist,h);
+  }
+  draw1x(ctx,tb){
+    let tt = this.initcnt;
+    let img = this.img;
+    let imgK = this.img2
+    let shc = '#880000'
+    let [x,y,w,h]=[80,150,667,259];
+    let dlist = [180,327,475,w];
+    this.draw1cmn0(ctx,tb,tt,img,imgK,shc,x,y,dlist,h);
+  }
+  //------------------------------------------------------------------
+  loopfunc() {
+    let [gCVX, gCVY] = this.gsize;
+    if (this.endcnt > 0) {
+      this.endcnt--;
+      if (this.endcnt <= 0) {
+        endFunc();
+        return;
+      }
+    }
+    // 入力処理
+    if(this.cflag!=0){
+      if(this.sts==3){
+        this.sts = 4;
+        this.sts4type = this.cflag; // 敵味方の区別。操作ボタン。
+        this.sts4pre = this.initcnt; // 使うことはなさそう。
+        this.initcnt = 160;
+        audioInvokeSE("Thunder10");
+      }
+      this.cflag=0;
+    }
+
+    let ctx = this.ctx;
+    let flag = (this.sts==2)?true:false;
+
+    // 背景リセット
+    ctx.fillStyle = 'rgb(80,80,80)'; //塗りつぶしの色
+    ctx.fillRect(0, 0, gCVX, gCVY);
+    // 背景
+    let base = this.basecalc(this.sts,this.initcnt);
+    this.bgc.draw(ctx,base,flag);
+
+    // 立ち合い処理
+    if (this.sts == 1) {
+      return this.draw0(ctx);
+    }
+    if (this.sts == 2) {
+      return this.draw1(ctx);
+    }
+    if (this.sts == 3) {
+      return this.draw2(ctx);
+    }
+    if (this.sts == 4) {
+      return this.draw3(ctx,base); // base で判断している処理があるため・・
+    }
+    if (this.sts == 5) {
+      return this.draw4(ctx);
+    }
+    if (this.sts == 6) {
+      return this.draw5(ctx);
+    }
+  }
+
   memberDraw(ctx){
     ctx.strokeStyle = 'rgb(0,0,0)'; //塗りつぶしの色
     ctx.strokeRect(80,100,240,340);
@@ -327,47 +579,5 @@ class battleMain {
     }
   }
 
-  loopfunc() {
-    let [gCVX, gCVY] = this.gsize;
-    if (this.endcnt > 0) {
-      this.endcnt--;
-      if (this.endcnt <= 0) {
-        endFunc();
-        return;
-      }
-    }
-    // 入力処理
-    if(this.cflag!=0){
-      if(this.sts==3){
-        this.sts = 4;
-        this.sts4type = this.cflag; // 敵味方の区別。操作ボタン。
-        this.sts4pre = this.initcnt; // 使うことはなさそう。
-        this.initcnt = 160;
-      }
-      this.cflag=0;
-    }
-
-    let ctx = this.ctx;
-    // 背景リセット
-    ctx.fillStyle = 'rgb(80,80,80)'; //塗りつぶしの色
-    ctx.fillRect(0, 0, gCVX, gCVY);
-    // 背景
-    let base = this.basecalc(this.sts,this.initcnt);
-    this.bgc.draw(ctx,base);
-
-    // 立ち合い処理
-    if (this.sts == 1) {
-      return this.draw0(ctx);
-    }
-    if (this.sts == 2) {
-      return this.draw1(ctx);
-    }
-    if (this.sts == 3) {
-      return this.draw2(ctx);
-    }
-    if (this.sts == 4) {
-      return this.draw3(ctx,base); // base で判断している処理があるため・・
-    }
-  }
 }
 

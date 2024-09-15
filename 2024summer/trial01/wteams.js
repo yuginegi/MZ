@@ -5,6 +5,7 @@ class teamClass {
     this.chara = [];
     this.gsize = parent.gsize;
     this.initcnt = 0;
+    this.teamID = 0;
   }
   // パラメータを頑張ってセット
   initLoad(type,n) {
@@ -50,6 +51,7 @@ class teamClass {
       this.simg.src = "img/faces/Actor2.png";
       this.spar = [this.simg,144*3,144,144,144];
     }
+    this.teamID = n;
   }
   drawchara(ctx,x,y){
     ctx.save();
@@ -79,7 +81,7 @@ class teamClass {
     x = (gCVX-330)/2;//330:PNG.width
     let dx = gCVX*(base/100)
     // セリフ
-    if(40 < tm && tm < 100){
+    if(20 < tm && tm < 80){
       ctx.fillStyle = 'rgb(0,0,0)'; //塗りつぶしの色
       let p = this.wpar;
       let y1 = gCVY*(0/3)+20;
@@ -146,6 +148,7 @@ class teamClass {
     ];
     ctx.save();
     utilclippath(ctx,argZZ);/* clip */
+    ctx.fillStyle = (type==0)?'rgb(0,0,255)':'rgb(255,0,0)';
     ctx.fillRect(x0,ypos,wbar,mm);
     // 白のきらりの仕掛け
     this.bardraw2white(ctx,type);
@@ -159,13 +162,12 @@ class teamClass {
     /* clip 後片付け */
     ctx.restore()
   }
-  // キャラにお引越しすべき
+  // 下のキャラ描画
   commondraw2(ctx){
     let type = this.type; 
     let [gCVX, gCVY] = this.gsize; // [796,604]
     let ypos = gCVY-159;//10
     // バー描画
-    ctx.fillStyle = (type==0)?'rgb(0,0,255)':'rgb(255,0,0)';
     this.bardraw2(ctx,type);
 
     // キャラ描画
