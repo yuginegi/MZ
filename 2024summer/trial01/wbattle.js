@@ -50,6 +50,17 @@ function audioInvokeSE(name,vol=90,pitch=100,pan=0){
   //Game_Interpreter.prototype.command251();
   Game_Interpreter.prototype.command250(par);
 }
+// For BGM
+function audioPlayBGM(name,vol=90,pitch=100,pan=0){
+  let par = [{"name":name,"volume":vol,"pitch":pitch,"pan":pan}]
+  Game_Interpreter.prototype.command241(par);
+}
+// For BGS
+function audioStopBGM(sec=0){
+  let par = [sec]
+  Game_Interpreter.prototype.command242(par);
+}
+
 // For BGS
 function audioPlayBGS(name,vol=90,pitch=100,pan=0){
   let par = [{"name":name,"volume":vol,"pitch":pitch,"pan":pan}]
@@ -89,6 +100,7 @@ class test0 {
     const element = document.getElementById('WRAPTOP');
     //element.remove();
     element.style.display = "none";
+    this.btm.endfunc();
     this.endfunc();
   }
   initHTML() {
@@ -260,6 +272,12 @@ class battleMain {
     let ctx = this.ctx;
     ctx.fillStyle = 'rgb(0,0,0)'; //塗りつぶしの色
     ctx.fillRect(0, 0, gCVX, gCVY);
+    //音楽開始
+    audioPlayBGM("MusMus-BGM-171")
+  }
+  endfunc(){
+    audioStopBGM();
+    audioStopBGS();
   }
   basecalc(sts,tm){
     let base = 796/2;
