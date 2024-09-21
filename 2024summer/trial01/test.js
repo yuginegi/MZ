@@ -1,13 +1,9 @@
 let testhtml = {};
 function testhtmlinit() {
+  disableMZ = true;
   testhtml.a = new test0();
 }
 function testhtmlinvoke() {
-  let e = document.getElementById("WRAPTOP");
-  if (e) {
-    testhtml.a.endinvoke();
-  } else {
-    testhtml.a.invoke();
-  }
+  testhtml.a.invoke();
 }
 window.onload = testhtmlinit;
