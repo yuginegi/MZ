@@ -1,77 +1,3 @@
-// BODYのCSSを書き換える。CSSファイル用意でも良い。
-function xxx() {
-  document.body.style.margin = "0px"; // HTML重ねる為
-  document.body.style.overflow = "hidden"; // スクロールバー抑制
-}
-window.addEventListener("load", xxx);
-
-// HTML append
-function generateElement(target, par) {
-  let ele = document.createElement(par.type);
-  if (target) { target.append(ele); }
-  for (let key in par.style) {
-    ele.style[key] = par.style[key];
-  }
-  for (let key in par) {
-    if (key == "classList_add") {
-      ele.classList.add(par[key]);
-      continue;
-    }
-    if (["type", "style"].indexOf(key) != -1) { continue; }
-    ele[key] = par[key];
-  }
-  return ele;
-}
-
-function UtilmultiMoveLine(ctx,arg){
-  ctx.moveTo(arg[0][0],arg[0][1]);// 最初にMOVEして、
-  for(let i=1;i<arg.length;i++){
-    ctx.lineTo(arg[i][0],arg[i][1]);// 以降はLINEする
-  }
-}
-
-function utilsaveclip(ctx,arg){
-  ctx.save()
-  ctx.beginPath();
-  UtilmultiMoveLine(ctx,arg);
-  ctx.closePath();
-  ctx.clip()
-}
-function utilclippath(ctx,arg){
-  ctx.beginPath();
-  UtilmultiMoveLine(ctx,arg);
-  ctx.closePath();
-  ctx.clip()
-}
-
-// For SE
-function audioInvokeSE(name,vol=90,pitch=100,pan=0){
-  let par = [{"name":name,"volume":vol,"pitch":pitch,"pan":pan}]
-  //Game_Interpreter.prototype.command251();
-  Game_Interpreter.prototype.command250(par);
-}
-// For BGM
-function audioPlayBGM(name,vol=90,pitch=100,pan=0){
-  let par = [{"name":name,"volume":vol,"pitch":pitch,"pan":pan}]
-  Game_Interpreter.prototype.command241(par);
-}
-// For BGS
-function audioStopBGM(sec=0){
-  let par = [sec]
-  Game_Interpreter.prototype.command242(par);
-}
-
-// For BGS
-function audioPlayBGS(name,vol=90,pitch=100,pan=0){
-  let par = [{"name":name,"volume":vol,"pitch":pitch,"pan":pan}]
-  Game_Interpreter.prototype.command245(par);
-}
-// For BGS
-function audioStopBGS(sec=0){
-  let par = [sec]
-  Game_Interpreter.prototype.command246(par);
-}
-
 class test0 {
   constructor() {
     this.name = "test0";
@@ -151,72 +77,6 @@ class test0 {
 
 /*================================*/
 
-class backgroundClass {
-  constructor(parent){
-    this.parent = parent;
-    this.img = [];
-    let flist = [ /* 1000x740 */
-      "img/battlebacks1/Grassland.png",
-      "img/battlebacks2/Grassland.png",
-      "img/battlebacks1/Ground1.png",
-      "img/battlebacks2/Ruins2.png"
-    ];
-    for(let src of flist){
-      let img = new Image();
-      img.src = src;
-      this.img.push(img);
-    }
-    this.ihash = {
-      "grass":[0,1],
-      "ruins":[2,3],
-    }
-  }
-  calcarg(type,base,m0,dy=0){
-    let [ww,hh] = [796,604];
-    let arg = (type==0)?[[ww,hh+dy],[ww,0+dy]]:[[0,hh+dy],[0,0+dy]];
-    //let m0 = 50;
-    let mm = (type==0)? +1*m0:-1*m0;
-    let n = 8;
-    for(let i=0;i<=n;i++){
-      let x = (i%2==0)?base+mm+25:base+mm-25;
-      let y = hh/n*i +dy;
-      arg.push([x,y]);
-    }
-    return arg;
-  }
-  bgdraw(ctx, base, type, id){
-    // 黒いギザギザ
-    let args =[[40,0],[40,40],[40,40-604]]
-    for(let aa of args){
-      ctx.beginPath();
-      let arg = this.calcarg(type,base,aa[0],aa[1]);
-      UtilmultiMoveLine(ctx,arg);
-      ctx.closePath();
-      ctx.fillStyle = "#000"
-      ctx.fill();
-    }
-    //------------------------------------------------------
-    /* clip 準備 */
-    let arg = this.calcarg(type,base,50);
-    ctx.save()
-    utilclippath(ctx,arg);/* clip */
-    let [a,b] = this.ihash[id];
-    let p = [100,740-604,796,604,0,0,796,604];/* 1000x740 */
-    ctx.drawImage(this.img[a],p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7]);
-    ctx.drawImage(this.img[b],p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7]);
-    ctx.restore()
-  }
-  draw(ctx,base,flag){
-    ctx.save()
-    ctx.filter = 'grayscale(100%)'
-    let p = [100,740-604,796,604,0,0,796,604];/* 1000x740 */
-    ctx.drawImage(this.img[2],p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7]);
-    if(!flag){ctx.restore()}
-    this.bgdraw(ctx, base, 0, "grass"); // 左
-    this.bgdraw(ctx, base, 1, "ruins"); // 右
-    if(flag){ctx.restore()}
-  }
-}
 // バトル
 class battleMain {
   constructor(ctx) {
@@ -228,6 +88,7 @@ class battleMain {
     this.bgc = new backgroundClass(this);
     this.cin = new cutinClass(this);
 
+    this.dfunc = [this.draw0,this.draw1,this.draw2,this.draw3,this.draw4,this.draw5];
     // TEST
     this.img4 = new Image();
     this.img4.src = "img/add/gamenfire.png";
@@ -282,24 +143,31 @@ class battleMain {
       base += aa * Math.sin(th);
     }
     if(sts==4){
-      let tm = this.initcnt;
+      let tm = this.initcnt; // 160 START
       let tp = this.sts4type;
+      this.sts4dx = null;
       {
+        /***************************************************************
+         * aa が小さいと ww が０
+         * つまり、160->140 ＝ base->(796-100)
+         * 20->0 ＝ (796-100)->base
+         * baseがだいたい真ん中。300を20Fかけて移動するくらいの理解で良い。
+         * dx = (base-(796-100)) とは、dx = ((796-100)+ww) - (796-100)
+         ***************************************************************/
         let aa = 0;
-        if(tm > 140){
-          aa = tm-140
-        }
-        if(tm <= 20){
-          aa = 20-tm;
-        }
+        if(tm > 140){aa = tm-140;}
+        if(tm <= 20){aa = 20-tm;}
         if(tp==1){
           let ww = (base-(796-100))*(aa/20);
-          base = (796-100)+ww;
+          base = (796-100)+ww; // ww = base-(796-100)
+          this.sts4dx = ww;
         }else{
           let ww = (base-(100))*(aa/20);
-          base = (100)+ww;
+          base = (100)+ww; // ww = base-100
+          this.sts4dx = ww;
         }
       }
+      this.sts4base = base;
     }
     if(sts==5){
       base = this.sts5base;
@@ -328,16 +196,21 @@ class battleMain {
     this.ch.drawInit(ctx);
     this.en.drawInit(ctx);
     // カットイン演出
-    this.cin.draw1x(ctx,this.initcnt,140)
+    this.cin.battlestart(ctx,this.initcnt,140)
   }
 
   draw2(ctx){
     if (this.initcnt-- <= 0) {
       this.initcnt = 80;
-      //return;
+      //return; RETRUNしない、繰り返す
     }
+    // 下のバー
     this.ch.commondraw2(ctx,1);
     this.en.commondraw2(ctx,0);
+    // 兵士
+    this.ch.charadraw(ctx);
+    this.en.charadraw(ctx);
+    /*
     //兵士ためし
     for(let cc of this.ch.chara){
       cc.move();
@@ -347,8 +220,9 @@ class battleMain {
       cc.move();
       cc.draw(ctx);
     }
+    */
   }
-  draw3(ctx,base){
+  draw3(ctx){
     if (this.initcnt-- <= 0) {
       this.initcnt = (this.sts4type==1)?80:40;
       this.sts = 3;
@@ -356,6 +230,19 @@ class battleMain {
     }
     this.ch.commondraw2(ctx,1);
     this.en.commondraw2(ctx,0);
+    // 
+    let dx = this.sts4dx;
+    if(this.sts4base > 796-200){
+      // ww = base-(796-100)
+      dx = (this.sts4base-(796-100)); // dx 0-100
+      this.en.drawCutin(ctx,this.sts4dx,this.initcnt);
+    }
+    if(this.sts4base < 200){
+       // ww = base-100
+      dx = (this.sts4base-(100)); // dx 0-100
+      this.ch.drawCutin(ctx,this.sts4dx,this.initcnt);
+    }
+/*
     // カットイン中：４ (baseで決めるべきか？？？)
     let dx = -1;
     if(base > 796-200){
@@ -366,12 +253,13 @@ class battleMain {
       dx = (base-(100)); // dx 0-100
       this.ch.drawCutin(ctx,dx,this.initcnt);
     }
+*/
     // セリフが100-20
     // 100 の時にちょっと寄り道、５
     if(this.initcnt == 100){
       this.sts=5;
       this.sts5tm = 150; // これで回る
-      this.sts5base = base;
+      this.sts5base = this.sts4base;//base
       this.sts5dx = dx;
       this.sts5type = this.sts4type;
       this.sts5ch = (this.sts4type==1)? this.en : this.ch;
@@ -411,7 +299,7 @@ class battleMain {
     this.en.commondraw2(ctx,0);
     this.sts5ch.drawCutin(ctx,this.sts5dx,this.initcnt);
     // カットイン演出
-    this.cin.draw4x(ctx,this.sts5tm,160,this.sts5type)
+    this.cin.keiryakucutin(ctx,this.sts5tm,160,this.sts5type)
   }
 
   draw5(ctx){
@@ -462,59 +350,19 @@ class battleMain {
       this.cflag=0;
     }
 
+    // 描画処理
     let ctx = this.ctx;
     let flag = (this.sts==2)?true:false;
 
-    // 背景リセット
-    ctx.fillStyle = 'rgb(80,80,80)'; //塗りつぶしの色
-    ctx.fillRect(0, 0, gCVX, gCVY);
     // 背景
     let base = this.basecalc(this.sts,this.initcnt);
     this.bgc.draw(ctx,base,flag);
-
-    // 立ち合い処理
-    if (this.sts == 1) {
-      return this.draw0(ctx);
+    //if(this.sts >=1 && this.sts <= this.dfunc.length)
+    if(this.dfunc[this.sts-1]){
+      let func = this.dfunc[this.sts-1].bind(this);
+      return func(ctx);
     }
-    if (this.sts == 2) {
-      return this.draw1(ctx);
-    }
-    if (this.sts == 3) {
-      return this.draw2(ctx);
-    }
-    if (this.sts == 4) {
-      return this.draw3(ctx,base); // base で判断している処理があるため・・
-    }
-    if (this.sts == 5) {
-      return this.draw4(ctx);
-    }
-    if (this.sts == 6) {
-      return this.draw5(ctx);
-    }
+    return;
   }
-
-  memberDraw(ctx){
-    ctx.strokeStyle = 'rgb(0,0,0)'; //塗りつぶしの色
-    ctx.strokeRect(80,100,240,340);
-    ctx.strokeRect(gCVX-320,100,240,340);
-
-    // 敵側の配置
-    ctx.fillStyle = 'rgb(255,0,0)'; //塗りつぶしの色
-    for(let i=0;i<8;i++){
-      let ix = Math.floor(i/4);
-      let iy = (i%4);
-      let [cx,cy] = [80+30+120*ix,100+30+80*iy-20*ix];
-      ctx.fillRect(cx,cy,64,64);//64x64
-    }
-    // 味方側の配置
-    ctx.fillStyle = 'rgb(0,0,255)'; //塗りつぶしの色
-    for(let i=0;i<8;i++){
-      let ix = Math.floor(i/4);
-      let iy = (i%4);
-      let [cx,cy] = [gCVX-320+120+30-120*ix,100+30+80*iy-20*ix];
-      ctx.fillRect(cx,cy,64,64);//64x64
-    }
-  }
-
 }
 

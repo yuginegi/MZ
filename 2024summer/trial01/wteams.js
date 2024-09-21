@@ -156,12 +156,8 @@ class teamClass {
         xx = gCVX-(x0-ww+2*ww*(20-this.initcnt)/20);
         mm = 100
       }
-      ctx.beginPath();
-      let arg = [
-        [mm/2+xx,ypos],[mm/2+xx+ww,ypos],[xx+ww,ypos+mm],[xx,ypos+mm],
-      ];
+      let arg = [[mm/2+xx,ypos],[mm/2+xx+ww,ypos],[xx+ww,ypos+mm],[xx,ypos+mm]];
       UtilmultiMoveLine(ctx,arg);
-      ctx.closePath();
       ctx.fill();
     }
   }
@@ -184,9 +180,7 @@ class teamClass {
     //--- 線引く
     ctx.lineWidth = 10;
     ctx.strokeStyle = 'rgb(0,0,0)';
-    ctx.beginPath();
     UtilmultiMoveLine(ctx,argZZ);
-    ctx.closePath();
     ctx.stroke();
     /* clip 後片付け */
     ctx.restore()
@@ -304,6 +298,14 @@ class teamClass {
     }
   }
 
+  // 一般的な動かしてDRAW
+  charadraw(ctx){
+    for (let cc of this.chara) {
+      cc.move();
+      cc.draw(ctx);
+    }
+  }
+
   setwaittime(e, n) {
     let wt = Math.floor(n * Math.random());
     e.waittime = wt;
@@ -344,136 +346,5 @@ class teamClass {
     for (let cc of this.chara) {
       cc.winflag = true;
     }
-  }
-}
-
-class cutinClass {
-  constructor(){
-    // 絵具
-    this.img = new Image();
-    this.img.src = "img/add/title2.png";
-    this.img1 = new Image();
-    this.img1.src = "img/add/title3.png";
-    // 文字：戦闘開始、計略
-    this.img2 = new Image();
-    this.img2.src = "img/add/bkaishi.png";
-    this.img3 = new Image();
-    this.img3.src = "img/add/keiryaku.png";
-    this.img3a = new Image();
-    this.img3a.src = "img/add/keiryaku3.png";
-    // スプラ、擬音
-    this.imgE1 = new Image();
-    this.imgE1.src = "img/add/k0078_1.png";
-    this.imgE2 = new Image();
-    this.imgE2.src = "img/add/k0078_4.png";
-    this.imgE3 = new Image();
-    this.imgE3.src = "img/add/ma134_7_9.png";
-    this.imgEa = new Image();
-    this.imgEa.src = "img/add/gion2.png";
-    this.imgA1 = new Image();
-    this.imgA1.src = "img/add/ma176_1_5.png";
-  }
-  draw1cmn(ctx,tt,tm,yy,ang,img){
-    if(tt < tm){ 
-      ctx.save();
-      let [w,h] = [512,119]//512x119
-      let [dw,dh] = [1.5*w,1.5*h]
-      let [x,y] = [(796-dw)/2,yy]//書きたいところ
-      // 回転の中心に中心点を移動する
-      ctx.translate(796/2,604/2);
-      // canvasを回転する
-      ctx.rotate(Math.PI*(ang/180));
-      let [dx,dy] = [x-796/2,y-604/2];
-      ctx.drawImage(img,0,0,w,h,dx,dy,dw,dh);
-      ctx.restore();
-    }
-    if(tt==tm){
-      audioInvokeSE("Sword4");
-    }
-  }
-  draw1cmn0(ctx,tb,tt,img,imgK,shc,x,y,dlist,h){
-    this.draw1cmn(ctx,tt,tb-20*1,100,10,img);
-    this.draw1cmn(ctx,tt,tb-20*2,200,360-10,img);
-    this.draw1cmn(ctx,tt,tb-20*3,300,10,img);
-    let tb2 = tb-20*2;
-    if(tt < tb2){ //667x259
-      ctx.save();
-      ctx.shadowOffsetX=2;
-      ctx.shadowOffsetY=2;
-      ctx.shadowBlur = 10;
-      ctx.shadowColor=shc;
-      let nn = 40/dlist.length;
-      let ii = Math.floor((tb2-tt)/nn);
-      ii = (ii >= dlist.length)? dlist.length-1 : ii;
-      let dw = dlist[ii];
-      ctx.drawImage(imgK,0,0,dw,h,x,y,dw,h);
-      ctx.restore();
-    }
-  }
-  fillargs(ctx,args){
-    ctx.beginPath();
-    UtilmultiMoveLine(ctx,args);
-    ctx.closePath();
-    ctx.fill();
-  }
-  draw4after(ctx,tt,tm,type){
-    //let tm = 70; // 160-(80+10)
-    if(tt < tm){//this.sts5tm
-      if(type==1){//this.sts5type
-        ctx.drawImage(this.imgE1,-100,-300);
-        ctx.drawImage(this.imgE2,600,0);
-        ctx.drawImage(this.imgE2,200,350);
-        ctx.drawImage(this.imgE3,0,0);
-      }else{
-        //お試しで [796,604]
-        ctx.fillStyle = "#FFFF0080";
-        this.fillargs(ctx, [[100,0],[796,350],[796,100],[450,0]]);
-        this.fillargs(ctx, [[300,0],[0,100],[0,350],[750,0]]);
-        this.fillargs(ctx, [[0,100],[696,604],[386,604],[0,300]]);
-        // カッ！！
-        ctx.drawImage(this.imgEa,170,220,155,200,400,20,155,200);
-        ctx.drawImage(this.imgEa,170,878,150,145,500,100,150,145);
-        ctx.drawImage(this.imgEa,550,860,100,150,650,120,100,150);
-      }
-    }
-    if(tt == tm){//this.sts5tm
-      let se = (type==1)?"Bite":"Skill3";//this.sts5type
-      audioInvokeSE(se);
-    }
-  }
-  draw4x(ctx,tt,tb,type){
-    //let tt = this.sts5tm;
-    let img = (type==1)? this.img:this.img1;
-    let imgK = (type==1)? this.img3:this.img3a;
-    let shc = (type==1)? '#880000':'#000088';
-    let [x,y,w,h]=[220,150,381,240];
-    let dlist = [184,w];
-    this.draw1cmn0(ctx,tb,tt,img,imgK,shc,x,y,dlist,h);
-    // バーン！
-    let tm = tb - 90; //70; // 160-(80+10);
-    this.draw4after(ctx,tt,tm,type)//70; // 160-(80+10)
-  }
-  draw1after(ctx,tt,tm){
-    //let tm = 50;
-    if(tt <= tm){//this.initcnt
-      //512x512,180-330
-      ctx.drawImage(this.imgA1,0,180,512,150,150,20,512,150);
-    }
-    if(tt == tm){//this.initcnt
-      let se = "Damage4";
-      audioInvokeSE(se);
-    }
-  }
-  draw1x(ctx,tt,tb){
-    //let tt = this.initcnt;
-    let img = this.img;
-    let imgK = this.img2
-    let shc = '#880000'
-    let [x,y,w,h]=[80,150,667,259];
-    let dlist = [180,327,475,w];
-    this.draw1cmn0(ctx,tb,tt,img,imgK,shc,x,y,dlist,h);
-    // バーン！
-    let tm = tb - 90; //50; // 140-(80+10);
-    this.draw1after(ctx,tt,tm)//70; // 160-(80+10)
   }
 }
