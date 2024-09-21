@@ -43,6 +43,7 @@ class teamClass {
       this.spar = [this.simg,0,144,144,144];
       this.twep = 1;
       this.hp = 526;
+      this.kwiryaku = 7;
     }else if(n==3){
       //let imgsrc = "img/sv_add/duran.png";
       let imgsrc = "img/pictures/aa_duran.png";
@@ -55,6 +56,7 @@ class teamClass {
       this.spar = [this.simg,0,0,144,144];
       this.twep = 13;
       this.hp = 987;
+      this.kwiryaku = 3;
     }else{
       let imgsrc = "img/pictures/Actor2_8.png";
       this.img = new Image();
@@ -66,6 +68,7 @@ class teamClass {
       this.spar = [this.simg,144*3,144,144,144];
       this.twep = 22;
       this.hp = 430;
+      this.kwiryaku = 8;
     }
     this.teamID = n;
     

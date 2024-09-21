@@ -1,6 +1,6 @@
 class characlass {
 	constructor(type) {
-		console.log("new characlass")
+		//DBG//console.log("new characlass")
 		let [gCVX] = [796];
 		//let imgsrc = ["img/sv_actors/Actor1_1.png", "img/sv_actors/Actor1_2.png"];
 		let imgsrc = ["img/sv_add/EN1_1.png", "img/sv_add/EN1_2.png"];
@@ -192,6 +192,9 @@ class characlass {
 				let [x, y] = this.pos;
 				ctx.fillStyle = "rgba(255,255,0,0.5)"
 				let h = 64*(t/90)
+				if (this.dr){
+					x = 796-x-64;
+				}
 				ctx.fillRect(x,y+64-h,64,h);
 		    }
 		}
@@ -203,10 +206,10 @@ class characlass {
 			ctx.save();		// canvas状態を保存
 			ctx.scale(-1, 1); // 左右反転にする（１）
 			ctx.translate(-gCVX, 0); // 左右反転にする（２）
-		}
-		this.drawmain(ctx, tt, ix, iy); // 描画
-		if (this.dr) {
+		  this.drawmain(ctx, tt, ix, iy); // 描画
 		  ctx.restore();
+		}else{
+			this.drawmain(ctx, tt, ix, iy); // 描画
 		}
 	}
 	drawmain(ctx, tt, inpx, inpy) {

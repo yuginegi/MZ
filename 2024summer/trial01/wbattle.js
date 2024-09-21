@@ -87,6 +87,7 @@ class battleMain {
     this.cutin = false;
     this.bgc = new backgroundClass(this);
     this.cin = new cutinClass(this);
+    this.keiryaku = new keiryakuClass(this);
 
     this.dfunc = [this.draw0,this.draw1,this.draw2,this.draw3,this.draw4,this.draw5];
     // TEST
@@ -202,7 +203,7 @@ class battleMain {
   draw2(ctx){
     if (this.initcnt-- <= 0) {
       this.initcnt = 80;
-      //return; RETRUNしない、繰り返す
+      return this.draw2(ctx);
     }
     // 下のバー
     this.ch.commondraw2(ctx,1);
@@ -210,17 +211,6 @@ class battleMain {
     // 兵士
     this.ch.charadraw(ctx);
     this.en.charadraw(ctx);
-    /*
-    //兵士ためし
-    for(let cc of this.ch.chara){
-      cc.move();
-      cc.draw(ctx);
-    }
-    for(let cc of this.en.chara){
-      cc.move();
-      cc.draw(ctx);
-    }
-    */
   }
   draw3(ctx){
     if (this.initcnt-- <= 0) {
@@ -230,68 +220,34 @@ class battleMain {
     }
     this.ch.commondraw2(ctx,1);
     this.en.commondraw2(ctx,0);
-    // 
-    let dx = this.sts4dx;
+    // 指揮官のカットイン表示
     if(this.sts4base > 796-200){
-      // ww = base-(796-100)
-      dx = (this.sts4base-(796-100)); // dx 0-100
       this.en.drawCutin(ctx,this.sts4dx,this.initcnt);
     }
     if(this.sts4base < 200){
-       // ww = base-100
-      dx = (this.sts4base-(100)); // dx 0-100
       this.ch.drawCutin(ctx,this.sts4dx,this.initcnt);
     }
-/*
-    // カットイン中：４ (baseで決めるべきか？？？)
-    let dx = -1;
-    if(base > 796-200){
-      dx = (base-(796-100)); // dx 0-100
-      this.en.drawCutin(ctx,dx,this.initcnt);
-    }
-    if(base < 200){
-      dx = (base-(100)); // dx 0-100
-      this.ch.drawCutin(ctx,dx,this.initcnt);
-    }
-*/
     // セリフが100-20
     // 100 の時にちょっと寄り道、５
     if(this.initcnt == 100){
-      this.sts=5;
+      this.sts = 5;
       this.sts5tm = 150; // これで回る
       this.sts5base = this.sts4base;//base
-      this.sts5dx = dx;
+      this.sts5dx = this.sts4dx;//dx;
       this.sts5type = this.sts4type;
       this.sts5ch = (this.sts4type==1)? this.en : this.ch;
     }
-    if(this.initcnt == 20 && this.sts4next > 0){
+    if(this.initcnt == 20){
       this.sts = 6;
-      //業火
-      if(this.sts4next == 3){
-        this.sts6type = this.sts4next;
-        this.sts6tm = 180;
-        this.sts6base = -100; // 相手側
-      }
-      if(this.sts4next == 7){
-        this.sts6type = this.sts4next;
-        this.sts6tm = 180;
-        this.sts6base = -100; // 自分側
-      }
+      let [tm,base] = this.keiryaku.getInitParam();
+      this.sts6tm = tm;
+      this.sts6base = base;
     }
   }
 
   draw4(ctx){
     if (this.sts5tm-- <= 0) {
-      console.log(this.sts5ch.teamID); // 3
-      this.sts4next = 0;
-      if(this.sts5ch.teamID==3){
-        this.sts4next = 3;// 火計
-        this.ch.pupset(2);
-      }
-      if(this.sts5ch.teamID==7){
-        this.sts4next = 7;
-        this.ch.pupset(1);
-      }
+      this.keiryaku.setCutinParam(this.sts5ch.kwiryaku, this.ch, this.en);
       this.sts = 4
       return this.draw3(ctx);
     }
@@ -304,59 +260,44 @@ class battleMain {
 
   draw5(ctx){
     if(this.sts6tm-- <= 0) {
-      audioStopBGS();
-      this.ch.pupset(0);
+      this.keiryaku.closeFunc();
       this.sts = 3;
       return this.draw2(ctx);
     }
-    // 火計
-    if(this.sts6type == 3){
-      //兵士ためし
-      this.ch.pupdraw(ctx);
-      //640x2400 = 640,480 x 5
-      let [w,h] = [640,480];
-      let ix = Math.floor(this.sts6tm/4)%5;
-      //[796,604]
-      ctx.drawImage(this.img4,0,h*ix,w,h,0,0,796,604);
-      if(this.sts6tm==175){
-        audioPlayBGS("Fire1");
-      }
-    }
-    // 号令 (180F)
-    if(this.sts6type == 7){//796,604
-      //兵士ためし
-      this.ch.pupdraw(ctx);
-    }
+    this.keiryaku.cutinEffect(ctx,this.sts6tm);
   }
 
   loopfunc() {
-    let [gCVX, gCVY] = this.gsize;
+    /* 
+    // 抜ける処理（今は動いてない、外から「endinvoke」が呼ばれる）
     if (this.endcnt > 0) {
+      console.log("loopend?")
       this.endcnt--;
       if (this.endcnt <= 0) {
+        console.log("loopend?")
         endFunc();
         return;
       }
-    }
+    }*/
     // 入力処理
     if(this.cflag!=0){
       if(this.sts==3){
         this.sts = 4;
-        this.sts4type = this.cflag; // 敵味方の区別。操作ボタン。
-        this.sts4pre = this.initcnt; // 使うことはなさそう。
         this.initcnt = 160;
+        this.sts4type = this.cflag; // 敵味方の区別。操作ボタン。
+        //this.sts4pre = this.initcnt; // 使うことはなさそう。
         audioInvokeSE("Thunder10");
       }
-      this.cflag=0;
+      this.cflag=0; // 入力を空にする
     }
 
     // 描画処理
     let ctx = this.ctx;
-    let flag = (this.sts==2)?true:false;
+    //let flag = (this.sts==2)?true:false;
 
     // 背景
     let base = this.basecalc(this.sts,this.initcnt);
-    this.bgc.draw(ctx,base,flag);
+    this.bgc.draw(ctx,base,(this.sts==2));
     //if(this.sts >=1 && this.sts <= this.dfunc.length)
     if(this.dfunc[this.sts-1]){
       let func = this.dfunc[this.sts-1].bind(this);

@@ -15,7 +15,6 @@ class cutinClass {
       ["gion_baan","img/add/ma176_1_5.png"],
       ["sheet_gion2","img/add/gion2.png"],
     ];
-
     this.img = {}
     for(let cc of srclist){
       let [k,src] = cc;
@@ -126,5 +125,91 @@ class cutinClass {
     // メイン処理
     this.enogumoji(ctx,tb,tt,img,imgK,shc,x,y,dlist,h);
     this.draw1after(ctx,tt,tm)
+  }
+}
+
+class keiryakuClass{
+  constructor(){
+    // TEST
+    this.img4 = new Image();
+    this.img4.src = "img/add/gamenfire.png";
+  }
+  // 3: 火計 敵→味方
+  // 7: 号令 味方
+  // 8: 号令 敵
+  //----------------------
+  // 計略時の演出
+  //----------------------
+  closeFunc(){
+    if(this.char){
+      this.char.pupset(0);
+    }
+    if(this.bgs){
+      audioStopBGS();
+    }
+  }
+  setCutinParam(id, ch, en){
+    console.log(id); // 3
+    //let next = 0;
+    this.char = null;
+    if(id==3){
+      //next = 3;// 火計
+      this.char = ch;
+      ch.pupset(2);//damflag
+    }
+    if(id==7){
+      //next = 7;
+      this.char = ch;
+      ch.pupset(1);//pupflag
+    }
+    if(id==8){
+      this.char = en;
+      this.char.pupset(1);//pupflag
+    }
+    this.id = id; // id is next if exists.
+    //this.next = next;
+    this.bgs = false;
+    //return next;
+  }
+  getInitParam(){
+    // this.id で 決めるべき。
+    let id = this.id;
+    let bb = [-100,796+100];//796,604
+    let tm = 0; // 演出時間は３秒くらい
+    let base = bb[0]; // プレイヤー側
+    if(id==3){
+      [tm,base] = [180,bb[0]];
+    }
+    if(id==7){
+      [tm,base] = [180,bb[0]];
+    }
+    if(id==8){
+      [tm,base] = [180,bb[0]];
+    }
+    return [tm,base];
+  }
+  // １８０Ｆ　演出
+  cutinEffect(ctx,tt){
+    // 火計
+    if(this.id == 3){
+      //兵士ためし
+      this.char.pupdraw(ctx);
+      //640x2400 = 640,480 x 5
+      let [w,h] = [640,480];
+      let ix = Math.floor(tt/4)%5;
+      //[796,604]
+      ctx.drawImage(this.img4,0,h*ix,w,h,0,0,796,604);
+      if(tt==175){
+        audioPlayBGS("Fire1");
+        this.bgs = true;
+      }
+    }
+    // 号令 (180F)//796,604
+    if(this.id == 7){
+      this.char.pupdraw(ctx);
+    }
+    if(this.id == 8){
+      this.char.pupdraw(ctx);
+    }
   }
 }
