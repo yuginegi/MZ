@@ -6,15 +6,15 @@ class teamClass {
     this.gsize = parent.gsize;
     this.initcnt = 0;
     this.teamID = 0;
-    //数字の読み込み(1個だけにしたいけど)
-    this.digis = []
-    for(let i=0;i<10;i++){
-      let e = new Image();
-      e.src = "img/add/num/digi"+i+".png";
-      this.digis[i] = e;
-    }
-    this.dcnt = 0;
-    this.dam = -1;
+    //画像
+    this.digires = new diginumresource();
+    this.digires.getres(this);
+    //画像は親の使う
+    this.digin = new diginum(this);
+    this.damagelist = [];
+    // TEST
+    this.pupimg = new Image();
+    this.pupimg.src = "img/system/IconSet.png"
   }
   // パラメータを頑張ってセット
   initLoad(type,n) {
@@ -44,6 +44,10 @@ class teamClass {
       this.twep = 1;
       this.hp = 526;
       this.kwiryaku = 7;
+      // 攻撃計算用
+      this.atk = 30;
+      this.def = 10;
+      this.powersts = {};
     }else if(n==3){
       //let imgsrc = "img/sv_add/duran.png";
       let imgsrc = "img/pictures/aa_duran.png";
@@ -57,6 +61,10 @@ class teamClass {
       this.twep = 13;
       this.hp = 987;
       this.kwiryaku = 3;
+      // 攻撃計算用
+      this.atk = 30;
+      this.def = 10;
+      this.powersts = {};
     }else{
       let imgsrc = "img/pictures/Actor2_8.png";
       this.img = new Image();
@@ -69,6 +77,10 @@ class teamClass {
       this.twep = 22;
       this.hp = 430;
       this.kwiryaku = 8;
+      // 攻撃計算用
+      this.atk = 30;
+      this.def = 10;
+      this.powersts = {};
     }
     this.teamID = n;
     
@@ -82,6 +94,70 @@ class teamClass {
         this.addchara(type, x1,100+80*i);
       }
     }
+  }
+  powerupdraw(ctx,type){
+    let [gCVX, gCVY] = this.gsize; // [796,604]
+    let xpos = (type==0)?gCVX-159:10;
+    let ypos = gCVY-159;
+    let dx=0;
+    let plist =[
+      ["atknum","atk",2,2],
+      ["defnum","def",3,2],
+    ];
+    for(let cc of plist){
+      let [num,sts,ix0,iy0] = cc;
+      if(this.powersts[num]){
+        let [ix,iy]=(this.def > this.powersts[sts])?[8+ix0,iy0+1]:[8+ix0,iy0];
+        let [px,py]=[xpos+dx,ypos];
+        ctx.drawImage(this.pupimg,ix*32,iy*32,32,32,px,py,32,32);
+        dx += 32;
+      }
+    }
+    /*
+    if(this.powersts["atknum"]){
+      let [ix,iy]=(this.atk > this.powersts["atk"])?[8+2,3]:[8+2,2];
+      let [px,py]=[xpos+dx,ypos];
+      ctx.drawImage(this.pupimg,ix*32,iy*32,32,32,px,py,32,32);
+      dx += 32;
+    }
+    if(this.powersts["defnum"]){
+      let [ix,iy]=(this.def > this.powersts["def"])?[8+3,3]:[8+3,2];
+      let [px,py]=[xpos+dx,ypos];
+      ctx.drawImage(this.pupimg,ix*32,iy*32,32,32,px,py,32,32);
+      dx += 32;
+    }*/
+  }
+  powerup(v){
+    if(v==1){
+      console.log(this)
+      this.powersts["atk"] = 5*this.atk;
+      this.powersts["atknum"] = 5;
+    }
+    if(v==2){
+      console.log(this)
+      this.powersts["atk"] = this.atk/10;
+      this.powersts["atknum"] = 6;
+      this.powersts["def"] = this.def*10+100;
+      this.powersts["defnum"] = 6;
+    }
+  }
+  getAtk(){
+    let v = (this.powersts["atk"])? this.powersts["atk"] : this.atk;
+    this.powersts["atknum"]--;
+    if(this.powersts["atknum"]==0){
+      delete this.powersts["atk"]
+      delete this.powersts["atknum"]
+    }
+    return v;
+  }
+  getDef(){
+    let v = (this.powersts["def"])? this.powersts["def"] : this.def;
+    this.powersts["defnum"]--;
+    if(this.powersts["defnum"]==0){
+      delete this.powersts["def"]
+      delete this.powersts["defnum"]
+    }
+    return v;
   }
   drawchara(ctx,x,y){
     ctx.save();
@@ -190,58 +266,24 @@ class teamClass {
   }
   // 数字を出す
   digidraw(ctx,type,hp){
-    if(hp < 0){
-      return;
-    }
-    let ypos = this.gsize[1]-159;//10
-    let strHP = hp.toString();
-    //parseInt. digi.H=112.
-    let aa = 1/3;
-    let xx = [0];
-    let n = strHP.length;
-    for(let i=0;i<n;i++){
-      let v = parseInt(strHP[i]);
-      let img = this.digis[v];
-      xx[i+1] = xx[i]+aa*(img.width);
-    }
-    for(let i=0;i<n;i++){
-      let v = parseInt(strHP[i]);
-      let img = this.digis[v];
-      let [w,h] = [img.width,img.height]
-      let x = (type==0)? 450+xx[i]:350-xx[n]+xx[i];
-      ctx.drawImage(img,0,0,w,h,x,ypos+10,aa*w,aa*h);
-    }
-    // 
-    let x0 =  (type==0)? 450+xx[n]:350;
-    this.digidraw2(ctx,x0,this.dcnt);
+    this.digin.digidraw(ctx);
+    //DBG//let n1 = this.damagelist.length;
+    this.damagelist.forEach((e, index) => {
+      e.digidraw2(ctx);
+      if (e.delflag) {
+        this.damagelist.splice(index, 1);
+      }
+    })
   }
-  digidraw2(ctx,wpos,cnt){
-    if(cnt > 30){
-      return;
-    }
-    if(this.dam < 0){
-      return;
-    }
-    let hp = this.dam;
-    let y0 = this.gsize[1]-159 -20;
-    let ypos = (cnt < 10)? y0 -2*cnt: y0 -20;
-    let strHP = hp.toString();
-    //parseInt. digi.H=112.
-    let aa = 1/3;
-    let xx = [0];
-    let n = strHP.length;
-    for(let i=0;i<n;i++){
-      let v = parseInt(strHP[i]);
-      let img = this.digis[v];
-      xx[i+1] = xx[i]+aa*(img.width);
-    }
-    for(let i=0;i<n;i++){
-      let v = parseInt(strHP[i]);
-      let img = this.digis[v];
-      let [w,h] = [img.width,img.height]
-      let x = wpos-xx[n]+xx[i];
-      ctx.drawImage(img,0,0,w,h,x,ypos+10,aa*w,aa*h);
-    }
+
+  setDamage(v,mode=0){
+    if(v < 0){v=0}
+    let [xx,n] = this.digin.getlen2(this.hp);
+    let x0 = (this.type==0)?450+xx[n]:350;
+    let e = new diginum(this);
+    e.setVal(v,60, x0, mode);
+    this.damagelist.push(e);
+    this.hp -= v;
   }
   // 下のキャラ描画
   commondraw2(ctx){
@@ -250,16 +292,6 @@ class teamClass {
     let ypos = gCVY-159;//10
     // バー描画
     this.bardraw2(ctx,type);
-    // 上から数字もらえれば出します。にする。
-    {
-      this.dcnt++;
-      if(this.dcnt>=180){
-        this.dcnt = 0;
-        this.dam = 20;
-        this.hp -= this.dam; 
-      }
-      this.digidraw(ctx,type,this.hp);
-    }
 
     // キャラ描画
     ctx.save();
@@ -275,6 +307,12 @@ class teamClass {
       ctx.drawImage(p[0],p[1],p[2],p[3],p[4],gCVX-159,ypos,144,144);
     }
     ctx.restore();
+    // HP表示・ダメージ描画処理
+    this.digidraw(ctx,type,this.hp);
+    // PowerUp しているようなら
+    this.powerupdraw(ctx,type);
+  
+    // カウント処理
     this.initcnt = (this.initcnt<=0) ? 80-1:(this.initcnt-1);
   }
   pupset(inp){
@@ -348,6 +386,145 @@ class teamClass {
   setWin() {
     for (let cc of this.chara) {
       cc.winflag = true;
+    }
+  }
+}
+
+class diginumresource{
+  constructor(){
+    //数字の読み込み(1個だけにしたいけど)
+    this.digis = []
+    for(let i=0;i<10;i++){
+      let e = new Image();
+      e.src = "img/add/num/digi"+i+".png";
+      this.digis[i] = e;
+    }
+    this.digisRed = []
+    for(let i=0;i<10;i++){
+      let e = new Image();
+      e.src = "img/add/num/daka"+i+".png";
+      this.digisRed[i] = e;
+    }
+  }
+  getres(base){
+    base.digis = this.digis;
+    base.digisRed = this.digisRed;
+  }
+}
+
+class diginum{
+  constructor(parent){
+    this.parent = parent;
+    this.digis = parent.digis;
+    this.digisRed = parent.digisRed;
+    this.v = 0;//HP表示
+    this.cnt = 0;
+  }
+  setVal(v,mcnt,wpos,mode=0){
+    this.v = v;
+    this.mcnt = mcnt;
+    this.cnt = 0;
+    this.wpos = wpos;
+    this.mode = mode;
+    //if(mode > 0)
+    if(v >= 100){ // デカくする
+      this.mode = (mode==0)?1:mode;
+      this.mcnt = 180;
+    }
+  }
+  getlen(){
+    let hp = this.parent.hp;
+    if(hp < 0){
+      return [0];
+    }
+    let strHP = hp.toString();
+    let n = strHP.length;
+    let aa = 1/3;
+    let xx = [0];
+    for(let i=0;i<n;i++){
+      let v = parseInt(strHP[i]);
+      let img = this.digis[v];
+      xx[i+1] = xx[i]+aa*(img.width);
+    }
+    return xx;
+  }
+  getlen2(hp,ain=1/3){
+    if(hp < 0){hp=0;}
+    let strHP = hp.toString();
+    let n = strHP.length;
+    let aa = ain;
+    let xx = [0];
+    for(let i=0;i<n;i++){
+      let v = parseInt(strHP[i]);
+      let img = this.digis[v];
+      xx[i+1] = xx[i]+aa*(img.width);
+    }
+    return [xx,n,strHP];
+  }
+  // 数字を出す
+  digidraw(ctx){
+    let type = this.parent.type;
+    let hp = this.parent.hp;
+    if(hp < 0){
+      hp = 0;
+    }
+    let [xx,n,strHP] = this.getlen2(hp);
+    let aa = 1/3;
+    let xpos = (type==0)? 450:350-xx[n];
+    let ypos = this.parent.gsize[1]-159;//10
+    this.drawcore(ctx,xpos,ypos,aa,xx,n,strHP,this.digis)
+  }
+  // ダメージ数字
+  digidraw2(ctx){
+    if(this.cnt++ > this.mcnt){
+      this.delflag = true;
+      return;
+    }
+    let [aa,ya1,ya2,yt] = [1/3,-20,-50,15]
+    if(this.mode!=0){
+      //return this.digidraw2SP(ctx);
+      [aa,ya1,ya2,yt] = [2/3,-60,-150,30]
+    }
+    let cnt = this.cnt;
+    //let aa = 1/3;
+    let [xx,n,strHP] = this.getlen2(this.v,aa);
+    let xpos = this.wpos-xx[n];
+    if(this.mode!=0){
+      xpos = (this.wpos > 400) ? 450 : 100;
+    }
+    let y0 = this.parent.gsize[1]-159 -20;
+    //let [ya1,ya2] = [-20,-50];
+    //let yt = 15; // this.mcnt 60
+    let th = Math.PI/yt; // Math.PI=180°
+    let ypos = y0 + ya1;
+    if(cnt < yt){
+      ypos = y0 + ya1*(cnt/yt) + ya2*Math.sin(th*cnt);
+    }
+    this.drawcore(ctx,xpos,ypos,aa,xx,n,strHP,this.digisRed)
+  }
+  // 大きいダメージ数字
+  digidraw2SP(ctx){
+    let cnt = this.cnt;
+    let aa = 2/3; // ★
+    let [xx,n,strHP] = this.getlen2(this.v,aa);
+    let xpos = (this.wpos > 400) ? 450 : 100; // ★
+    let y0 = this.parent.gsize[1]-159 -20;
+    let [ya1,ya2] = [-60,-150]; // ★
+    let yt = 30; // this.mcnt 180 // ★
+    let th = Math.PI/yt; // Math.PI=180°
+    let ypos = y0 + ya1;
+    if(cnt < yt){
+      ypos = y0 + ya1*(cnt/yt) + ya2*Math.sin(th*cnt);
+    }
+    this.drawcore(ctx,xpos,ypos,aa,xx,n,strHP,this.digisRed)
+  }
+  drawcore(ctx,xpos,ypos,aa,xx,n,strHP,ilist){
+    for(let i=0;i<n;i++){
+      let v = parseInt(strHP[i]);
+      let img = ilist[v];
+      let [w,h] = [img.width,img.height]
+      let x = xpos+xx[i];
+      ctx.drawImage(img,0,0,w,h,x,ypos+10,aa*w,aa*h);
     }
   }
 }

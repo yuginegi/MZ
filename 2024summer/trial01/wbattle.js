@@ -89,10 +89,7 @@ class battleMain {
     this.cin = new cutinClass(this);
     this.keiryaku = new keiryakuClass(this);
 
-    this.dfunc = [this.draw0,this.draw1,this.draw2,this.draw3,this.draw4,this.draw5];
-    // TEST
-    this.img4 = new Image();
-    this.img4.src = "img/add/gamenfire.png";
+    this.dfunc = [this.draw0,this.draw1,this.draw2,this.draw3];
   }
   keycont(e){
     let k = e.key;
@@ -147,34 +144,26 @@ class battleMain {
       let tm = this.initcnt; // 160 START
       let tp = this.sts4type;
       this.sts4dx = null;
+      //if(this.sts5tm >= 0){base = this.sts5base; }else 
+      if(this.sts6tm >= 0){base = this.sts6base;}else
       {
         /***************************************************************
          * aa が小さいと ww が０
          * つまり、160->140 ＝ base->(796-100)
+         * 140-20 は aa=0,ww=0;
          * 20->0 ＝ (796-100)->base
          * baseがだいたい真ん中。300を20Fかけて移動するくらいの理解で良い。
          * dx = (base-(796-100)) とは、dx = ((796-100)+ww) - (796-100)
          ***************************************************************/
         let aa = 0;
         if(tm > 140){aa = tm-140;}
-        if(tm <= 20){aa = 20-tm;}
-        if(tp==1){
-          let ww = (base-(796-100))*(aa/20);
-          base = (796-100)+ww; // ww = base-(796-100)
-          this.sts4dx = ww;
-        }else{
-          let ww = (base-(100))*(aa/20);
-          base = (100)+ww; // ww = base-100
-          this.sts4dx = ww;
-        }
+        if(tm < 20){aa = 20-tm;}
+        let bb = (tp==1)? (796-100) : (100);
+        let ww = (base-bb)*(aa/20);
+        base = bb+ww;
+        this.sts4dx = ww;
       }
       this.sts4base = base;
-    }
-    if(sts==5){
-      base = this.sts5base;
-    }
-    if(sts==6){
-      base = this.sts6base;
     }
     return base;
   }
@@ -191,6 +180,7 @@ class battleMain {
     if (this.initcnt-- <= 0) {
       this.initcnt = 60;
       this.sts = 3;
+      this.sts3tm = 0
       return this.draw2(ctx)
     }
     //立ち絵
@@ -205,50 +195,78 @@ class battleMain {
       this.initcnt = 80;
       return this.draw2(ctx);
     }
-    // 下のバー
-    this.ch.commondraw2(ctx,1);
-    this.en.commondraw2(ctx,0);
     // 兵士
     this.ch.charadraw(ctx);
     this.en.charadraw(ctx);
+    // 下のバー
+    this.ch.commondraw2(ctx,1);
+    this.en.commondraw2(ctx,0);
   }
+
+  //=== 計略演出効果(sts=4) =======
   draw3(ctx){
+    if(this.sts5tm >= 0){
+      return this.draw3A(ctx)
+    }
+    if(this.sts6tm >= 0){
+      return this.draw3B(ctx)
+    }
+    //DBG//console.log(this.initcnt);
     if (this.initcnt-- <= 0) {
       this.initcnt = (this.sts4type==1)?80:40;
       this.sts = 3;
+      this.sts3tm = 0
       return this.draw2(ctx)
     }
+    // 描画メイン
+    this.draw3main(ctx);
+    // 100 の時にちょっと寄り道、５
+    if(this.initcnt == 100){
+      this.enterdraw3A();
+    }
+    // 20 の時にちょっと寄り道、６
+    if(this.initcnt == 20){
+      this.enterdraw3B();
+    }
+  }
+  draw3main(ctx){
     this.ch.commondraw2(ctx,1);
     this.en.commondraw2(ctx,0);
     // 指揮官のカットイン表示
-    if(this.sts4base > 796-200){
-      this.en.drawCutin(ctx,this.sts4dx,this.initcnt);
-    }
-    if(this.sts4base < 200){
+    if(0 < this.sts4base && this.sts4base < 200){
+      //DBG//console.log("Player cutin",this.sts4base);
       this.ch.drawCutin(ctx,this.sts4dx,this.initcnt);
     }
-    // セリフが100-20
-    // 100 の時にちょっと寄り道、５
-    if(this.initcnt == 100){
-      this.sts = 5;
-      this.sts5tm = 150; // これで回る
-      this.sts5base = this.sts4base;//base
-      this.sts5dx = this.sts4dx;//dx;
-      this.sts5type = this.sts4type;
-      this.sts5ch = (this.sts4type==1)? this.en : this.ch;
-    }
-    if(this.initcnt == 20){
-      this.sts = 6;
-      let [tm,base] = this.keiryaku.getInitParam();
-      this.sts6tm = tm;
-      this.sts6base = base;
+    if(796-200 < this.sts4base && this.sts4base < 796 ){
+      //DBG//console.log("Enemys cutin",this.sts4base);
+      this.en.drawCutin(ctx,this.sts4dx,this.initcnt);
     }
   }
+  enterkeiryaku(){
+    this.sts = 4;
+    this.initcnt = 160;
+    this.sts4type = this.cflag; // 敵味方の区別。操作ボタン。
+    audioInvokeSE("Thunder10");
+    this.sts5tm = -1;// 抜けるときは -1 になる。ので、無効化は-1
+    this.sts6tm = -1;// 抜けるときは -1 になる。ので、無効化は-1
+  }
+  enterdraw3A(){
+    this.sts5tm = 150; // これで回る
+    this.sts5dx = this.sts4dx;
+    this.sts5type = this.sts4type;
+    this.sts5ch = (this.sts4type==1)? this.en : this.ch;
+  }
+  enterdraw3B(){
+    let [tm,base] = this.keiryaku.getInitParam();
+    this.sts6tm = tm; // これで回る
+    this.sts6base = base;
+    console.log(tm,base);
+  }
 
-  draw4(ctx){
+  draw3A(ctx){
     if (this.sts5tm-- <= 0) {
       this.keiryaku.setCutinParam(this.sts5ch.kwiryaku, this.ch, this.en);
-      this.sts = 4
+      //this.sts = 4
       return this.draw3(ctx);
     }
     this.ch.commondraw2(ctx,1);
@@ -258,47 +276,51 @@ class battleMain {
     this.cin.keiryakucutin(ctx,this.sts5tm,160,this.sts5type)
   }
 
-  draw5(ctx){
+  draw3B(ctx){
     if(this.sts6tm-- <= 0) {
       this.keiryaku.closeFunc();
+      // のこり２０Ｆの指揮官の引っ込む表示するとき
+      //this.sts = 4
+      return this.draw3(ctx);
+      // のこり２０Ｆを捨てて、戦闘に戻るとき
       this.sts = 3;
       return this.draw2(ctx);
     }
     this.keiryaku.cutinEffect(ctx,this.sts6tm);
   }
 
+  battleCalc(dd,aa){
+    let atk = aa.getAtk();
+    let def = dd.getDef();
+    let v = atk - def;
+    dd.setDamage(v);
+  }
+
   loopfunc() {
-    /* 
-    // 抜ける処理（今は動いてない、外から「endinvoke」が呼ばれる）
-    if (this.endcnt > 0) {
-      console.log("loopend?")
-      this.endcnt--;
-      if (this.endcnt <= 0) {
-        console.log("loopend?")
-        endFunc();
-        return;
-      }
-    }*/
     // 入力処理
     if(this.cflag!=0){
       if(this.sts==3){
-        this.sts = 4;
-        this.initcnt = 160;
-        this.sts4type = this.cflag; // 敵味方の区別。操作ボタン。
-        //this.sts4pre = this.initcnt; // 使うことはなさそう。
-        audioInvokeSE("Thunder10");
+        this.enterkeiryaku();
       }
       this.cflag=0; // 入力を空にする
+    }
+    // 戦闘中か？ そうなら、ダメージ計算
+    if(this.sts == 3){
+      this.sts3tm++;
+      if(this.sts3tm%180==0){
+        //this.ch.setDamage(20);
+        //this.en.setDamage(20);
+        this.battleCalc(this.ch,this.en);
+        this.battleCalc(this.en,this.ch);
+      }
     }
 
     // 描画処理
     let ctx = this.ctx;
-    //let flag = (this.sts==2)?true:false;
-
     // 背景
     let base = this.basecalc(this.sts,this.initcnt);
     this.bgc.draw(ctx,base,(this.sts==2));
-    //if(this.sts >=1 && this.sts <= this.dfunc.length)
+    // シーンごとの描画処理
     if(this.dfunc[this.sts-1]){
       let func = this.dfunc[this.sts-1].bind(this);
       return func(ctx);

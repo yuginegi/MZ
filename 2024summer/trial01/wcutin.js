@@ -170,6 +170,7 @@ class keiryakuClass{
     //this.next = next;
     this.bgs = false;
     //return next;
+    console.log(this.id)
   }
   getInitParam(){
     // this.id で 決めるべき。
@@ -186,6 +187,7 @@ class keiryakuClass{
     if(id==8){
       [tm,base] = [180,bb[0]];
     }
+    console.log(id,tm,base)
     return [tm,base];
   }
   // １８０Ｆ　演出
@@ -202,14 +204,22 @@ class keiryakuClass{
       if(tt==175){
         audioPlayBGS("Fire1");
         this.bgs = true;
+        // ダメ計
+        this.char.setDamage(259);
       }
     }
     // 号令 (180F)//796,604
     if(this.id == 7){
       this.char.pupdraw(ctx);
+      if(tt==175){
+        this.char.powerup(1);
+      }
     }
     if(this.id == 8){
       this.char.pupdraw(ctx);
+      if(tt==175){
+        this.char.powerup(2);
+      }
     }
   }
 }
