@@ -200,13 +200,15 @@ class keiryakuClass{
       let [w,h] = [640,480];
       let ix = Math.floor(tt/4)%5;
       //[796,604]
-      ctx.drawImage(this.img4,0,h*ix,w,h,0,0,796,604);
+      let dy = 80;
+      ctx.drawImage(this.img4,0,h*ix+dy,w,h-dy,0,0,796,604);
       if(tt==175){
         audioPlayBGS("Fire1");
         this.bgs = true;
         // ダメ計
         this.char.setDamage(259);
       }
+      this.ktext(ctx,["地獄の業火","火によるダメージを与える"]);
     }
     // 号令 (180F)//796,604
     if(this.id == 7){
@@ -214,12 +216,29 @@ class keiryakuClass{
       if(tt==175){
         this.char.powerup(1);
       }
+      this.ktext(ctx,["勇者の大号令","攻撃力が上がる"]);
     }
     if(this.id == 8){
       this.char.pupdraw(ctx);
       if(tt==175){
         this.char.powerup(2);
       }
+      this.ktext(ctx,["献身的な防衛","攻撃力は下がるが、防御力が大きく上がる"]);
     }
+  }
+  ktext(ctx,txt){
+    ctx.fillStyle = "#00000080"
+    let y = 350;
+    ctx.fillRect(0,y,796,604-y);
+    // TEXT
+    let save = ctx.textAlign
+    ctx.textAlign = "center"
+    ctx.fillStyle = 'rgb(255,255,0)'; //塗りつぶしの色
+    ctx.font = "60px MSゴシック";
+    ctx.fillText(txt[0], 796/2,420); // y:上に出す
+    ctx.fillStyle = 'rgb(255,255,255)'; //塗りつぶしの色
+    ctx.font = "30px MSゴシック";
+    ctx.fillText(txt[1], 796/2,500); // y:上に出す
+    ctx.textAlign = save;
   }
 }

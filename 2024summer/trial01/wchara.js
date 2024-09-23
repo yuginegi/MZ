@@ -23,6 +23,8 @@ class characlass {
 		this.winflag = false;
 		this.pupflag = false;
 		this.damflag = false;
+		this.move1flag = false;
+		this.move2flag = false;
 		// 攻撃方法
 		this.atkwep = 0;
 		this.wepdef = {
@@ -42,7 +44,9 @@ class characlass {
 			// 勝ち
 			30: { a: 0, b: 0 }, 31: { a: 2, b: 1 },
 			// PUP
-			40: { a: 0, b: 0 }, 41: { a: 2, b: 1 }
+			40: { a: 0, b: 0 }, 41: { a: 2, b: 1 },
+			// MOVE
+			50: { a: 2, b: 0 }, 51: { a: 0, b: 0 }
 		};
 	}
 	setimage(imgsrc){
@@ -59,6 +63,10 @@ class characlass {
 			this.nextsts4(s, t);
 		} else if (this.damflag) {
 			this.nextsts5(s, t);
+		} else if (this.move1flag) {
+			this.nextsts6a(s, t);
+		} else if (this.move2flag) {
+			this.nextsts6b(s, t);
 		} else {
 			// ココが通常の動き
 			if (this.dr) {
@@ -92,6 +100,36 @@ class characlass {
 			}
 		}
 		this.sts = [s, t]
+	}
+	// 入場
+	nextsts6a(s, t) {
+		let [a,b,t1,t2] = [12,0,20,60]
+		if (s < 51) { // t=0 にセット
+			s = 51;
+			t = 0;
+			this.mvpos[0] =  a*(t2-t1);
+			this.mvpos[1] =  b*(t2-t1);
+		} else if(s==51 && t >= t1 && t < t2){
+		  this.mvpos[0] -= a;
+		  this.mvpos[1] -= b;
+		}
+		this.sts = [s, t + 1];
+	}
+	// 入場
+	nextsts6b(s, t) {
+		if (s < 50) { // t=0 にセット
+			s = 50;
+			t = 0;
+			this.mvpos[0] = 20*30;
+			this.mvpos[1] = -5*30;
+		} else if (s == 50 && t > 30) {
+			s = s + 1;
+			t = 0;
+		}else if(s==50){
+		  this.mvpos[0] -= 20;
+		  this.mvpos[1] += 5;
+		}
+		this.sts = [s, t + 1];
 	}
 	// 被ダメ時のアニメーション
 	nextsts5(s, t) {

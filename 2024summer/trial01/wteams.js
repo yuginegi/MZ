@@ -23,13 +23,13 @@ class teamClass {
     if(type==0){
       // 右だから
       this.pxy = [796-350,100];
-      this.wpar = [300, gCVY*(2/3)+50, gCVX-350, gCVY*(1/3)-80];
-      this.tpar = [350, gCVX*(2/3)]
+      this.wpar = [300, 20, gCVX-350, gCVY*(1/3)-80];
+      this.tpar = [330,60+4]
     }else{
       // 左だから
       this.pxy = [20,100];
-      this.wpar = [30, gCVY*(0/3)+20, gCVX-350, gCVY*(1/3)-80];
-      this.tpar = [60, 100]
+      this.wpar = [30, 20, gCVX-350, gCVY*(1/3)-80];
+      this.tpar = [60,60+4]
     }
     // データ読み込み
     if(n==7){
@@ -38,28 +38,31 @@ class teamClass {
       this.img.src = imgsrc;
       this.itxt = "いけ！";
       this.ctxt = "ここが勝負時だ！";
+      this.endt = "くっ、ここは退く・・";
+      this.wint = "我々の勝利だ！！";
       this.simg = new Image();
       this.simg.src = "img/faces/Actor1.png";
       this.spar = [this.simg,0,144,144,144];
       this.twep = 1;
-      this.hp = 526;
+      this.hp = 226;//526;
       this.kwiryaku = 7;
       // 攻撃計算用
       this.atk = 30;
       this.def = 10;
       this.powersts = {};
     }else if(n==3){
-      //let imgsrc = "img/sv_add/duran.png";
       let imgsrc = "img/pictures/aa_duran.png";
       this.img = new Image();
       this.img.src = imgsrc;
       this.itxt = "相手をしてやろう";
       this.ctxt = "地獄の業火をくらえ！";
+      this.endt = "ふんっ、退却だ";
+      this.wint = "たいしたことない";
       this.simg = new Image();
       this.simg.src = "img/faces/aa_duran.png";
       this.spar = [this.simg,0,0,144,144];
       this.twep = 13;
-      this.hp = 987;
+      this.hp = 187;//987;
       this.kwiryaku = 3;
       // 攻撃計算用
       this.atk = 30;
@@ -71,11 +74,13 @@ class teamClass {
       this.img.src = imgsrc;
       this.itxt = "守ってみせまする";
       this.ctxt = "守ってみせまする";
+      this.endt = "すみません、退きます";
+      this.wint = "守り通せました";
       this.simg = new Image();
       this.simg.src = "img/faces/Actor2.png";
       this.spar = [this.simg,144*3,144,144,144];
       this.twep = 22;
-      this.hp = 430;
+      this.hp = 130;//430;
       this.kwiryaku = 8;
       // 攻撃計算用
       this.atk = 30;
@@ -113,19 +118,6 @@ class teamClass {
         dx += 32;
       }
     }
-    /*
-    if(this.powersts["atknum"]){
-      let [ix,iy]=(this.atk > this.powersts["atk"])?[8+2,3]:[8+2,2];
-      let [px,py]=[xpos+dx,ypos];
-      ctx.drawImage(this.pupimg,ix*32,iy*32,32,32,px,py,32,32);
-      dx += 32;
-    }
-    if(this.powersts["defnum"]){
-      let [ix,iy]=(this.def > this.powersts["def"])?[8+3,3]:[8+3,2];
-      let [px,py]=[xpos+dx,ypos];
-      ctx.drawImage(this.pupimg,ix*32,iy*32,32,32,px,py,32,32);
-      dx += 32;
-    }*/
   }
   powerup(v){
     if(v==1){
@@ -159,6 +151,7 @@ class teamClass {
     }
     return v;
   }
+
   drawchara(ctx,x,y){
     ctx.save();
     ctx.shadowColor='rgb(0,255,255)';
@@ -168,16 +161,6 @@ class teamClass {
     ctx.restore();
   }
   drawInit(ctx){
-    //立ち合いのセリフ
-    if(0){
-      ctx.fillStyle = 'rgb(0,0,0)'; //塗りつぶしの色
-      let p = this.wpar;
-      ctx.fillRect(p[0],p[1],p[2],p[3]);
-      ctx.fillStyle = 'rgb(255,255,255)'; //塗りつぶしの色
-      ctx.font = "40px MSゴシック";
-      p = this.tpar;
-      ctx.fillText(this.itxt, p[0],p[1]);
-    }
     // キャラの絵（dxに依存のみ）
     this.drawchara(ctx,this.pxy[0],this.pxy[1])
   }
@@ -191,13 +174,12 @@ class teamClass {
     if(20 < tm && tm < 80){
       ctx.fillStyle = 'rgb(0,0,0)'; //塗りつぶしの色
       let p = this.wpar;
-      let y1 = gCVY*(0/3)+20;
-      ctx.fillRect(p[0],y1,p[2],p[3]/2);
+      //let y1 = gCVY*(0/3)+20;
+      ctx.fillRect(p[0],p[1],p[2],p[3]/2);
       ctx.fillStyle = 'rgb(255,255,255)'; //塗りつぶしの色
       ctx.font = "40px MSゴシック";
       p = this.tpar;
-      //let y2 = 100;
-      ctx.fillText(this.ctxt, p[0],60+4); // y:上に出す
+      ctx.fillText(this.ctxt, p[0],p[1]); // y:上に出す
     }
     // キャラの背景（薄い赤・薄い青）
     {
@@ -213,6 +195,34 @@ class teamClass {
         ctx.fillStyle = 'rgba(255,0,0,0.5)'; //塗りつぶしの色
       }
       ctx.fillRect(x,100,w,350);
+    }
+    // キャラの絵（dxに依存のみ）
+    this.drawchara(ctx,x+dx,y)
+  }
+
+  // 退却のカットイン
+  endCutin(ctx,base,tm,tp=0){
+    let [gCVX, gCVY] = this.gsize;
+    let [x,y] = this.pxy;
+    x = (gCVX-330)/2;//330:PNG.width
+    let dx = gCVX*(base/100)
+    // ちょっとおしゃれめに
+    {
+      ctx.fillStyle = '#888888CC'; //塗りつぶしの色
+      ctx.fillRect(0,0,gCVX,y);
+      ctx.fillRect(0,y+350,gCVX,gCVY-(y+350));
+    }
+    // セリフ
+    if(20 < tm && tm < 80){
+      ctx.fillStyle = 'rgb(0,0,0)'; //塗りつぶしの色
+      let p = this.wpar;
+      //let y1 = gCVY*(0/3)+20;
+      ctx.fillRect(p[0],p[1],p[2],p[3]/2);
+      ctx.fillStyle = 'rgb(255,255,255)'; //塗りつぶしの色
+      ctx.font = "40px MSゴシック";
+      p = this.tpar;
+      let txt = (tp==0)?this.endt:this.wint;
+      ctx.fillText(txt, p[0],p[1]); // y:上に出す
     }
     // キャラの絵（dxに依存のみ）
     this.drawchara(ctx,x+dx,y)
@@ -264,18 +274,19 @@ class teamClass {
     /* clip 後片付け */
     ctx.restore()
   }
-  // 数字を出す
-  digidraw(ctx,type,hp){
-    this.digin.digidraw(ctx);
+
+  //「damagelist」に従って、digidraw2 描画、使い終わったら削除。
+  digidraw(ctx){
+    this.digin.digidraw(ctx); // HPを表示する
     //DBG//let n1 = this.damagelist.length;
     this.damagelist.forEach((e, index) => {
-      e.digidraw2(ctx);
+      e.digidraw2(ctx); // ダメージを表示する
       if (e.delflag) {
-        this.damagelist.splice(index, 1);
+        this.damagelist.splice(index, 1); // 使い終わったら削除
       }
     })
   }
-
+  // 「damagelist」を 追加する。
   setDamage(v,mode=0){
     if(v < 0){v=0}
     let [xx,n] = this.digin.getlen2(this.hp);
@@ -285,6 +296,7 @@ class teamClass {
     this.damagelist.push(e);
     this.hp -= v;
   }
+
   // 下のキャラ描画
   commondraw2(ctx){
     let type = this.type; 
@@ -308,7 +320,7 @@ class teamClass {
     }
     ctx.restore();
     // HP表示・ダメージ描画処理
-    this.digidraw(ctx,type,this.hp);
+    this.digidraw(ctx);
     // PowerUp しているようなら
     this.powerupdraw(ctx,type);
   
@@ -336,6 +348,34 @@ class teamClass {
     for (let cc of this.pchara) {
       cc.move();
       cc.draw(ctx);
+    }
+  }
+  /*
+      let [x0,x1] = [796-200,796-100]
+
+      for(let i=0;i<3;i++){
+        this.addchara(type, x0,150+80*i);
+      }
+      for(let i=0;i<4;i++){
+        this.addchara(type, x1,100+80*i);
+      }
+  */
+  moveset(inp){
+    this.pupsts = inp;
+    this.pchara = [];
+    if(inp == 0){
+      this.pchara = [];
+    }else{
+      for(let i=0;i<7;i++){
+        let x = (i<3)? 796-200:796-100;
+        if(inp == 1){x = (i<3)? 796/2-50:796/2+50;}
+        let y = (i<3)? 150+80*i:100+80*(i-3);
+        let e = new characlass(this.type);
+        e.pos = [x,y]
+        if(inp == 1){e.move1flag = true;}
+        if(inp == 2){e.move2flag = true;}
+        this.pchara.push(e);
+      }
     }
   }
 
@@ -386,145 +426,6 @@ class teamClass {
   setWin() {
     for (let cc of this.chara) {
       cc.winflag = true;
-    }
-  }
-}
-
-class diginumresource{
-  constructor(){
-    //数字の読み込み(1個だけにしたいけど)
-    this.digis = []
-    for(let i=0;i<10;i++){
-      let e = new Image();
-      e.src = "img/add/num/digi"+i+".png";
-      this.digis[i] = e;
-    }
-    this.digisRed = []
-    for(let i=0;i<10;i++){
-      let e = new Image();
-      e.src = "img/add/num/daka"+i+".png";
-      this.digisRed[i] = e;
-    }
-  }
-  getres(base){
-    base.digis = this.digis;
-    base.digisRed = this.digisRed;
-  }
-}
-
-class diginum{
-  constructor(parent){
-    this.parent = parent;
-    this.digis = parent.digis;
-    this.digisRed = parent.digisRed;
-    this.v = 0;//HP表示
-    this.cnt = 0;
-  }
-  setVal(v,mcnt,wpos,mode=0){
-    this.v = v;
-    this.mcnt = mcnt;
-    this.cnt = 0;
-    this.wpos = wpos;
-    this.mode = mode;
-    //if(mode > 0)
-    if(v >= 100){ // デカくする
-      this.mode = (mode==0)?1:mode;
-      this.mcnt = 180;
-    }
-  }
-  getlen(){
-    let hp = this.parent.hp;
-    if(hp < 0){
-      return [0];
-    }
-    let strHP = hp.toString();
-    let n = strHP.length;
-    let aa = 1/3;
-    let xx = [0];
-    for(let i=0;i<n;i++){
-      let v = parseInt(strHP[i]);
-      let img = this.digis[v];
-      xx[i+1] = xx[i]+aa*(img.width);
-    }
-    return xx;
-  }
-  getlen2(hp,ain=1/3){
-    if(hp < 0){hp=0;}
-    let strHP = hp.toString();
-    let n = strHP.length;
-    let aa = ain;
-    let xx = [0];
-    for(let i=0;i<n;i++){
-      let v = parseInt(strHP[i]);
-      let img = this.digis[v];
-      xx[i+1] = xx[i]+aa*(img.width);
-    }
-    return [xx,n,strHP];
-  }
-  // 数字を出す
-  digidraw(ctx){
-    let type = this.parent.type;
-    let hp = this.parent.hp;
-    if(hp < 0){
-      hp = 0;
-    }
-    let [xx,n,strHP] = this.getlen2(hp);
-    let aa = 1/3;
-    let xpos = (type==0)? 450:350-xx[n];
-    let ypos = this.parent.gsize[1]-159;//10
-    this.drawcore(ctx,xpos,ypos,aa,xx,n,strHP,this.digis)
-  }
-  // ダメージ数字
-  digidraw2(ctx){
-    if(this.cnt++ > this.mcnt){
-      this.delflag = true;
-      return;
-    }
-    let [aa,ya1,ya2,yt] = [1/3,-20,-50,15]
-    if(this.mode!=0){
-      //return this.digidraw2SP(ctx);
-      [aa,ya1,ya2,yt] = [2/3,-60,-150,30]
-    }
-    let cnt = this.cnt;
-    //let aa = 1/3;
-    let [xx,n,strHP] = this.getlen2(this.v,aa);
-    let xpos = this.wpos-xx[n];
-    if(this.mode!=0){
-      xpos = (this.wpos > 400) ? 450 : 100;
-    }
-    let y0 = this.parent.gsize[1]-159 -20;
-    //let [ya1,ya2] = [-20,-50];
-    //let yt = 15; // this.mcnt 60
-    let th = Math.PI/yt; // Math.PI=180°
-    let ypos = y0 + ya1;
-    if(cnt < yt){
-      ypos = y0 + ya1*(cnt/yt) + ya2*Math.sin(th*cnt);
-    }
-    this.drawcore(ctx,xpos,ypos,aa,xx,n,strHP,this.digisRed)
-  }
-  // 大きいダメージ数字
-  digidraw2SP(ctx){
-    let cnt = this.cnt;
-    let aa = 2/3; // ★
-    let [xx,n,strHP] = this.getlen2(this.v,aa);
-    let xpos = (this.wpos > 400) ? 450 : 100; // ★
-    let y0 = this.parent.gsize[1]-159 -20;
-    let [ya1,ya2] = [-60,-150]; // ★
-    let yt = 30; // this.mcnt 180 // ★
-    let th = Math.PI/yt; // Math.PI=180°
-    let ypos = y0 + ya1;
-    if(cnt < yt){
-      ypos = y0 + ya1*(cnt/yt) + ya2*Math.sin(th*cnt);
-    }
-    this.drawcore(ctx,xpos,ypos,aa,xx,n,strHP,this.digisRed)
-  }
-  drawcore(ctx,xpos,ypos,aa,xx,n,strHP,ilist){
-    for(let i=0;i<n;i++){
-      let v = parseInt(strHP[i]);
-      let img = ilist[v];
-      let [w,h] = [img.width,img.height]
-      let x = xpos+xx[i];
-      ctx.drawImage(img,0,0,w,h,x,ypos+10,aa*w,aa*h);
     }
   }
 }

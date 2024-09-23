@@ -45,6 +45,7 @@ class test0 {
     });
     let ctx = cnv.getContext("2d");
     this.btm = new battleMain(ctx);
+    this.btm.rootclass = this;
 
     let btn = generateElement(base, {
       type: "button", textContent: "btn",
@@ -89,7 +90,7 @@ class battleMain {
     this.cin = new cutinClass(this);
     this.keiryaku = new keiryakuClass(this);
 
-    this.dfunc = [this.draw0,this.draw1,this.draw2,this.draw3];
+    this.dfunc = [this.draw0,this.draw1,this.draw2,this.draw3,this.draw4];
   }
   keycont(e){
     let k = e.key;
@@ -145,8 +146,9 @@ class battleMain {
       let tp = this.sts4type;
       this.sts4dx = null;
       //if(this.sts5tm >= 0){base = this.sts5base; }else 
-      if(this.sts6tm >= 0){base = this.sts6base;}else
-      {
+      if(this.sts6tm >= 0){
+        base = this.sts6base;
+      }else{
         /***************************************************************
          * aa が小さいと ww が０
          * つまり、160->140 ＝ base->(796-100)
@@ -165,15 +167,44 @@ class battleMain {
       }
       this.sts4base = base;
     }
+    if(sts==5){ // sts = 5 200 から start
+      // sts = 4 のように、時刻で移動させる
+      let tb = this.draw4mx -20;
+      let tm = this.initcnt;
+      let tp = (this.ch.hp <= 0)? 0:1; // やられた側へ
+      let aa = 0;
+      if(tm > tb){aa = tm-tb;}
+      // aa さえもらえれば
+      let bb = (tp==1)? (796-100) : (100);
+      let ww = (base-bb)*(aa/20);
+      base = bb+ww;
+    }
     return base;
   }
 
-  draw0(ctx){
+  draw0(ctx){ // 180
+    if(this.initcnt == 180){
+      this.ch.moveset(1);
+      this.en.moveset(2);
+    }
     if (this.initcnt-- <= 0) {
       this.initcnt = 150;
       this.sts = 2;
+      this.ch.moveset(0);
+      this.en.moveset(0);
       return this.draw1(ctx)
     }
+    // 兵士
+    let tm = this.initcnt;
+    if(60 < tm && tm < 180){
+      this.ch.pupdraw(ctx);
+    }
+    if(0 < tm && tm < 60){
+      this.en.pupdraw(ctx);
+    }
+    // 下のバー
+    this.ch.commondraw2(ctx,1);
+    this.en.commondraw2(ctx,0);
   }
 
   draw1(ctx){
@@ -289,11 +320,72 @@ class battleMain {
     this.keiryaku.cutinEffect(ctx,this.sts6tm);
   }
 
+  //=== 決着(sts=5) =======
+  // 200-160 HP バーが出る
+  // 160-140 カットインで出てくる
+  // 80-20 敗北セリフ
+  // 40- キャラ引っ込む
+  // draw4B 勝利セリフ
+  draw4(ctx){
+    if(this.draw4ex >= 0){
+      return this.draw4B(ctx)
+    }
+    // 戦闘終了
+    if (this.initcnt-- <= 0) {
+      this.rootclass.endinvoke();
+      return;
+    }
+    // バーはある程度残す
+    if(this.initcnt >=(this.draw4mx-40)){
+      this.ch.commondraw2(ctx,1);
+      this.en.commondraw2(ctx,0);
+      return
+    }
+    // 指揮官のカットイン表示
+    {
+      let tm = this.initcnt;
+      let tp = this.draw4tp;//(this.ch.hp <= 0)? 0:1;
+      this.draw4leader(ctx,0,tm,tp, [(this.draw4mx-60),20,40,20])
+    }
+    // 勝利セリフに移行
+    if(this.initcnt==0){
+      this.draw4mx = 160;
+      this.draw4ex = this.draw4mx;
+    }
+  }
+  draw4B(ctx){
+    if (this.draw4ex-- <= 0) {
+      return this.draw4(ctx);
+    }
+    // 指揮官のカットイン表示
+    {
+      let tm = this.draw4ex;
+      let tp = 1-this.draw4tp;//(this.ch.hp <= 0)? 1:0; // 逆
+      this.draw4leader(ctx,1,tm,tp, [(this.draw4mx-20),20,0,20])
+    }
+  }
+  draw4leader(ctx,ed,tm,tp,arg){
+    let [t1,n1,t2,n2] = arg;
+    let team = (tp==0)?this.ch:this.en;
+    let aa = 0;
+    if(tm-t1 > 0){aa = (tm-t1)/n1;}
+    if(t2-tm > 0){aa = (t2-tm)/n2;}
+    let dx = (tp==0)?400*aa:-400*aa;
+    team.endCutin(ctx,dx,tm,ed);
+  }
+
   battleCalc(dd,aa){
     let atk = aa.getAtk();
     let def = dd.getDef();
     let v = atk - def;
     dd.setDamage(v);
+  }
+  hpcheck(){
+    if(this.ch.hp > 0 && this.en.hp > 0){return;}
+    this.draw4mx = 200;
+    this.draw4tp = (this.ch.hp <= 0)? 0:1;
+    this.sts = 5;
+    this.initcnt = this.draw4mx;
   }
 
   loopfunc() {
@@ -308,11 +400,11 @@ class battleMain {
     if(this.sts == 3){
       this.sts3tm++;
       if(this.sts3tm%180==0){
-        //this.ch.setDamage(20);
-        //this.en.setDamage(20);
         this.battleCalc(this.ch,this.en);
         this.battleCalc(this.en,this.ch);
       }
+      // HPの判定
+      this.hpcheck();
     }
 
     // 描画処理
