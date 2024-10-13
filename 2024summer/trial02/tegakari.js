@@ -191,7 +191,10 @@
       };
       generateElement(base,par2);
     }
-    resizeFunc() {
+    resizeFunc(){
+      utilResizeFunc("TEGAKARI",this.barpos);
+    }
+    resizeFunc_org() {
       let km = document.getElementById("TEGAKARI");
       if (km) {
         let [sw, sh] = [window.innerWidth, window.innerHeight];
@@ -243,51 +246,6 @@
       tegakari_call(1);
     }
     return smgoto(sceneClass);
-  }
-
-/*
-
-  // マップからメニューを開かせない
-  // Window_MenuCommand.initCommandPosition() は メニューとコマンドだけ
-  const TE = TouchInput.update;
-  const IE = Input.update;
-  const TD = function() {};
-  var gHookMenuMode = false;
-  function smresume(){
-    if(gHookMenuMode==false){
-      console.log("endMenu skip");
-      return;
-    }
-    gHookMenuMode = false;
-    console.log("endMenu");
-    //SceneManager.resume()
-    TouchInput.update = TE;
-    Input.update = IE;
-    // TEST
-    const element = document.getElementById('TEGTEXT');
-    if(element){
-      element.textContent = "操作可能"
-    }
-  }
-  Scene_Map.prototype.callMenu = function() {
-    if(gHookMenuMode!=false){
-      console.log("callMenu skip");
-      return;
-    }
-    gHookMenuMode = true;
-    console.log("callMenu");
-    this.menuCalling = false; // 繰り返し呼びを止める
-    //SceneManager.stop()
-    TouchInput.update = TD;TouchInput.clear();
-    Input.update = TD;Input.clear();
-    $gameTemp.clearDestination();
-    // 5秒停止
-    setTimeout(smresume,5000);
-    // TEST
-    const element = document.getElementById('TEGTEXT');
-    if(element){
-      element.textContent = "5秒操作禁止"
-    }
   }
 
   /*=== HOOK =======*/
