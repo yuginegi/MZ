@@ -22,6 +22,9 @@ window.addEventListener("load", xxx);
 function generateElement(target, par) {
   let ele = document.createElement(par.type);
   if (target) { target.append(ele); }
+  return setStyleElement(ele,par);
+}
+function setStyleElement(ele, par) {
   for (let key in par.style) {
     ele.style[key] = par.style[key];
   }
@@ -34,6 +37,15 @@ function generateElement(target, par) {
     ele[key] = par[key];
   }
   return ele;
+}
+function setabspos(ele,left,top,mode=0){
+  ele.style.position = "absolute";
+  if(mode%2==1){
+    ele.style.right = left+"px";
+  }else{
+    ele.style.left = left+"px";
+  }
+  ele.style.top = top+"px";
 }
 
 function UtilmultiMoveLine(ctx,arg){
@@ -67,13 +79,9 @@ function utilResizeFunc(target, barpos=null) {
       // 計算が悪いんだけどとりあえずこれでいいか・・・。
       let [dw, dh] = barpos // [160,0]
       let [w1, h1] = [w0 - dw, h0 - dh] // 位置決め
-      [cl, ct] = [(sw - w1) / 2, (sh - h1) / 2];
       aa = (ax > ay) ? ay : ax;
-      if(ax > ay){ // aa = ay
-        ct = dh/2
-      }else{ // aa = ax
-        ct = (sh - aa*h1)/2
-      }
+      cl = (sw - w1) / 2;
+      ct = (ax > ay) ? dh/2 : (sh - aa*h1)/2;
     }else{ // 816x624にマージン１０向け
       aa = (ax > ay) ? ay : ax;
       [cl, ct] = [(sw - w0 + 20) / 2, (sh - h0 + 20) / 2];
@@ -154,19 +162,14 @@ function getImgSrcFromTEXT(txt){
   let aa = generateTextBmp(txt);
   return aa.context.canvas.toDataURL();
 }
-
 function geneTagImg(sid,src){
   let p = document.createElement("img");
   p.id = sid;
   p.src = src;
   return p;
 }
-
 function geneTagImgFromTEXT(sid,txt){
-  let p = document.createElement("img");
-  p.id = sid;
-  p.src = getImgSrcFromTEXT(txt);
-  return p;
+  return geneTagImg(sid,getImgSrcFromTEXT(txt))
 }
 
 // click, enter, leave ３セット

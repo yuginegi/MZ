@@ -29,6 +29,129 @@
 (() => {
   'use strict';
 
+  class tegakaListClass{
+    constructor(parent){
+      this.parent = parent;
+      this.name = "tegakaListClass";
+      window.addEventListener('resize', this.resizeFunc.bind(this));
+      // サイズ (816, 624)
+      this.size = [816,624]
+      this.guisize = [816 - 20, 624 - 20];
+
+      // Resource
+      {  // Resource START
+        // BASEのパラメータ
+        this.basepar = { /* W & H are FIXED. RESIZED BY SCALE */
+          type: "div", id: "tglist",
+          style: { /* Left,Top,scale are CHANGED */
+            backgroundColor: "#0000FF50", position: "relative", zIndex: 20,
+            width: this.guisize[0] + "px", height: this.guisize[1] + "px"
+          }
+        };
+        this.css = {
+          div1:{style:{backgroundColor:"#0000FF00"}},
+          closebutton:{style:{backgroundColor:"#00000080",padding:"5px 10px 5px 10px","text-align":"center"}},
+          btmstyle:{style:{backgroundColor:"#0000CC",padding:"10px"}},
+        }
+      } // Resource END
+    }
+    show(){
+      const element = document.getElementById('tglist');
+      if (element) {
+        console.log("SET BLOCK")
+        element.style.display = "block";
+      } else {
+        this.initHTML();
+      }
+    }
+    hide(){
+      const element = document.getElementById('tglist');
+      if (element) {
+        console.log("SET NONE")
+        element.style.display = "none";
+      }
+    }
+    // div
+    creatediv(base,inp,w,h){
+      let par = {
+        type: "div", id: inp,
+        style: {
+          backgroundColor: "#000000",
+          width: w + "px", height: h + "px"
+        }
+      };
+      return generateElement(base,par);
+    }
+    initHTML() {
+      // メイン
+      let base = generateElement(document.body, this.basepar);
+      base.style.backgroundColor = "#0000FF80";
+      this.resizeFunc();
+      // コンテンツ(796x604)
+      // CLOSEボタン
+      {
+        let mm = this.creatediv(base,"close",100,40);//40
+        setStyleElement(mm, this.css.closebutton);
+        setabspos(mm,5,5,1);
+        // CLOSEの文字
+        let ii = geneTagImgFromTEXT("txt_BACK","BACK");
+        mm.appendChild(ii);
+        // mause event
+        set3func(mm,this,this.mfunc2);
+      }
+      // BOTTOM MENU 
+      {
+        let [ww,hh] = [796-20,(604-60-10-350)-20];//184=604-420
+        this.btmmenu = this.creatediv(base,"btmmenu",ww,hh);
+        setStyleElement(this.btmmenu, this.css.btmstyle);
+        setabspos(this.btmmenu,0,420);
+        // テキストの描画エリア
+        let btm = this.creatediv(this.btmmenu,"btarea",ww-20,hh-20);
+        setStyleElement(btm, {style:{padding:"10px"}});
+        // テキスト
+        let btmtxt = geneTagImgFromTEXT("bt_txtimg2", "新メニュー");
+        btm.appendChild(btmtxt);
+      }
+    }
+    cfunc(){
+      console.log("cfunc invoke.")
+      this.hide();
+      this.parent.show();
+    }
+    mfunc2(e){
+      let func = this.cfunc.bind(this); 
+      let p = e.currentTarget;//現在のイベントハンドラーが装着されているオブジェクトを表します。
+      return this.mfcommonTXT(p,e.type,func,"#00FFFF80","#00000080","bt_txtimg2","戻ります");
+    }
+    // テキストを置き換えるタイプ
+    mfcommonTXT(p, type, func, c1, c2, tar=null, ex=null){
+      // クリック
+      if(type=="click"){
+        console.log("[mfcommon]clicked ",p, p.id);
+        func();
+        return;
+      }
+      // マウス移動
+      if(type=="mouseenter"){
+        console.log("[mfcommon]mouseenter ",p);
+        p.style.backgroundColor = c1;
+        // テキストを書き換える
+        if(tar){
+          let element = document.getElementById(tar);
+          if(element){
+            element.src = getImgSrcFromTEXT(ex);
+          }
+        }
+      }else{
+        console.log("[mfcommon]else "+type);
+        p.style.backgroundColor = c2;
+      }
+    }
+    // Common Function -> utils.js
+    resizeFunc(){
+      utilResizeFunc("tglist");
+    }
+  }
   class tmenuClass{
     constructor(){
       this.name = "tmenuClass";
@@ -59,7 +182,14 @@
           close:{text:"閉じる", explain:"メニューを閉じます",
           func:smresume1}
         }
+        this.css = {
+          div1:{style:{backgroundColor:"#0000FF00"}},
+          closebutton:{style:{backgroundColor:"#00000080",padding:"5px 10px 5px 10px","text-align":"center"}},
+          btmstyle:{style:{backgroundColor:"#0000CC",padding:"10px"}},
+        }
       } // Resource END
+      // List
+      this.tlist = new tegakaListClass(this);
     }
     invoke(){
       this.show();
@@ -91,45 +221,68 @@
       };
       return generateElement(base,par);
     }
+    pagefunc(){
+      this.hide();
+      this.tlist.show();
+    }
     initHTML() {
       // メイン
       let base = generateElement(document.body, this.basepar);
+      base.style.backgroundColor = "#0000FF80";
       this.resizeFunc();
       // コンテンツ(796x604)
-      //this.menu0 = this.creatediv(base,"TMENU0",330,350);
-      let [m0ww,m0hh] = [796-20,50-10]
-      let menu0 = this.creatediv(base,"TMENU",m0ww,m0hh);//40+p10
-      menu0.style.padding = "10px 10px 0px 10px";//上右下左
-      menu0.style.display = "flex";
-      var len = Object.keys(this.menupar).length;
-      for(let kk in this.menupar){
-        let mm = this.creatediv(menu0,kk,(m0ww-20)/len,30);//40
-        mm.style.padding = "5px 10px 5px 10px";//上右下左
-        mm.style["text-align"] = "center";
-        let ii = geneTagImgFromTEXT("txt_"+kk,this.menupar[kk].text);
+      // CENTER MENU
+      {
+        let img0 = this.creatediv(base,"CMRIGHT",330,350);
+        setStyleElement(img0, this.css.div1);
+        setabspos(img0,450,80);
+        this.menu0 = img0;
+        this.imgset();
+        // mause event
+        set3func(img0,this,this.mfuncX);
+      }
+      // MENU
+      { //--- 622x122
+        let ilist = ["/img/add/ready1.png","/img/add/ready1.png","/img/add/ready1.png","/img/add/ready1.png"];
+        for(let i=0;i<4;i++){
+          let img0 = this.creatediv(base,"MENU"+(i+1),10,10);
+          setStyleElement(img0, this.css.div1);
+          setabspos(img0,60,60+(90*i));
+          // メニューイメージ
+          let p = geneTagImg("imgMENU"+(i+1),ilist[i]);
+          let imgmenustyle = {height:61,classList_add:"fadeInM",style:{"animation-duration":((1*i+5)/10)+"s"}};
+          setStyleElement(p, imgmenustyle);
+          img0.append(p);
+          // mause event
+          set3func(p,this,this.mfuncX);
+        }
+      }
+      // CLOSEボタン
+      {
+        let mm = this.creatediv(base,"close",100,40);//40
+        setStyleElement(mm, this.css.closebutton);
+        setabspos(mm,5,5,1);
+        // CLOSEの文字
+        let ii = geneTagImgFromTEXT("txt_CLOSE","CLOSE");
         mm.appendChild(ii);
         // mause event
-        set3func(mm,this,this.mfunc);
+        set3func(mm,this,this.mfunc2);
       }
-      let menubar = this.creatediv(base,"MENUBAR",796,10);
-      menubar.style.backgroundColor = "#004444";
-      // CENTER MENU
-      let menu1 = this.creatediv(base,"CMENU",796,350);
-      menu1.style.display = "flex";
-      this.creatediv(menu1,"CMLEFT",400,350);
-      this.menu0 = this.creatediv(menu1,"CMRIGHT",330,350);
-      this.imgset();
       // BOTTOM MENU 
-      let [ww,hh] = [796-20,(604-60-10-350)-20];
-      this.btmmenu = this.creatediv(base,"btmmenu",ww,hh);
-      this.btmmenu.style.backgroundColor = "#0000CC";
-      this.btmmenu.style.padding = "10px";
-      let btm = this.creatediv(this.btmmenu,"btarea",ww-20,hh-20);
-      btm.style.padding = "10px";
-      let btmtxt = geneTagImgFromTEXT("bt_txtimg", "メニューです");
-      btm.appendChild(btmtxt);
+      {
+        let [ww,hh] = [796-20,(604-60-10-350)-20];//184=604-420
+        this.btmmenu = this.creatediv(base,"btmmenu",ww,hh);
+        setStyleElement(this.btmmenu, this.css.btmstyle);
+        setabspos(this.btmmenu,0,420);
+        // テキストの描画エリア
+        let btm = this.creatediv(this.btmmenu,"btarea",ww-20,hh-20);
+        setStyleElement(btm, {style:{padding:"10px"}});
+        // テキスト
+        let btmtxt = geneTagImgFromTEXT("bt_txtimg", "メニューです");
+        btm.appendChild(btmtxt);
+      }
     }
-    //　イメージをセットする
+    //　イメージをセットする。Refresh。
     imgset(){
       console.log("imgset",this.name);
       this.menu0.innerHTML ="";
@@ -142,24 +295,77 @@
     }
     mfunc(e){
       let p = e.currentTarget;//現在のイベントハンドラーが装着されているオブジェクトを表します。
+      return this.mfcommonTXT(p,e.type,this.menupar[p.id].func,"#00FFFF80","#000000","bt_txtimg",this.menupar[p.id].explain);
+    }
+    mfunc2(e){
+      let p = e.currentTarget;//現在のイベントハンドラーが装着されているオブジェクトを表します。
+      return this.mfcommonTXT(p,e.type,this.menupar[p.id].func,"#00FFFF80","#00000080","bt_txtimg",this.menupar[p.id].explain);
+    }
+    mfuncX(e){
+      let p = e.currentTarget;//現在のイベントハンドラーが装着されているオブジェクトを表します。
+      let exp = "メニュー「"+p.id+"」が選択";
+      if(p.id=="CMRIGHT"){
+        exp = "ユウ「世直し旅と参ろうじゃないか";
+      }
+      let func = null;
+      if(p.id == "imgMENU1"){
+        func = this.pagefunc.bind(this);
+      }
+      if(p.id == "imgMENU2"){
+        func = statusfunc;
+      }
+      return this.mfcommonIMG(p,e.type,func,"/img/add/ready3.png","/img/add/ready1.png","bt_txtimg",exp)
+    }
+    // テキストを置き換えるタイプ
+    mfcommonTXT(p, type, func, c1, c2, tar=null, ex=null){
       // クリック
-      if(e.type=="click"){
-        console.log("clicked ",p, p.id);
-        this.menupar[p.id].func();
+      if(type=="click"){
+        console.log("[mfcommon]clicked ",p, p.id);
+        func();
         return;
       }
       // マウス移動
-      if(e.type=="mouseenter"){
-        console.log("mouseenter ",p);
-        p.style.backgroundColor = "#00FFFF80";
+      if(type=="mouseenter"){
+        console.log("[mfcommon]mouseenter ",p);
+        p.style.backgroundColor = c1;
         // テキストを書き換える
-        let element = document.getElementById("bt_txtimg");
-        if(element){
-          element.src = getImgSrcFromTEXT(this.menupar[p.id].explain);
+        if(tar){
+          let element = document.getElementById(tar);
+          if(element){
+            element.src = getImgSrcFromTEXT(ex);
+          }
         }
       }else{
-        console.log("else "+e.type);
-        p.style.backgroundColor = "#000000";
+        console.log("[mfcommon]else "+type);
+        p.style.backgroundColor = c2;
+      }
+    }
+    // 画像を置き換えるタイプ
+    mfcommonIMG(p, type, func, c1, c2, tar=null, exp=null){
+      // クリック
+      if(type=="click" && func){
+        console.log("[mfcommonIMG]clicked ",p, p.id);
+        func();
+        return;
+      }
+      // マウス移動
+      if(type=="mouseenter"){
+        let element = document.getElementById(p.id);
+        if(element){
+          element.src = c1;
+        }
+        // テキストを書き換える
+        {
+          let element = document.getElementById(tar);
+          if(element){
+            element.src = getImgSrcFromTEXT(exp);
+          }
+        }
+      }else{
+        let element = document.getElementById(p.id);
+        if(element){
+          element.src = c2;
+        }
       }
     }
     // Common Function -> utils.js
