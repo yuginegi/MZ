@@ -84,6 +84,13 @@ function utilResizeFunc(target, barpos=null) {
   }
   console.log(this.name, "RESIZE!");
 }
+function utilSetButton(base,txt,pos,func){
+  let btn = generateElement(base, {
+    type: "button", textContent: txt,
+    style: { position: "absolute", right: pos[0]+"px", top: pos[1]+"px" }
+  });
+  btn.addEventListener("click", func);
+}
 
 /*** TUKURU *******/
 var disableMZ = false;
@@ -124,4 +131,49 @@ function audioStopBGS(sec=0){
 
 /* HOOK */
 
+/* util */
+// From official TextPicture:createTextPictureBitmap
+function generateTextBmp(text) {
+  //DBG//console.log("generateTextBmp invoked. "+text);
+  if(!text || text.length < 1){text = "　";}
+  const tempWindow = new Window_Base(new Rectangle());
+  const size = tempWindow.textSizeEx(text);
+  tempWindow.padding = 0;
+  tempWindow.move(0, 0, size.width, size.height);
+  tempWindow.createContents();
+  tempWindow.drawTextEx(text, 0, 0, 0);
+  const bitmap = tempWindow.contents;
+  tempWindow.contents = null;
+  tempWindow.destroy();
+  bitmap.mzkp_isTextPicture = true;
+  return bitmap;
+}
 
+function getImgSrcFromTEXT(txt){
+  // img.src = getImgSrcFromTEXT(txt) みたいに使う
+  let aa = generateTextBmp(txt);
+  return aa.context.canvas.toDataURL();
+}
+
+function geneTagImg(sid,src){
+  let p = document.createElement("img");
+  p.id = sid;
+  p.src = src;
+  return p;
+}
+
+function geneTagImgFromTEXT(sid,txt){
+  let p = document.createElement("img");
+  p.id = sid;
+  p.src = getImgSrcFromTEXT(txt);
+  return p;
+}
+
+// click, enter, leave ３セット
+function set3func(tar,base,func1,func2=null,func3=null){
+  if(func2==null){func2 = func1;}
+  if(func3==null){func3 = func2;}
+  tar.onclick      = func1.bind(base);
+  tar.onmouseenter  = func2.bind(base);
+  tar.onmouseleave = func3.bind(base);
+}

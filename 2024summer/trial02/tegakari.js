@@ -194,28 +194,6 @@
     resizeFunc(){
       utilResizeFunc("TEGAKARI",this.barpos);
     }
-    resizeFunc_org() {
-      let km = document.getElementById("TEGAKARI");
-      if (km) {
-        let [sw, sh] = [window.innerWidth, window.innerHeight];
-        // 816x624
-        let [w0, h0] = [816, 624]; // 全体
-        let [dw, dh] = this.barpos
-        let [w1, h1] = [w0 - dw, h0 - dh] // 位置決め
-        let [ax, ay] = [sw / w0, sh / h0];
-        let [cl, ct] = [(sw - w1) / 2, (sh - h1) / 2];
-        let aa = (ax > ay) ? ay : ax;
-        if(ax > ay){ // aa = ay
-          ct = dh/2
-        }else{ // aa = ax
-          ct = (sh - aa*h1)/2
-        }
-        km.style.left = cl + "px";
-        km.style.top = ct + "px";
-        km.style.transform = "scale(" + aa + "," + aa + ")";
-      }
-      console.log(this.name, "RESIZE!");
-    }
   }
 
   var current = document.currentScript.src;

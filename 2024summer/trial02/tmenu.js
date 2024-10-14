@@ -30,16 +30,36 @@
   'use strict';
 
   class tmenuClass{
-    constructor(ids){
+    constructor(){
       this.name = "tmenuClass";
       window.addEventListener('resize', this.resizeFunc.bind(this));
       // サイズ (816, 624)
       this.size = [816,624]
-      // 状態
-      this.viewstate = 0;
-    }
-    saveTukuru(){
-
+      this.guisize = [816 - 20, 624 - 20];
+      // Resource
+      {  // Resource START
+        // BASEのパラメータ
+        this.basepar = { /* W & H are FIXED. RESIZED BY SCALE */
+          type: "div", id: "TMENU",
+          style: { /* Left,Top,scale are CHANGED */
+            backgroundColor: "#0000FF50", position: "relative", zIndex: 20,
+            width: this.guisize[0] + "px", height: this.guisize[1] + "px"
+          }
+        };
+        // top menuのパラメータ
+        this.menupar = {
+          coop:{text:"仲間", explain:"メンバーと相談します",
+          func:this.imgset.bind(this)},
+          story:{text:"ストーリー", explain:"ストーリーや手がかりを確認します",
+          func:this.imgset.bind(this)},
+          status:{text:"ステータス", explain:"とりあえずステータス画面",
+          func:statusfunc},
+          save:{text:"セーブ", explain:"セーブします（宿屋セーブでもいいような）",
+          func:savefunc},
+          close:{text:"閉じる", explain:"メニューを閉じます",
+          func:smresume1}
+        }
+      } // Resource END
     }
     invoke(){
       this.show();
@@ -60,36 +80,58 @@
         element.style.display = "none";
       }
     }
-    initHTML() {
-      let [w, h] = [816 - 20, 624 - 20];
+    // div
+    creatediv(base,inp,w,h){
       let par = {
-        type: "div", id: "TMENU",
-        style: { /* Left,Top,scale are CHANGED */
-          backgroundColor: "#0000FF50", position: "relative", zIndex: 20,
-          width: w + "px", height: h + "px" /* W & H are FIXED */
-        }
-      };
-      let base = generateElement(document.body, par);
-      this.resizeFunc();
-      // コンテンツ
-      let par2 = {
-        type: "div", id: "TMEMU0",
+        type: "div", id: inp,
         style: {
           backgroundColor: "#000000",
-          width: 330 + "px", 
-          height: 350 + "px"
+          width: w + "px", height: h + "px"
         }
       };
-      this.menu0 = generateElement(base,par2);
-      this.cfunc();
-      // ボタン
-      this.setButton(base,"close",[5,5],smresume1);
-      this.setButton(base,"SAVE",[5,100],savefunc);
-      this.setButton(base,"STATUS",[5,50],statusfunc);
-      this.setButton(base,"NEWGUI",[5,150],this.cfunc.bind(this));
+      return generateElement(base,par);
     }
-    cfunc(){
-      console.log("cfunc",this.name);
+    initHTML() {
+      // メイン
+      let base = generateElement(document.body, this.basepar);
+      this.resizeFunc();
+      // コンテンツ(796x604)
+      //this.menu0 = this.creatediv(base,"TMENU0",330,350);
+      let [m0ww,m0hh] = [796-20,50-10]
+      let menu0 = this.creatediv(base,"TMENU",m0ww,m0hh);//40+p10
+      menu0.style.padding = "10px 10px 0px 10px";//上右下左
+      menu0.style.display = "flex";
+      var len = Object.keys(this.menupar).length;
+      for(let kk in this.menupar){
+        let mm = this.creatediv(menu0,kk,(m0ww-20)/len,30);//40
+        mm.style.padding = "5px 10px 5px 10px";//上右下左
+        mm.style["text-align"] = "center";
+        let ii = geneTagImgFromTEXT("txt_"+kk,this.menupar[kk].text);
+        mm.appendChild(ii);
+        // mause event
+        set3func(mm,this,this.mfunc);
+      }
+      let menubar = this.creatediv(base,"MENUBAR",796,10);
+      menubar.style.backgroundColor = "#004444";
+      // CENTER MENU
+      let menu1 = this.creatediv(base,"CMENU",796,350);
+      menu1.style.display = "flex";
+      this.creatediv(menu1,"CMLEFT",400,350);
+      this.menu0 = this.creatediv(menu1,"CMRIGHT",330,350);
+      this.imgset();
+      // BOTTOM MENU 
+      let [ww,hh] = [796-20,(604-60-10-350)-20];
+      this.btmmenu = this.creatediv(base,"btmmenu",ww,hh);
+      this.btmmenu.style.backgroundColor = "#0000CC";
+      this.btmmenu.style.padding = "10px";
+      let btm = this.creatediv(this.btmmenu,"btarea",ww-20,hh-20);
+      btm.style.padding = "10px";
+      let btmtxt = geneTagImgFromTEXT("bt_txtimg", "メニューです");
+      btm.appendChild(btmtxt);
+    }
+    //　イメージをセットする
+    imgset(){
+      console.log("imgset",this.name);
       this.menu0.innerHTML ="";
       let p = document.createElement("img");
       p.id = "imgx";
@@ -98,32 +140,34 @@
       p.classList.add("CharaShadow");
       this.menu0.append(p);
     }
-    setButton(base,txt,pos,func){
-      let btn = generateElement(base, {
-        type: "button", textContent: txt,
-        style: { position: "absolute", right: pos[0]+"px", top: pos[1]+"px" }
-      });
-      btn.addEventListener("click", func);
+    mfunc(e){
+      let p = e.currentTarget;//現在のイベントハンドラーが装着されているオブジェクトを表します。
+      // クリック
+      if(e.type=="click"){
+        console.log("clicked ",p, p.id);
+        this.menupar[p.id].func();
+        return;
+      }
+      // マウス移動
+      if(e.type=="mouseenter"){
+        console.log("mouseenter ",p);
+        p.style.backgroundColor = "#00FFFF80";
+        // テキストを書き換える
+        let element = document.getElementById("bt_txtimg");
+        if(element){
+          element.src = getImgSrcFromTEXT(this.menupar[p.id].explain);
+        }
+      }else{
+        console.log("else "+e.type);
+        p.style.backgroundColor = "#000000";
+      }
     }
+    // Common Function -> utils.js
     resizeFunc(){
       utilResizeFunc("TMENU");
     }
-    resizeFunc_org() {
-      let km = document.getElementById("TMENU");
-      if (km) {
-        let [sw, sh] = [window.innerWidth, window.innerHeight];
-        // 816x624
-        let [w0, h0] = [816, 624];
-        let [ax, ay] = [sw / w0, sh / h0];
-        let [cl, ct] = [(sw - w0 + 20) / 2, (sh - h0 + 20) / 2];
-        let aa = (ax > ay) ? ay : ax;
-        km.style.left = cl + "px";
-        km.style.top = ct + "px";
-        km.style.transform = "scale(" + aa + "," + aa + ")";
-      }
-      console.log(this.name, "RESIZE!");
-    }
   }
+
 
   var current = document.currentScript.src;
   let modname = current.match(/([^/]*)\./)[1];

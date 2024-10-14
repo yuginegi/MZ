@@ -31,7 +31,7 @@
     constructor(pp){
       this.size = pp.size;
       this.closefunc = pp.closefunccode.bind(pp);
-      this.setButton = pp.setButton;
+      this.setButton = utilSetButton//pp.setButton;
     }
     initHTML(base,inp){
       switch(inp){
@@ -86,20 +86,24 @@
       window.addEventListener('resize', this.resizeFunc.bind(this));
       // サイズ (816, 624)
       this.size = [816,624]
+      this.guisize = [816 - 20, 624 - 20];
+      // Resource
+      {  // Resource START
+        // BASEのパラメータ
+        this.basepar = { /* W & H are FIXED. RESIZED BY SCALE */
+          type: "div", id: "TCUTIN",
+          style: { /* Left,Top,scale are CHANGED */
+            backgroundColor: "#00FF0050", position: "relative", zIndex: 20,
+            width: this.guisize[0] + "px", height: this.guisize[1] + "px"
+          }
+        };
+      } // Resource END
       // HTML Resource
       this.htmlres = new tcHTMLRes(this);
-      // close
-      //this.closefunc = this.closefunccode.bind(this);
     }
     invoke(inp){
-      savegmbusy();
+      savegmbusy(); // rollbackmbusy is called at close timing.
       this.show(inp);
-    }
-    tgcontrol(mode){
-      const teg = document.getElementById('TEGAKARI');
-      if(teg){
-        teg.style.display = (mode==1)?"block":"none";
-      }
     }
     show(inp){
       this.tgcontrol(0);
@@ -112,60 +116,31 @@
       }
     }
     hide(){
-      /*const teg = document.getElementById('TEGAKARI');
-      if(teg){
-        teg.style.display = "block";
-      }*/
       this.tgcontrol(1);
       const element = document.getElementById('TCUTIN');
       if (element) {
         element.remove();
       }
     }
+    tgcontrol(mode){
+      const teg = document.getElementById('TEGAKARI');
+      if(teg){
+        teg.style.display = (mode==1)?"block":"none";
+      }
+    }
     initHTML(inp){
-      let [w, h] = [816 - 20, 624 - 20];
-      let par = {
-        type: "div", id: "TCUTIN",
-        style: { /* Left,Top,scale are CHANGED */
-          backgroundColor: "#00FF0050", position: "relative", zIndex: 20,
-          width: w + "px", height: h + "px" /* W & H are FIXED */
-        }
-      };
-      let base = generateElement(document.body, par);
+      let base = generateElement(document.body, this.basepar);
       this.resizeFunc();
       this.htmlres.initHTML(base,inp);
     }
-
     closefunccode(){
       console.log("[TCUTIN] endMenu");
       // TEST
       this.hide();
       rollbackmbusy();
     }
-    setButton(base,txt,pos,func){
-      let btn = generateElement(base, {
-        type: "button", textContent: txt,
-        style: { position: "absolute", right: pos[0]+"px", top: pos[1]+"px" }
-      });
-      btn.addEventListener("click", func);
-    }
     resizeFunc(){
       utilResizeFunc("TCUTIN");
-    }
-    resizeFunc_org() {
-      let km = document.getElementById("TCUTIN");
-      if (km) {
-        let [sw, sh] = [window.innerWidth, window.innerHeight];
-        // 816x624
-        let [w0, h0] = [816, 624];
-        let [ax, ay] = [sw / w0, sh / h0];
-        let [cl, ct] = [(sw - w0 + 20) / 2, (sh - h0 + 20) / 2];
-        let aa = (ax > ay) ? ay : ax;
-        km.style.left = cl + "px";
-        km.style.top = ct + "px";
-        km.style.transform = "scale(" + aa + "," + aa + ")";
-      }
-      console.log(this.name, "RESIZE!");
     }
   }
 
