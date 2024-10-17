@@ -140,6 +140,18 @@ function audioStopBGS(sec=0){
 /* HOOK */
 
 /* util */
+var gtxtCacheHash = {};
+function generateTextClear(){
+  console.log("generateTextClear", Object.keys(gtxtCacheHash).length);
+  for(let kk in gtxtCacheHash){
+    let bitmap = gtxtCacheHash[kk];
+    //destroyTextPictureBitmap(bitmap)
+    if (bitmap && bitmap.mzkp_isTextPicture) {
+      bitmap.destroy();
+    }
+  }
+  gtxtCacheHash = {}
+}
 // From official TextPicture:createTextPictureBitmap
 function generateTextBmp(text) {
   //DBG//console.log("generateTextBmp invoked. "+text);
@@ -158,10 +170,17 @@ function generateTextBmp(text) {
 }
 
 function getImgSrcFromTEXT(txt){
+  // キャッシュ（メモ化）
+  if(gtxtCacheHash[txt]){
+    console.log("Cache used.");
+    return gtxtCacheHash[txt].context.canvas.toDataURL();
+  }
   // img.src = getImgSrcFromTEXT(txt) みたいに使う
   let aa = generateTextBmp(txt);
+  gtxtCacheHash[txt]=aa; // キャッシュのハッシュに追加
   return aa.context.canvas.toDataURL();
 }
+
 function geneTagImg(sid,src){
   let p = document.createElement("img");
   p.id = sid;
@@ -179,4 +198,45 @@ function set3func(tar,base,func1,func2=null,func3=null){
   tar.onclick      = func1.bind(base);
   tar.onmouseenter  = func2.bind(base);
   tar.onmouseleave = func3.bind(base);
+}
+
+class charaImg{ // 歩行イメージ
+  constructor(args,ifile,id){
+    // args[2] から決めるパラメータ
+    let cid = args[2];
+    let imgfile = "/img/characters/"+ifile+".png";
+    // Image
+    this.img = new Image();
+    this.img.src = imgfile;
+    this.cid = cid;
+    // Init
+    this.xx = args[0];
+    this.yy = args[1];
+    this.can = generateElement(null,{type:"canvas",id:"chara_"+id,vid:id,width:48,height:48, 
+    style:{"z-index":51,position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
+    this.ctx = this.can.getContext("2d");
+    // mouseevent は 上でセット。
+    // loop
+    this.tt = 0;
+    setInterval(this.draw.bind(this),250);
+  }
+  // 上から状態を更新するとき。例えばマウスホバー
+  setdraw(flag){
+    this.setflag=flag;
+    this.tt--;
+    this.draw();
+  }
+  // 描画
+  draw(){
+    const ctx = this.ctx;
+    ctx.clearRect(0,0,48,48);
+    if(this.setflag){ // 背景色の設定
+      ctx.fillStyle = "#0000FF80";
+      ctx.fillRect(0,0,48,48);
+    }
+    let ii = this.cid-1;
+    let ll = [0,1,2,1]
+    let [px,py]=[3*(ii%4)+ll[(this.tt++)%(ll.length)], 4*Math.floor(ii/4)];
+    ctx.drawImage(this.img,48*px,48*py,48,48,0,0,48,48);
+  }
 }

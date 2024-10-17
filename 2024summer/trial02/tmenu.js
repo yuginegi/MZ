@@ -122,8 +122,47 @@
         btm.appendChild(btmtxt);
       }
     }
+    // 右のキャラグラ表示 (グラはimgsetでそれぞれ対応する)
+    drawrchara(contents,pre,func=null,tar=null){
+      let img0 = this.creatediv(contents,pre+"RIGHT",330,350);
+      setStyleElement(img0, this.css.div1);
+      setabspos(img0,450,80);
+      this.menu0 = img0;
+      this.imgset();
+      // mause event
+      if(func){
+        set3func(img0,this,func);
+      }
+    }
+    //メニューヘッダ表示
+    drawhead(contents,pre,imgfile){
+      let img0 = this.creatediv(contents,pre+"HEAD",10,10);
+      setStyleElement(img0, this.css.div1);
+      setabspos(img0,60,40);
+      // メニューイメージ
+      let img = "/img/add/"+imgfile;
+      let p = geneTagImg(pre+"HEADIMG",img);
+      let imgmenustyle = {classList_add:"fadeInM"};
+      setStyleElement(p, imgmenustyle);
+      img0.append(p);
+      // mause event
+      set3func(p,this,this.tfunc);
+    }
+    imgsetCore(pre,ifile){
+      //DBG//console.log("imgset",this.name);
+      this.menu0.innerHTML ="";
+      if(!ifile){return;}
+      let p = document.createElement("img");
+      p.id = pre+"imgx";
+      p.src = "/img/pictures/"+ifile;
+      p.classList.add("fadeIn");
+      p.classList.add("CharaShadow");
+      this.menu0.append(p);
+    }
+    // CLOSE の代わりの戻るボタン、BACK
     backfunc(){
       this.tagRemove(this.closeback);
+      generateTextClear();
       this.closeback = null;
       this.show();
     }
@@ -170,10 +209,16 @@
       }
     }
     // Common Function -> utils.js
+    tagRemove(id){
+      let eee = document.getElementById(id);
+      if(eee){
+        eee.remove();
+      }
+    }
     updatedisplay(id,mode){
-      const element = document.getElementById(id);
-      if (element) {
-        element.style.display = mode;
+      const eee = document.getElementById(id);
+      if (eee) {
+        eee.style.display = mode;
       }
     }
     updateImgSrc(id,src){
@@ -181,12 +226,6 @@
       let eee = document.getElementById(id);
       if(eee){
         eee.src = src;
-      }
-    }
-    tagRemove(id){
-      let eee = document.getElementById(id);
-      if(eee){
-        eee.remove();
       }
     }
     updateImgSrcTEXT(id,text){
@@ -197,6 +236,148 @@
     }
   }
 
+  class storyClass extends menucommonClass{
+    constructor(parent){
+      super();
+      this.parent = parent;
+      this.name = "storyClass";
+      this.contdiv = "STLIST";
+      // Resource
+      {  // Resource START
+        // コンテンツのパラメータ（上書き）
+        this.contpar.id = this.contdiv;
+      } // Resource END
+      this.listpos = [50,120+75,10];
+      this.ilist = {
+        1:{ff:"People2",cid:3},
+        2:{ff:"Actor1", cid:2},
+        3:{ff:"Actor1", cid:1},
+      }
+      this.explist = [
+        "旅の目的",
+        "アルスとの出会い",
+        "旅の勇者との交流",
+        "ハコネの問題、一件落着",
+        "未開放5",
+        "未開放6",
+        "未開放7",
+        "未開放8",
+        "未開放9",
+        "未開放10",
+      ];
+      this.guimsg = "これまでのストーリーです";
+    }
+    show(){
+      this.addHTML();
+    }
+    addHTML() {
+      let pre = "ST";
+      let base = document.getElementById(this.target)
+      // コンテンツ(796x604)
+      let contents = generateElement(base, this.contpar);
+      setabspos(contents,0,0);
+      // CENTER MENU
+      this.drawrchara(contents,pre);
+      // ヘッダ表示
+      this.drawhead(contents,pre,"msky1.png");
+      // リスト
+      this.drawlist(contents);
+      // メニュー更新
+      this.updateImgSrcTEXT("bt_txtimg",this.guimsg);
+      // CLOSE更新
+      this.updateImgSrcTEXT("btnimg_CLOSE","BACK")
+      this.parent.closeback = this.contdiv;
+    }
+    drawlist(contents){
+      let [bx,by,n] = this.listpos;
+      for(let i=0;i<n;i++){
+        let [ix,iy]=[i%5,Math.floor(i/5)];
+        let [xx,yy]=[bx+70*ix,by+75*iy];
+        let id = (i%10+1);
+        let [ff,cid] = (this.ilist[i])?[this.ilist[i].ff,this.ilist[i].cid]:["Actor1",5];
+        let ii = new charaImg([xx,yy,cid],ff,id);
+        contents.append(ii.can);
+        // mause event
+        set3func(ii.can,this,this.tfunc);
+      }
+    }
+    //　イメージをセットする。CENTER MENU から呼ばれる Refresh。
+    imgset(i=0){
+      let [ff,cid] = (this.ilist[i])?[this.ilist[i].ff,this.ilist[i].cid]:["Actor1",5];
+      this.imgsetCore("",ff+"_"+cid+".png");
+    }
+    tfunc(e){
+      let p = e.currentTarget;
+      let type = e.type;
+      // クリック
+      if(type=="click"){
+        console.log("click")
+        return;
+      }
+      // マウス移動
+      if(type=="mouseenter"){
+        if(p.id == "STHEADIMG"){
+          return this.updateImgSrcTEXT("bt_txtimg",this.guimsg);
+        }
+        this.updateImgSrcTEXT("bt_txtimg",this.explist[p.vid-1]);
+        this.imgset(p.vid-1);
+      }else{
+        /* mouse leave */
+      }
+    }
+  }
+
+  class partyClass extends menucommonClass{
+    constructor(parent){
+      super();
+      this.parent = parent;
+      this.name = "partyClass";
+      this.contdiv = "PTLIST";
+      // Resource
+      {  // Resource START
+        // コンテンツのパラメータ（上書き）
+        this.contpar.id = this.contdiv;
+      } // Resource END
+      this.guimsg = "助けてくれる仲間たち";
+    }
+    show(){
+      this.addHTML();
+    }
+    addHTML() {
+      let base = document.getElementById(this.target)
+      // コンテンツ(796x604)
+      let contents = generateElement(base, this.contpar);
+      setabspos(contents,0,0);
+      // ヘッダ表示
+      this.drawhead(contents,"PT","msky3.png");
+      // メニュー更新
+      this.updateImgSrcTEXT("bt_txtimg",this.guimsg);
+      // CLOSE更新
+      this.updateImgSrcTEXT("btnimg_CLOSE","BACK")
+      this.parent.closeback = this.contdiv;
+    }
+    tfunc(e){
+      let p = e.currentTarget;
+      let type = e.type;
+      // クリック
+      if(type=="click"){
+        console.log("click")
+        return;
+      }
+      // マウス移動
+      if(type=="mouseenter"){
+        if(p.id == "PTHEADIMG"){
+          return this.updateImgSrcTEXT("bt_txtimg",this.guimsg);
+        }
+        this.updateImgSrcTEXT("bt_txtimg",this.explist[p.vid-1]);
+        this.imgset(p.vid);
+      }else{
+        /* mouse leave */
+      }
+    }
+  }
+
+  // 手がかり表示（123行）
   class tegakaListClass extends menucommonClass{
     constructor(parent){
       super();
@@ -208,26 +389,102 @@
         // コンテンツのパラメータ（上書き）
         this.contpar.id = this.contdiv;
       } // Resource END
+      this.listpos = [50,120+75,10];
+      this.ilist = {
+        1:{tid:"mati1",ff:"People1",cid:8},
+        2:{tid:"mati2",ff:"People1",cid:6},
+        3:{tid:"mati3",ff:"People1",cid:3},
+        4:{tid:"mati4",ff:"People1",cid:7},
+        5:{tid:"mati5",ff:"People1",cid:6},
+        6:{tid:"mati6",ff:"People1",cid:6},
+        7:{tid:"mati7",ff:"Actor3",cid:7},
+        8:{tid:"mati8",ff:"Evil",cid:1},
+        9:{tid:"mati9",ff:"People2",cid:3},
+        10:{tid:"mati10",ff:"People3",cid:1},
+      }
+      this.explist = [
+        "領主様も昔はとてもやさしいお方でした。\n今ではすっかり別人。。。",
+        "この地方はとても住みやすかったのですけどね。\n今となっては・・・。\nどこかに移住しようと思っています。",
+        "あいつが、あいつが来てから\nこの辺は変わっちまった。",
+        "何もないがゆっくりしていってくれ。\n商売しづらくなっちまったよ、この村も・・。",
+        "食べるものを入手するのも大変です。\n領主様のところにお仕えすれば・・・。\nしかし、若い女の人しか雇わないと聞きます。", //5
+        "ごめんなさい、もう食材が無くて、、\nこの地方はもうダメね・・\n厳しい取り立てでもう限界・・",
+        "港の方でこっそり売ってくれるんだ。\n食糧や酒などが手に入るって話だぜ。",
+        "※ 船の捜索\n船には食料品がたくさんあった\n高く売って儲けている奴がどこかにいる",
+        "※ 立ち聞き\n重税や買い占めで価格のつり上げ\n領主がダイコクにすり替わっているとか\nアルス「なんということだ・・。",
+        "ダイコク屋に軟禁されていたのだ。\nあいつらは、、、"
+      ];
+      this.guimsg = "これまで集めた手がかりです";
     }
     show(){
       this.addHTML();
     }
     addHTML() {
+      let pre = "TG";
       let base = document.getElementById(this.target)
       // コンテンツ(796x604)
       let contents = generateElement(base, this.contpar);
       setabspos(contents,0,0);
+      // CENTER MENU
+      this.drawrchara(contents,pre);
+      // ヘッダ表示
+      this.drawhead(contents,pre,"msky2.png");
+      // リスト
+      this.drawlist(contents);
       // メニュー更新
-      let element = document.getElementById("bt_txtimg");
-      if(element){
-        element.src = getImgSrcFromTEXT("新GUI");
-      }
+      this.updateImgSrcTEXT("bt_txtimg",this.guimsg);
       // CLOSE更新
       this.updateImgSrcTEXT("btnimg_CLOSE","BACK")
       this.parent.closeback = this.contdiv;
     }
+    drawlist(contents){
+      let val = $gameVariables.value(1);//this.ids[0]
+      let [bx,by,n] = this.listpos;
+      for(let i=0;i<n;i++){
+        let [ix,iy]=[i%5,Math.floor(i/5)];
+        let [xx,yy]=[bx+70*ix,by+75*iy];
+        let id = (i%10+1);
+        let p=this.ilist[id]
+        if(!val[p.tid]){continue;}
+        let ii = new charaImg([xx,yy,p.cid],p.ff,id);
+        contents.append(ii.can);
+        // mause event
+        set3func(ii.can,this,this.tfunc);
+      }
+    }
+    //　イメージをセットする。CENTER MENU から呼ばれる Refresh。
+    imgset(vid=0){
+      let ifile = null;
+      if(vid>0){
+        let [ff,vv] = [this.ilist[vid].ff,this.ilist[vid].cid]
+        ifile = ff+"_"+vv+".png";
+      }
+      this.imgsetCore("TG",ifile);
+    }
+    tfunc(e){
+      let pre = "TG";
+      let p = e.currentTarget;
+      let type = e.type;
+      // クリック
+      if(type=="click"){
+        console.log("click")
+        return;
+      }
+      // マウス移動
+      if(type=="mouseenter"){
+        if(p.id == pre+"HEADIMG"){
+          return this.updateImgSrcTEXT("bt_txtimg",this.guimsg);
+        }
+        // テキストを書き換える // "新GUI"+p.id+" "+p.vid
+        this.updateImgSrcTEXT("bt_txtimg",this.explist[p.vid-1]);
+        this.imgset(p.vid);
+      }else{
+        //DBG//console.log("[mfcommon]else "+type);
+      }
+    }
   }
 
+  // トップメニュー
   class tmenuClass extends menucommonClass{
     constructor(){
       super();
@@ -236,78 +493,70 @@
       {  // Resource START
         // top menuのパラメータ
         this.menupar = {
-          coop:{text:"仲間", explain:"メンバーと相談します",
-          func:this.imgset.bind(this)},
-          story:{text:"ストーリー", explain:"ストーリーや手がかりを確認します",
-          func:this.imgset.bind(this)},
-          status:{text:"ステータス", explain:"とりあえずステータス画面",
-          func:statusfunc},
-          save:{text:"セーブ", explain:"セーブします（宿屋セーブでもいいような）",
-          func:savefunc},
+          story:{text:"ストーリー", explain:"ストーリーを振り返ります",
+          img:"mblu1.png",himg:"msky1.png",func:this.pagefunc.bind(this,1)},
+          clues:{text:"手がかり", explain:"いままで集めた手がかりを確認します",
+          img:"mblu2.png",himg:"msky2.png",func:this.pagefunc.bind(this,2)},
+          party:{text:"仲間", explain:"とりあえず別画面、仲間",
+          img:"mblu3.png",himg:"msky3.png",func:this.pagefunc.bind(this,3)},
+          save:{text:"セーブ", explain:"セーブします",
+          img:"mblu4.png",himg:"msky4.png",func:savefunc},
         }
       } // Resource END
-      // List
-      this.tlist = new tegakaListClass(this);
+      // Target Class List
+      {
+        let st = new storyClass(this);
+        let tg = new tegakaListClass(this);
+        let pt = new partyClass(this);
+        this.target = {1:st,2:tg,3:pt}
+      }
     }
     createContents(base){
       // CENTER MENU
-      {
-        let img0 = this.creatediv(base,"CMRIGHT",330,350);
-        setStyleElement(img0, this.css.div1);
-        setabspos(img0,450,80);
-        this.menu0 = img0;
-        this.imgset();
-        // mause event
-        set3func(img0,this,this.mfuncX);
-      }
+      this.drawrchara(base,"CM",this.mfuncX);
       // MENU
-      { //--- 622x122
-        let ilist = ["/img/add/ready1.png","/img/add/ready1.png","/img/add/ready1.png","/img/add/ready1.png"];
-        for(let i=0;i<4;i++){
-          let img0 = this.creatediv(base,"MENU"+(i+1),10,10);
-          setStyleElement(img0, this.css.div1);
-          setabspos(img0,60,60+(90*i));
-          // メニューイメージ
-          let p = geneTagImg("imgMENU"+(i+1),ilist[i]);
-          let imgmenustyle = {height:61,classList_add:"fadeInM",style:{"animation-duration":((1*i+5)/10)+"s"}};
-          setStyleElement(p, imgmenustyle);
-          img0.append(p);
-          // mause event
-          set3func(p,this,this.mfuncX);
-        }
+      this.drawlist(base);
+    }
+    // MENU表示
+    drawlist(base){
+      let keys = Object.keys(this.menupar);
+      for(let i=0;i<keys.length;i++){
+        let img0 = this.creatediv(base,"MENU"+(i+1),10,10);
+        setStyleElement(img0, this.css.div1);
+        setabspos(img0,60,60+(90*i));
+        // メニューイメージ
+        let img = "/img/add/" + this.menupar[keys[i]].img;
+        let p = geneTagImg(keys[i],img);
+        let imgmenustyle = {classList_add:"fadeInM",style:{"animation-duration":((1*i+5)/10)+"s"}};
+        setStyleElement(p, imgmenustyle);
+        img0.append(p);
+        // mause event
+        set3func(p,this,this.mfuncX);
       }
     }
     //　イメージをセットする。CENTER MENU から呼ばれる Refresh。
     imgset(){
-      console.log("imgset",this.name);
-      this.menu0.innerHTML ="";
-      let p = document.createElement("img");
-      p.id = "imgx";
-      p.src = "/img/pictures/Actor1_5.png";
-      p.classList.add("fadeIn");
-      p.classList.add("CharaShadow");
-      this.menu0.append(p);
+      this.imgsetCore("","Actor1_5.png")
     }
     // 自分を隠して、別の窓を出す
-    pagefunc(){
+    pagefunc(xx){
+      //DBG//console.log("pagefunc invoke.", xx)
       this.updatedisplay(this.contdiv,"none");
-      this.tlist.show();
+      if(this.target[xx]){this.target[xx].show();}
     }
     // クリックやマウスオーバーの実行制御
     mfuncX(e){
       let p = e.currentTarget;//現在のイベントハンドラーが装着されているオブジェクトを表します。
-      let exp = "メニュー「"+p.id+"」が選択";
+      let mm = this.menupar[p.id];
+      let func = (mm) ? mm.func : null;
+      let exp = (mm) ? mm.explain : "メニュー「"+p.id+"」が選択";
       if(p.id=="CMRIGHT"){
         exp = "ユウ「世直し旅と参ろうじゃないか";
-      }
-      let func = null;
-      if(p.id == "imgMENU1"){
-        func = this.pagefunc.bind(this);
-      }
-      if(p.id == "imgMENU2"){
         func = statusfunc;
       }
-      return this.mfcommonIMG(p,e.type,func,"/img/add/ready3.png","/img/add/ready1.png","bt_txtimg",exp)
+      let ph = "/img/add/";
+      let [img,himg] = (mm) ? [mm.img,mm.himg] : [null,null];
+      return this.mfcommonIMG(p,e.type,func,ph+himg,ph+img,"bt_txtimg",exp)
     }
   }
 
@@ -345,6 +594,7 @@
     gHookMenuMode = false;
   }
   function smresume1(){
+    generateTextClear();
     smresume();
     // MENUのために (ほかに遷移していないので、わざわざ呼び出す必要がある)
     const element = document.getElementById('TEGAKARI');
