@@ -79,6 +79,7 @@
       this.closeback = null;
     }
     hide(){
+      console.log("hide",this.name)
       this.updatedisplay(this.target,"none");
     }
     // div
@@ -120,6 +121,19 @@
         // テキスト
         let btmtxt = geneTagImgFromTEXT("bt_txtimg", "メニューです");
         btm.appendChild(btmtxt);
+      }
+      base.addEventListener('mousedown',this.cff.bind(this));
+    }
+    // close func
+    cff(e){
+      //DBG//console.log("Right Clicked.", e.button )
+      if(e.button==2){ // https://ja.javascript.info/mouse-events-basics
+        //DBG//console.log("this.closeback",this.closeback,this)
+        if(this.closeback){
+          this.backfunc();
+        }else{
+          smresume1()
+        }
       }
     }
     // 右のキャラグラ表示 (グラはimgsetでそれぞれ対応する)
@@ -216,6 +230,7 @@
       }
     }
     updatedisplay(id,mode){
+      console.log("updatedisplay",id,mode)
       const eee = document.getElementById(id);
       if (eee) {
         eee.style.display = mode;
@@ -249,9 +264,10 @@
       } // Resource END
       this.listpos = [50,120+75,10];
       this.ilist = {
-        1:{ff:"People2",cid:3},
-        2:{ff:"Actor1", cid:2},
-        3:{ff:"Actor1", cid:1},
+        0:{flag:11,ff:"Actor1", cid:5},
+        1:{flag:2,ff:"People2",cid:3},
+        2:{flag:5,ff:"Actor1", cid:2},
+        3:{flag:12,ff:"Actor1", cid:1},
       }
       this.explist = [
         "旅の目的",
@@ -291,10 +307,13 @@
     drawlist(contents){
       let [bx,by,n] = this.listpos;
       for(let i=0;i<n;i++){
+        if(!this.ilist[i]){continue;}
+        let flag = this.ilist[i].flag;
+        if(!$gameSwitches.value(flag)){continue;}
         let [ix,iy]=[i%5,Math.floor(i/5)];
         let [xx,yy]=[bx+70*ix,by+75*iy];
         let id = (i%10+1);
-        let [ff,cid] = (this.ilist[i])?[this.ilist[i].ff,this.ilist[i].cid]:["Actor1",5];
+        let [ff,cid] = [this.ilist[i].ff,this.ilist[i].cid];
         let ii = new charaImg([xx,yy,cid],ff,id);
         contents.append(ii.can);
         // mause event
@@ -339,22 +358,59 @@
         this.contpar.id = this.contdiv;
       } // Resource END
       this.guimsg = "助けてくれる仲間たち";
+      //
+      this.ilist = {
+        3:{flag:4,ff:"Actor1",cid:0,exp:"旅の男"},
+        4:{flag:5,ff:"Actor1",cid:1,exp:"旅の女"},
+        1:{flag:11,ff:"Actor1",cid:4,exp:"ユウ"},
+        2:{flag:1,ff:"People2",cid:2,exp:"アルス"},
+      }
     }
     show(){
       this.addHTML();
     }
     addHTML() {
+      let pre = "PT";
       let base = document.getElementById(this.target)
       // コンテンツ(796x604)
       let contents = generateElement(base, this.contpar);
       setabspos(contents,0,0);
+      // CENTER MENU
+      this.drawrchara(contents,pre);
       // ヘッダ表示
-      this.drawhead(contents,"PT","msky3.png");
+      this.drawhead(contents,pre,"msky3.png");
+      // キャラのリスト
+      this.charalist(contents,pre);
       // メニュー更新
       this.updateImgSrcTEXT("bt_txtimg",this.guimsg);
       // CLOSE更新
       this.updateImgSrcTEXT("btnimg_CLOSE","BACK")
       this.parent.closeback = this.contdiv;
+    }
+    charalist(contents){
+      let [bx,by,n] = [50,120,4];
+      let facelist = this.ilist
+      for(let i=0;i<n;i++){
+        let id = (i+1);
+        if(!facelist[id]){continue;}
+        let flag = facelist[id].flag;
+        if(!$gameSwitches.value(flag)){continue;}
+        let [xx,yy]=[bx+170*(i%2),by+150*Math.floor(i/2)];
+        let [ff,cid] = [facelist[id].ff,facelist[id].cid];
+        let ii = new charaFace([xx,yy,cid],ff,id);
+        contents.append(ii.can);
+        // mause event
+        set3func(ii.can,this,this.tfunc);
+      }
+    }
+    imgset(vid=0){
+      let ifile = null;
+      if(vid>0){
+        let [ff,cid] = [this.ilist[vid].ff,this.ilist[vid].cid]
+        ifile = ff+"_"+(cid+1)+".png";
+        console.log("ifile",ifile)
+      }
+      this.imgsetCore("PT",ifile);
     }
     tfunc(e){
       let p = e.currentTarget;
@@ -369,7 +425,7 @@
         if(p.id == "PTHEADIMG"){
           return this.updateImgSrcTEXT("bt_txtimg",this.guimsg);
         }
-        this.updateImgSrcTEXT("bt_txtimg",this.explist[p.vid-1]);
+        this.updateImgSrcTEXT("bt_txtimg",this.ilist[p.vid].exp);
         this.imgset(p.vid);
       }else{
         /* mouse leave */
@@ -389,7 +445,10 @@
         // コンテンツのパラメータ（上書き）
         this.contpar.id = this.contdiv;
       } // Resource END
-      this.listpos = [50,120+75,10];
+      this.guimsg = "これまで集めた手がかりです";
+
+      /*** ここからが1面のデータ *******/
+      // 手がかりデータ
       this.ilist = {
         1:{tid:"mati1",ff:"People1",cid:8},
         2:{tid:"mati2",ff:"People1",cid:6},
@@ -403,10 +462,10 @@
         10:{tid:"mati10",ff:"People3",cid:1},
       }
       this.explist = [
-        "領主様も昔はとてもやさしいお方でした。\n今ではすっかり別人。。。",
+        "領主様も昔はとてもやさしいお方でした。\n今ではすっかり別人。。。\n食べるものも着るものも、家族までも失いました。",
         "この地方はとても住みやすかったのですけどね。\n今となっては・・・。\nどこかに移住しようと思っています。",
-        "あいつが、あいつが来てから\nこの辺は変わっちまった。",
-        "何もないがゆっくりしていってくれ。\n商売しづらくなっちまったよ、この村も・・。",
+        "あいつが、あいつが来てから\nこの辺は変わっちまった。\n借金の形で、おれの妹まで連れていかれた・・・。",
+        "何もないがゆっくりしていってくれ。\n商売しづらくなっちまったよ、この村も・・。\n今ではすっかり海賊が我が物顔で歩いてやがる。\n昔はこんなじゃない、治安が良かったんだがな・・",
         "食べるものを入手するのも大変です。\n領主様のところにお仕えすれば・・・。\nしかし、若い女の人しか雇わないと聞きます。", //5
         "ごめんなさい、もう食材が無くて、、\nこの地方はもうダメね・・\n厳しい取り立てでもう限界・・",
         "港の方でこっそり売ってくれるんだ。\n食糧や酒などが手に入るって話だぜ。",
@@ -414,7 +473,12 @@
         "※ 立ち聞き\n重税や買い占めで価格のつり上げ\n領主がダイコクにすり替わっているとか\nアルス「なんということだ・・。",
         "ダイコク屋に軟禁されていたのだ。\nあいつらは、、、"
       ];
-      this.guimsg = "これまで集めた手がかりです";
+      // メニューレイアウト（Aタイプ） Y=195 スタート
+      this.listpos = [50,120+75,10];
+      this.infopos = [80,120];
+      // メニューレイアウト（Bタイプ） Y=120 スタート
+      //this.listpos = [50,120,20];
+      //this.infopos = [380,40];
     }
     show(){
       this.addHTML();
@@ -429,6 +493,8 @@
       this.drawrchara(contents,pre);
       // ヘッダ表示
       this.drawhead(contents,pre,"msky2.png");
+      // 手がかり情報の表示
+      this.infolist(contents,pre)
       // リスト
       this.drawlist(contents);
       // メニュー更新
@@ -436,6 +502,19 @@
       // CLOSE更新
       this.updateImgSrcTEXT("btnimg_CLOSE","BACK")
       this.parent.closeback = this.contdiv;
+    }
+    
+    infolist(contents,pre){
+      let val = $gameVariables.value(1);
+      console.log(val);
+      if(!val || !val.num){return;}
+      let str = "手がかり回収率 "+(Object.keys(val).length -2)+"／"+(val.num);
+      let img0 = this.creatediv(contents,pre+"INFO",10,10);
+      setStyleElement(img0, this.css.div1);
+      setabspos(img0,this.infopos[0],this.infopos[1]); // ここに設置。２０人の時は調整必要
+      // テキスト
+      let btmtxt = geneTagImgFromTEXT(pre+"info_txtimg", str);
+      img0.appendChild(btmtxt);
     }
     drawlist(contents){
       let val = $gameVariables.value(1);//this.ids[0]
@@ -503,12 +582,12 @@
           img:"mblu4.png",himg:"msky4.png",func:savefunc},
         }
       } // Resource END
-      // Target Class List
+      // nextpage Class List
       {
         let st = new storyClass(this);
         let tg = new tegakaListClass(this);
         let pt = new partyClass(this);
-        this.target = {1:st,2:tg,3:pt}
+        this.nextpage = {1:st,2:tg,3:pt}
       }
     }
     createContents(base){
@@ -542,7 +621,7 @@
     pagefunc(xx){
       //DBG//console.log("pagefunc invoke.", xx)
       this.updatedisplay(this.contdiv,"none");
-      if(this.target[xx]){this.target[xx].show();}
+      if(this.nextpage[xx]){this.nextpage[xx].show();}
     }
     // クリックやマウスオーバーの実行制御
     mfuncX(e){
@@ -586,12 +665,18 @@
     // 村人を動かす
     SceneManager.resume()
     // 操作再開
+    TouchInput.clear();
+    Input.clear();
     TouchInput.update = TE;
     Input.update = IE;
     // TEST
     tmenu.hide();
     // メニューを再び押せるように
+    setTimeout(resfunc,100);
+  }
+  function resfunc(){
     gHookMenuMode = false;
+    $gameSystem.enableMenu();
   }
   function smresume1(){
     generateTextClear();
@@ -617,6 +702,8 @@
     TouchInput.update = TD;TouchInput.clear();
     Input.update = TD;Input.clear();
     $gameTemp.clearDestination();
+    // 無効化する
+    $gameSystem.disableMenu();
     // TEST
     tmenu.invoke();
     // MENUのために
@@ -632,13 +719,13 @@
   // Status
   function statusfunc(){
     console.log("statusfunc invoke");
-    smresume();
+    smresume();//$gameSystem.enableMenu();
     SceneManager.push(Scene_Status);
   }
   // Save
   function savefunc(){
     console.log("savefunc invoke");
-    smresume();
+    smresume();//$gameSystem.enableMenu();
     SceneManager.push(Scene_Save);
   }
 

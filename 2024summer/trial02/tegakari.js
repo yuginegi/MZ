@@ -103,8 +103,10 @@
       // 処理
       if(inp==1){
         console.log("SHOW",inp,val)
-        this.viewstate = 1;
-        this.show();
+        if(val && val.id){
+          this.viewstate = 1;
+          this.show();
+        }
       }else{
         console.log("HIDE",inp,val)
         this.viewstate = 0;

@@ -200,6 +200,35 @@ function set3func(tar,base,func1,func2=null,func3=null){
   tar.onmouseleave = func3.bind(base);
 }
 
+class charaFace{ // 顔イメージ
+  constructor(args,ifile,id){
+    // args[2] から決めるパラメータ
+    let cid = args[2];
+    let imgfile = "img/faces/"+ifile+".png";
+    //console.log(imgfile);
+    // Image
+    this.img = new Image();
+    this.img.src = imgfile;
+    this.cid = cid;
+    // Init
+    this.xx = args[0];
+    this.yy = args[1];
+    this.can = generateElement(null,{type:"canvas",id:"cface_"+id,vid:id,width:144,height:144,
+      style:{"z-index":51,position:"absolute",left:args[0]+"px",top:args[1]+"px"}});
+    this.ctx = this.can.getContext("2d");
+    // mouseevent は 上でセット。
+    this.img.onload = this.draw.bind(this)
+  }
+  draw(){
+    const ctx = this.ctx;
+    ctx.clearRect(0,0,144,144);
+    let ii = this.cid;
+    let [x,y]=[(ii%4), Math.floor(ii/4)];
+    //DBG//console.log(x,y,ii);
+    let aa = 1;
+    ctx.drawImage(this.img,144*x,144*y,144,144,0,0,144*aa,144*aa);
+  }
+}
 class charaImg{ // 歩行イメージ
   constructor(args,ifile,id){
     // args[2] から決めるパラメータ
