@@ -91,22 +91,14 @@ class battleMain {
     this.keiryaku = new keiryakuClass(this);
     this.btlresult = 0;
 
-    this.dfunc = [this.draw0,this.draw1,this.draw2,this.draw3,this.draw4];
+    this.dfunc = [this.draw0,this.draw1,this.draw2,this.draw3,this.draw4,this.draw5];
   }
   keycont(e){
     let k = e.key;
-    if(k=="z"){
-      this.cflag = 1;
-    }
-    if(k=="x"){
-      this.cflag = 2;
-    }
-    if(k=="c"){
-      this.cflag = 3;
-    }
-    if(k=="v"){
-      this.cflag = 4;
-    }
+    //DBG//if(k=="z"){this.cflag = 1;}
+    if(k=="x"){this.cflag = 2;}
+    if(k=="c"){this.cflag = 3;}
+    if(k=="v"){this.cflag = 4;}
   }
   // キャラクターの読み込み
   initload(csdr,esdr) {
@@ -127,6 +119,7 @@ class battleMain {
     //audioPlayBGM("MusMus-BGM-171")
     // 勝敗フラグ
     this.btlresult = 0;
+    this.eventflag = 0;
     // TEST
     this.imgface = new Image();
     this.imgface.src = "img/faces/Actor1.png"
@@ -258,11 +251,20 @@ class battleMain {
       for(let i=0;i<2;i++){
         let px = pos[i]; 
         ctx.fillStyle = "#000088";
+        let flag = Math.floor(this.initcnt/8)%5;
+        if(flag){
+          // 必殺技打てるかどうか確認する
+          let rtn = this.ch.checkKeiryaku(i+1);
+          if(rtn==0){
+            let cl = ["#00FFFF","#00CCCC","#00AAAA","#008888"];
+            ctx.fillStyle = cl[flag-1];
+          }
+        }
         ctx.fillRect(px,y,w,h);
         ctx.drawImage(this.imgface,0+144*i,0,144,144,px,y,w,h)
       }
     }
-    // 足してみる
+    // カウントダウン 足してみる
     let [gCVX, gCVY] = this.gsize;
     let fm = 40;
     let [x,y,w,h] = [gCVX/2, gCVY-fm-10, 60, fm]
@@ -323,12 +325,59 @@ class battleMain {
     }
   }
   enterkeiryaku(){
+    //打てるかチェックする
+    if(this.cflag > 1){
+      let rtn = this.ch.checkKeiryaku(this.cflag-2);
+      if(rtn){
+        console.log("Can't do KEIRYAKU")
+        return;
+      }
+      this.ch.resetKeiryaku(this.cflag-2)
+    }
     this.sts = 4;
     this.initcnt = 160;
     this.sts4type = this.cflag; // 敵味方の区別。操作ボタン。
     audioInvokeSE("Thunder10");
     this.sts5tm = -1;// 抜けるときは -1 になる。ので、無効化は-1
     this.sts6tm = -1;// 抜けるときは -1 になる。ので、無効化は-1
+  }
+  enterEvent(){
+    console.log("EVENT!!",this.eventflag)
+    this.sts = 6;
+    this.stsEtype = this.eventflag; // EVENT
+    let sdt = {
+      999:{tm:180,
+      tp:1, //ENEMY
+      cutintm:160,statm:140,endtm:20,
+      serif:"げええ！！",
+      ch:-1,
+      },
+      1:{tm:300,
+        tp:0, //PLAYER
+        cutintm:280,statm:260,endtm:20,
+        //serif:null,
+        serifArr:[
+          [260,"攻撃なら得意だよ！"],
+          [180,"計略で速度を上げるっ"],
+          [100,"いつでも任せて！"],
+        ],
+        ch:0,
+      },
+      2:{tm:300,
+        tp:0, //PLAYER
+        cutintm:280,statm:260,endtm:20,
+        //serif:null,
+        serifArr:[
+          [260,"気を付けてください！"],
+          [180,"大ダメージが来ます！"],
+          [100,"私の計略で守ります！"],
+        ],
+        ch:1,
+      }
+    };
+    this.stsEvtdt = sdt[this.eventflag];
+    this.initcnt = sdt[this.eventflag].tm;
+    audioInvokeSE("Thunder10");
   }
   enterdraw3A(){
     this.sts5tm = 150; // これで回る
@@ -367,6 +416,26 @@ class battleMain {
       return this.draw2(ctx);
     }
     this.keiryaku.cutinEffect(ctx,this.sts6tm);
+  }
+  //=== EVENT CUTIN (sts=6) =======
+  draw5(ctx){
+    if (this.initcnt-- <= 0) {
+      this.sts = 3;
+      return this.draw2(ctx)
+    }
+    // 指揮官のカットイン表示
+    {
+      let sss = this.stsEvtdt;
+      let tm = this.initcnt;
+      let tp = sss.tp;
+      let [t1,n1,t2,n2] = [sss.cutintm,20,sss.endtm,20]
+      let aa = 0;
+      if(tm-t1 > 0){aa = (tm-t1)/n1;}
+      if(t2-tm > 0){aa = (t2-tm)/n2;}
+      let dx = (tp==0)?400*aa:-400*aa; // 出たり入ったり
+      let team = (tp==0)?this.ch:this.en;
+      team.serifCutin(ctx,dx,tm,sss);//4tharg 0:まけ、1:勝ち
+    }
   }
 
   //=== 決着(sts=5) =======
@@ -420,6 +489,7 @@ class battleMain {
     if(tm-t1 > 0){aa = (tm-t1)/n1;}
     if(t2-tm > 0){aa = (t2-tm)/n2;}
     let dx = (tp==0)?400*aa:-400*aa;
+    //DBG//console.log("endCutin",dx,tm,ed);
     team.endCutin(ctx,dx,tm,ed);
   }
 
@@ -446,6 +516,11 @@ class battleMain {
       }
       this.cflag=0; // 入力を空にする
     }
+    // EVENT処理
+    else if(this.sts==3 && this.eventflag!=0){
+      this.enterEvent();
+      this.eventflag=0; // 入力を空にする
+    }
     // 戦闘中か？ そうなら、ダメージ計算
     if(this.sts == 3){
       //this.sts3tm++;
@@ -455,6 +530,8 @@ class battleMain {
           let tar = [this.ch,this.en];
           this.battleCalc(tar[1-i],tar[i]);// DEF,ATK
           this.sts3tmTM[i] = tar[i].getAgi();
+          // チャージする
+          tar[i].chargeFunc();
         }
       }
       // HPの判定

@@ -70,6 +70,8 @@ class teamClass {
       this.wpar = [30, 20, gCVX-350, gCVY*(1/3)-80];
       this.tpar = [60,60+4]
     }
+    // チャージ
+    this.charge = [0];
     // データ読み込み
     if(n==7){ // 勇者
       let imgsrc = "img/pictures/Actor1_5.png";
@@ -83,14 +85,14 @@ class teamClass {
       this.simg.src = "img/faces/Actor1.png";
       this.spar = [this.simg,0,144,144,144];
       this.twep = 1;
-      this.hp = 226;//526;
+      this.hp = 576;//526;
       this.kwiryaku = 7;
       // 攻撃計算用
       this.atk = 30;
       this.def = 10;
       this.agi = 180;
       this.powersts = {};
-      // 味方
+      // 味方（１面）
       {
         this.imgP = []
         let farr = ["img/pictures/Actor1_1.png","img/pictures/Actor1_2.png"];
@@ -102,8 +104,13 @@ class teamClass {
         //this.kwiryaku = 7;
         this.ctxtP=["お助けいたします！","お護りいたします"];
         this.kwiryakuP=[5,6];
+        // 必殺技
+        this.charge = [6,9,0];//[0,2,0]
+        this.kgage = [12,10,8];//[5,3,5];
       }
-    }else if(n==1){
+    }
+    // 敵の１面
+    else if(n==1){
       let imgsrc = "img/pictures/People2_5.png";
       this.img = new Image();
       this.img.src = imgsrc;
@@ -116,14 +123,19 @@ class teamClass {
       this.spar = [this.simg,0,144,144,144];
       this.twep = 3;
       this.soltype = 3;
-      this.hp = 587;//987;
+      this.hp = 986;//587;//987;
       this.kwiryaku = 1;
       // 攻撃計算用
       this.atk = 30;
       this.def = 10;
       this.agi = 200;
       this.powersts = {};
-    }else if(n==3){
+      // 敵ロジック
+      this.enelogic = this.bossfunc1
+      this.eneflag = 0;
+    }
+    // デュラン
+    else if(n==3){
       let imgsrc = "img/pictures/aa_duran.png";
       this.img = new Image();
       this.img.src = imgsrc;
@@ -142,7 +154,9 @@ class teamClass {
       this.def = 10;
       this.agi = 180;
       this.powersts = {};
-    }else{
+    }
+    // 女忍者
+    else{
       let imgsrc = "img/pictures/Actor2_8.png";
       this.img = new Image();
       this.img.src = imgsrc;
@@ -162,21 +176,40 @@ class teamClass {
       this.agi = 180;
       this.powersts = {};
     }
-    this.teamID = n;
-    
-    {
-      let [x0,x1] = [796-200,796-100]
 
-      for(let i=0;i<3;i++){
-        this.addchara(type, x0,150+80*i);
-      }
-      for(let i=0;i<4;i++){
-        this.addchara(type, x1,100+80*i);
-      }
+    // チームIDを確保（使ってないみたい）
+    this.teamID = n;
+
+    // 兵士７人の配置
+    for(let i=0;i<7;i++){
+      let [x,y] = (i<3)?[796-200,150+80*i]:[796-100,100+80*(i-3)]
+      this.addchara(type,x,y);
     }
-    // キラキラ
+    // キラキラ演出
     this.kira = [];
     this.kiratm = 0;
+  }
+  // １だと打てない
+  checkKeiryaku(ii){
+    if(!this.kgage){return 0;}
+    if(this.kgage[ii] <= this.charge[ii]){
+      return 0;
+    }
+    return 1;
+  }
+  resetKeiryaku(ii){
+    this.charge[ii] = 0; // リセットする
+  }
+  chargeFunc(){
+    if(!this.kgage){
+      console.log("CHARGE SKIP");
+      return;
+    }
+    let n = this.kgage.length;
+    for(let i=0;i<n;i++){
+      this.charge[i] += 1;
+    }
+    console.log("CHARGE:",this.charge,this.kgage);
   }
   powerupdraw(ctx,type){
     let [gCVX, gCVY] = this.gsize; // [796,604]
@@ -348,7 +381,7 @@ class teamClass {
       ctx.fillRect(x,100,w,350);
     }
     // キャラの絵（dxに依存のみ）
-    console.log("drawCutin:",type)
+    //DBG//console.log("drawCutin:",type)
     if(type<=2){
       this.drawchara(ctx,x+dx,y)
     }else{
@@ -356,8 +389,11 @@ class teamClass {
     }
   }
 
-  // 退却のカットイン
-  endCutin(ctx,base,tm,tp=0){
+  // セリフカットイン
+  // セリフ秒数：statm,endtm,
+  // セリフ：serif,
+  // キャラ指定：ch (-1で指揮官)
+  serifCutin(ctx,base,tm,sss){
     let [gCVX, gCVY] = this.gsize;
     let [x,y] = this.pxy;
     x = (gCVX-330)/2;//330:PNG.width
@@ -369,7 +405,7 @@ class teamClass {
       ctx.fillRect(0,y+350,gCVX,gCVY-(y+350));
     }
     // セリフ
-    if(20 < tm && tm < 80){
+    if(sss.endtm < tm && tm < sss.statm){
       ctx.fillStyle = 'rgb(0,0,0)'; //塗りつぶしの色
       let p = this.wpar;
       //let y1 = gCVY*(0/3)+20;
@@ -379,11 +415,28 @@ class teamClass {
       ctx.textAlign = "start"; // 規定
       ctx.textBaseline = "alphabetic"; // 規定
       p = this.tpar;
-      let txt = (tp==0)?this.endt:this.wint;
+      let txt = "";
+      if(sss.serifArr){
+        for(let cc of sss.serifArr){
+          if(cc[0] > tm){txt = cc[1];}
+        }
+      }else{
+        txt = sss.serif;
+      }
       ctx.fillText(txt, p[0],p[1]); // y:上に出す
     }
     // キャラの絵（dxに依存のみ）
-    this.drawchara(ctx,x+dx,y)
+    let img = (sss.ch>=0)? this.imgP[sss.ch] : null;
+    this.drawchara(ctx,x+dx,y,img);
+  }
+
+  // 退却のカットイン
+  endCutin(ctx,base,tm,tp=0){
+    let sss = {
+      statm:80,endtm:20,ch:-1,
+      serif:(tp==0)?this.endt:this.wint,
+    }
+    this.serifCutin(ctx,base,tm,sss);
   }
 
   bardraw2white(ctx,type){
@@ -453,6 +506,33 @@ class teamClass {
     e.setVal(v,60, x0, mode);
     this.damagelist.push(e);
     this.hp -= v;
+    //敵のロジックがあれば
+    if(this.enelogic){
+      this.enelogic(this.hp,v);
+    }
+  }
+  // １面のボスのロジック
+  bossfunc1(hp,dam){
+    //DBG//console.log("DM",hp,dam);
+    if(this.powersts["atknum"]>0){ // パワーアップ中は打たない
+      //DBG//console.log("Already Power up",this.powersts["atknum"]);  
+      return;
+    }
+    // はじめての被ダメ
+    if(this.eneflag==0){
+      this.eneflag++;
+      this.parent.cflag = 1;//計略を撃つ
+      this.parent.eventflag = 1;//EVENT
+      return;
+    }
+    let tarhp = [600,300];
+    if(hp<=tarhp[0] && tarhp[0]<hp+dam){ // はじめて３００を割った時
+      this.parent.cflag = 1;//計略を撃つ
+      this.parent.eventflag = 2;//EVENT
+    }
+    if(hp<=tarhp[1]){ // ３００以下は常に
+      this.parent.cflag = 1;//計略を撃つ
+    }
   }
 
   // 下のキャラ描画
@@ -473,15 +553,23 @@ class teamClass {
       let p = this.spar;
       ctx.drawImage(p[0],p[1],p[2],p[3],p[4],10,ypos,144,144);
     }else{
+      let [x,y,w,h] = [gCVX-159,ypos,144,144];
+      // 計略てるかどうか(味方のみ)
+      let rtn = this.checkKeiryaku(0);
+      if(rtn==0){
+        let cl = ["#00FFFF80","#00FFFF80","#00CCCC80","#00AAAA80","#00888880"];
+        let flag = Math.floor(this.initcnt/8)%5;
+        ctx.fillStyle = cl[flag];
+        ctx.fillRect(x,y,w,h);
+      }
       let p = this.spar;
-      ctx.drawImage(p[0],p[1],p[2],p[3],p[4],gCVX-159,ypos,144,144);
+      ctx.drawImage(p[0],p[1],p[2],p[3],p[4],x,y,w,h);
     }
     ctx.restore();
     // HP表示・ダメージ描画処理
     this.digidraw(ctx);
     // PowerUp しているようなら
     this.powerupdraw(ctx,type);
-  
     // カウント処理
     this.initcnt = (this.initcnt<=0) ? 80-1:(this.initcnt-1);
   }

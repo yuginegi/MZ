@@ -13,7 +13,7 @@ function xxx() {
   head.appendChild(link);
   // 右クリック禁止(これでうまくいくっぽい)
   d.oncontextmenu = function () {return false;}
-  console.log("xxx invoked.")
+  //DBG//console.log("xxx invoked.")
 }
 window.addEventListener("load", xxx);
 
@@ -90,7 +90,7 @@ function utilResizeFunc(target, barpos=null) {
     km.style.top = ct + "px";
     km.style.transform = "scale(" + aa + "," + aa + ")";
   }
-  console.log(this.name, "RESIZE!");
+  //DBG//console.log(this.name, "RESIZE!");
 }
 function utilSetButton(base,txt,pos,func){
   let btn = generateElement(base, {
@@ -142,7 +142,7 @@ function audioStopBGS(sec=0){
 /* util */
 var gtxtCacheHash = {};
 function generateTextClear(){
-  console.log("generateTextClear", Object.keys(gtxtCacheHash).length);
+  //DBG//console.log("generateTextClear", Object.keys(gtxtCacheHash).length);
   for(let kk in gtxtCacheHash){
     let bitmap = gtxtCacheHash[kk];
     //destroyTextPictureBitmap(bitmap)
@@ -172,7 +172,7 @@ function generateTextBmp(text) {
 function getImgSrcFromTEXT(txt){
   // キャッシュ（メモ化）
   if(gtxtCacheHash[txt]){
-    console.log("Cache used.");
+    //DBG//console.log("Cache used.");
     return gtxtCacheHash[txt].context.canvas.toDataURL();
   }
   // img.src = getImgSrcFromTEXT(txt) みたいに使う

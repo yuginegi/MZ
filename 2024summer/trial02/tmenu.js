@@ -79,7 +79,7 @@
       this.closeback = null;
     }
     hide(){
-      console.log("hide",this.name)
+      //DBG//console.log("hide",this.name)
       this.updatedisplay(this.target,"none");
     }
     // div
@@ -198,12 +198,12 @@
       }
       // マウス移動
       if(type=="mouseenter"){
-        console.log("[mfcommon]mouseenter ",p);
+        //DBG//console.log("[mfcommon]mouseenter ",p);
         p.style.backgroundColor = c1;
         // テキストを書き換える
         this.updateImgSrcTEXT(tar,exp)
       }else{
-        console.log("[mfcommon]else "+type);
+        //DBG//console.log("[mfcommon]else "+type);
         p.style.backgroundColor = c2;
       }
     }
@@ -230,7 +230,7 @@
       }
     }
     updatedisplay(id,mode){
-      console.log("updatedisplay",id,mode)
+      //DBG//console.log("updatedisplay",id,mode)
       const eee = document.getElementById(id);
       if (eee) {
         eee.style.display = mode;
@@ -265,7 +265,7 @@
       this.listpos = [50,120+75,10];
       this.ilist = {
         0:{flag:11,ff:"Actor1", cid:5},
-        1:{flag:2,ff:"People2",cid:3},
+        1:{flag:1,ff:"People2",cid:3},
         2:{flag:5,ff:"Actor1", cid:2},
         3:{flag:12,ff:"Actor1", cid:1},
       }
@@ -408,7 +408,7 @@
       if(vid>0){
         let [ff,cid] = [this.ilist[vid].ff,this.ilist[vid].cid]
         ifile = ff+"_"+(cid+1)+".png";
-        console.log("ifile",ifile)
+        //DBG//console.log("ifile",ifile)
       }
       this.imgsetCore("PT",ifile);
     }
@@ -506,7 +506,7 @@
     
     infolist(contents,pre){
       let val = $gameVariables.value(1);
-      console.log(val);
+      //DBG//console.log(val);
       if(!val || !val.num){return;}
       let str = "手がかり回収率 "+(Object.keys(val).length -2)+"／"+(val.num);
       let img0 = this.creatediv(contents,pre+"INFO",10,10);
@@ -661,7 +661,7 @@
       console.log("endMenu skip");
       return;
     }
-    console.log("endMenu");
+    //DBG//console.log("endMenu");
     // 村人を動かす
     SceneManager.resume()
     // 操作再開
@@ -684,7 +684,7 @@
     // MENUのために (ほかに遷移していないので、わざわざ呼び出す必要がある)
     const element = document.getElementById('TEGAKARI');
     if (element) {
-      console.log("SET BLOCK")
+      //DBG//console.log("SET BLOCK")
       element.style.display = "BLOCK";
     }
   }
@@ -694,7 +694,7 @@
       return;
     }
     gHookMenuMode = true;
-    console.log("callMenu");
+    //DBG//console.log("callMenu");
     this.menuCalling = false; // 繰り返し呼びを止める
     // 村人を動かさない
     SceneManager.stop()
@@ -709,7 +709,7 @@
     // MENUのために
     const element = document.getElementById('TEGAKARI');
     if (element) {
-      console.log("SET NONE")
+      //DBG//console.log("SET NONE")
       element.style.display = "none";
     }
     // メニューを隠す

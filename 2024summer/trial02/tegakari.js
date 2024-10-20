@@ -102,13 +102,13 @@
       let val = $gameVariables.value(this.ids[0]);
       // 処理
       if(inp==1){
-        console.log("SHOW",inp,val)
+        //DBG//console.log("SHOW",inp,val)
         if(val && val.id){
           this.viewstate = 1;
           this.show();
         }
       }else{
-        console.log("HIDE",inp,val)
+        //DBG//console.log("HIDE",inp,val)
         this.viewstate = 0;
         this.hide();
       }
@@ -154,11 +154,11 @@
       }
     }
     show(){
-      console.log(this.viewstate)
+      //DBG//console.log(this.viewstate)
       if(this.viewstate!=1){return;}
       const element = document.getElementById('TEGAKARI');
       if (element) {
-        console.log("SET BLOCK")
+        //DBG//console.log("SET BLOCK")
         element.style.display = "block";
       } else {
         this.initHTML();
@@ -169,7 +169,7 @@
     hide(){
       const element = document.getElementById('TEGAKARI');
       if (element) {
-        console.log("SET NONE")
+        //DBG//console.log("SET NONE")
         element.style.display = "none";
       }
     }

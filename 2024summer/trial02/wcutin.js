@@ -151,7 +151,7 @@ class keiryakuClass{
     }
   }
   setCutinParam(id, ch, en){
-    console.log(id); // 3
+    //DBG//console.log(id); // 3
     //let next = 0;
     this.char = null;
     if(id==3){
@@ -177,7 +177,7 @@ class keiryakuClass{
     //this.next = next;
     this.bgs = false;
     //return next;
-    console.log(this.id)
+    //DBG//console.log(this.id)
   }
   getInitParam(){
     // this.id で 決めるべき。
@@ -198,7 +198,7 @@ class keiryakuClass{
     if(id==1){
       [tm,base] = [180,bb[0]];
     }
-    console.log(id,tm,base)
+    //DBG//console.log(id,tm,base)
     return [tm,base];
   }
   // １８０Ｆ　演出
