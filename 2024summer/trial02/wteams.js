@@ -73,7 +73,7 @@ class teamClass {
     // チャージ
     this.charge = [0];
     // データ読み込み
-    if(n==7){ // 勇者
+    if(n==7||n==8||n==9){ // 勇者
       let imgsrc = "img/pictures/Actor1_5.png";
       this.img = new Image();
       this.img.src = imgsrc;
@@ -86,27 +86,68 @@ class teamClass {
       this.spar = [this.simg,0,144,144,144];
       this.twep = 1;
       this.hp = 576;//526;
-      this.kwiryaku = 7;
+      this.kwiryaku = 4;
       // 攻撃計算用
       this.atk = 30;
       this.def = 10;
       this.agi = 180;
       this.powersts = {};
       // 味方（１面）
-      {
-        this.imgP = []
-        let farr = ["img/pictures/Actor1_1.png","img/pictures/Actor1_2.png"];
-        for(let i=0;i<farr.length;i++){
-          this.imgP[i] = new Image();
-          this.imgP[i].src = farr[i];
-        }
-        //this.ctxt = "ここが勝負時だ！";
-        //this.kwiryaku = 7;
+      if(n==7){
+        // 計略
         this.ctxtP=["お助けいたします！","お護りいたします"];
         this.kwiryakuP=[5,6];
-        // 必殺技
         this.charge = [6,9,0];//[0,2,0]
         this.kgage = [12,10,8];//[5,3,5];
+        this.farr = ["img/add/tb1_1.png","img/add/tb2_1.png"];
+        let f1 = new Image();
+        f1.src = "img/add/tb1_2.png"
+        let f2 = new Image();
+        f2.src = "img/add/tb2_2.png"
+        this.imgfacePar = [[f1,0,0],[f2,0,0]];
+      }
+      // 味方（２面）
+      if(n==8){
+        this.farr = ["img/add/coconaB1.png","img/add/mina1.png"];
+        // 計略
+        this.ctxtP=["ちょいちょいっと","くらいなさい！！"];
+        this.kwiryakuP=[7,8];
+        this.charge = [0,0,3];//[0,2,0]
+        this.kgage = [6,3,3];//[5,3,5];
+        // IMGPAR
+        let f1 = new Image();
+        f1.src = "img/add/heroine.png"
+        let f2 = new Image();
+        f2.src = "img/add/mina2.png"
+        this.imgfacePar = [[f1,0,0],[f2,0,0]];
+        
+        // 敵ロジックの利用
+        this.enelogic = this.stgfunc2
+        this.eneflag = 0;
+      }
+      // 味方（３面）
+      if(n==9){
+        // 計略
+        this.ctxtP=["お助けいたします！","お護りいたします"];
+        this.kwiryakuP=[9,10];
+        this.charge = [0,15,0];
+        this.kgage = [6,16,6];
+        this.farr = ["img/pictures/Actor1_6.png","img/pictures/Actor1_8.png"];
+        let f1 = new Image();
+        f1.src = "img/faces/Actor1.png"
+        let f2 = new Image();
+        f2.src = "img/faces/Actor1.png"
+        this.imgfacePar = [[f1,144,144],[f2,144*3,144]];
+
+        // 敵ロジックの利用
+        this.enelogic = this.stgfunc3
+        this.eneflag = 0;
+      }
+      // 助っ人画像
+      this.imgP = [];
+      for(let i=0;i<this.farr.length;i++){
+        this.imgP[i] = new Image();
+        this.imgP[i].src = this.farr[i];
       }
     }
     // 敵の１面
@@ -134,6 +175,51 @@ class teamClass {
       this.enelogic = this.bossfunc1
       this.eneflag = 0;
     }
+    // 女忍者
+    else if(n==2){
+      let imgsrc = "img/pictures/Actor2_8.png";
+      this.img = new Image();
+      this.img.src = imgsrc;
+      this.itxt = "守ってみせまする";
+      this.ctxt = "守ってみせまする";
+      this.endt = "すみません、退きます";
+      this.wint = "守り通せました";
+      this.simg = new Image();
+      this.simg.src = "img/faces/Actor2.png";
+      this.spar = [this.simg,144*3,144,144,144];
+      this.twep = 22;
+      this.hp = 430;
+      this.kwiryaku = 2;
+      // 攻撃計算用
+      this.atk = 20;
+      this.def = 15;
+      this.agi = 150;
+      this.powersts = {};
+      // 敵ロジック
+      this.enelogic = this.bossfunc2
+      this.eneflag = 0;
+      // 助っ人
+      {
+        // 計略
+        this.ctxtP=["ぐへへ！","ぐふふ！"];
+        this.kwiryakuP=[12,11];
+        // 助っ人
+        this.farr = ["img/add/en2b_1.png","img/add/en2r_1.png"];
+        let f1 = new Image();
+        f1.src = "img/add/en2b_2.png"
+        let f2 = new Image();
+        f2.src = "img/add/en2r_2.png"
+        this.imgfacePar = [[f1,144,144],[f2,144,144]];
+        // 内部フラグ
+        this.stg2cnt = 0;
+      }
+      // 助っ人画像
+      this.imgP = [];
+      for(let i=0;i<this.farr.length;i++){
+        this.imgP[i] = new Image();
+        this.imgP[i].src = this.farr[i];
+      }
+    }
     // デュラン
     else if(n==3){
       let imgsrc = "img/pictures/aa_duran.png";
@@ -147,35 +233,40 @@ class teamClass {
       this.simg.src = "img/faces/aa_duran.png";
       this.spar = [this.simg,0,0,144,144];
       this.twep = 13;
-      this.hp = 187;//987;
+      this.soltype = 2;
+      this.hp = 1059;
       this.kwiryaku = 3;
       // 攻撃計算用
       this.atk = 30;
       this.def = 10;
-      this.agi = 180;
+      this.agi = 200;
       this.powersts = {};
+      // 敵ロジック
+      this.enelogic = this.bossfunc3
+      this.eneflag = 0;
+      // 助っ人
+      {
+        // 計略
+        this.ctxtP=["させません！！","ぐふふ！"];
+        this.kwiryakuP=[2];
+        // 助っ人
+        this.farr = ["img/pictures/Actor2_8.png","img/add/en2r_1.png"];
+        let f1 = new Image();
+        f1.src = "img/faces/Actor2.png"
+        let f2 = new Image();
+        f2.src = "img/add/en2r_2.png"
+        this.imgfacePar = [[f1,3*144,144]];
+        // 内部フラグ
+        this.stg2cnt = 0;
+      }
+      // 助っ人画像
+      this.imgP = [];
+      for(let i=0;i<this.farr.length;i++){
+        this.imgP[i] = new Image();
+        this.imgP[i].src = this.farr[i];
+      }
     }
-    // 女忍者
-    else{
-      let imgsrc = "img/pictures/Actor2_8.png";
-      this.img = new Image();
-      this.img.src = imgsrc;
-      this.itxt = "守ってみせまする";
-      this.ctxt = "守ってみせまする";
-      this.endt = "すみません、退きます";
-      this.wint = "守り通せました";
-      this.simg = new Image();
-      this.simg.src = "img/faces/Actor2.png";
-      this.spar = [this.simg,144*3,144,144,144];
-      this.twep = 22;
-      this.hp = 130;//430;
-      this.kwiryaku = 8;
-      // 攻撃計算用
-      this.atk = 30;
-      this.def = 10;
-      this.agi = 180;
-      this.powersts = {};
-    }
+
 
     // チームIDを確保（使ってないみたい）
     this.teamID = n;
@@ -191,7 +282,13 @@ class teamClass {
   }
   // １だと打てない
   checkKeiryaku(ii){
-    if(!this.kgage){return 0;}
+    //if(!this.kgage){return 0;}
+    if(!this.kgage){
+      if(ii==0){return 0;}
+      if(!this.kwiryakuP){return 1;}
+      if(this.kwiryakuP[ii-1]){return 0;}
+      return 1;
+    }
     if(this.kgage[ii] <= this.charge[ii]){
       return 0;
     }
@@ -217,6 +314,8 @@ class teamClass {
     let ypos = gCVY-159;
     let dx=0;
     let plist =[
+      ["aaanum","aaa",9,4],
+      ["bbbnum","bbb",1,5],
       ["atknum","atk",2,2],
       ["defnum","def",3,2],
       ["aginum","agi",6,2],
@@ -263,21 +362,21 @@ class teamClass {
     }
   }
   powerup(v){
+    // 勇者の号令
     if(v==1){
       console.log(this)
       let et = 3;
       this.powersts["atk"] = 5*this.atk;
       this.powersts["atknum"] = 3;
     }
+    // ２面ボス
     if(v==2){
       console.log(this)
-      let et = 3;
-      this.powersts["atk"] = this.atk/10;
-      this.powersts["atknum"] = et;
-      this.powersts["def"] = this.def*10+100;
+      let et = 5;
+      this.powersts["def"] = 145;
       this.powersts["defnum"] = et;
     }
-    // HAKONE
+    // HAKONE ボス
     if(v==3){
       console.log(this)
       this.powersts["atk"] = this.atk*10;
@@ -296,8 +395,51 @@ class teamClass {
       this.powersts["def"] = 9999;
       this.powersts["defnum"] = 1;
     }
+    // MIKATA
+    if(v==7){ // ２面雲散
+      let list = ["atk","aaa"];
+      for(let cc of list){
+        delete this.powersts[cc]
+        delete this.powersts[cc+"num"]
+      }
+      this.stg2cnt = 0;
+    }
+    if(v==9){ // ３面回復
+      let v = 576 - this.hp;
+      v = (v > 260)? 260 : v;
+      this.setHeal(v); // 暫定
+    }
+    if(v==10){ // ３面バリア
+      this.powersts["bbb"] = 200;
+      this.powersts["bbbnum"] = 1;
+    }
+    // 回復
+    if(v==11){
+      let v = 430 - this.hp;
+      this.setHeal(v); // 暫定
+    }
+    // 攻撃力がどんどんあがる
+    if(v==12){
+      //console.log("powerup10")
+      this.powersts["aaa"] = 20;
+      this.powersts["aaanum"] = 10;
+      this.powersts["atk"] = this.atk; // これが必要
+      this.powersts["atknum"] = 10;
+    }
   }
   getAtk(){
+    // aaanum あれば
+    if(this.powersts["aaanum"]){
+      this.powersts["atk"] += this.powersts["aaa"];
+      this.powersts["atknum"] = this.powersts["aaanum"];
+      this.powersts["aaanum"]--;
+      console.log(this.powersts)
+      if(this.powersts["aaanum"]==0){
+        delete this.powersts["aaa"]
+        delete this.powersts["aaanum"]
+      }
+    }
+    // 攻撃力
     let v = (this.powersts["atk"])? this.powersts["atk"] : this.atk;
     this.powersts["atknum"]--;
     if(this.powersts["atknum"]==0){
@@ -321,6 +463,14 @@ class teamClass {
       delete this.powersts["def"]
       delete this.powersts["defnum"]
     }
+    // bbbnum あれば
+    if(this.powersts["bbbnum"]){
+      this.powersts["bbbnum"]--;
+      if(this.powersts["bbbnum"]==0){
+        delete this.powersts["bbb"]
+        delete this.powersts["bbbnum"]
+      }
+    }
     return v;
   }
   getAgi(){
@@ -329,9 +479,42 @@ class teamClass {
     return v;
   }
   getkwiryaku(type=0){
-    return (type<=2)?this.kwiryaku:this.kwiryakuP[type-3];
+    return (type==0)?this.kwiryaku:this.kwiryakuP[type-1];
+    //return (type<=2)?this.kwiryaku:this.kwiryakuP[type-3];
   }
 
+  drawGuest(ctx){ // this.type==0 が右
+    let [gCVX, gCVY] = this.gsize;
+    let [x,y,w,h] = (this.type==0)?[gCVX-159-72-5, gCVY-72-10, 72, 72]:[159+5, gCVY-72-10, 72, 72]
+    let pos = (this.type==0)?[x,x-72-5]:[x,x+72+5];
+    let n = (this.imgfacePar)?this.imgfacePar.length:0;
+    for(let i=0;i<n;i++){
+      let px = pos[i]; 
+      if(this.type==0){
+        ctx.fillStyle = "#000088";
+        let flag = Math.floor(this.initcnt/8)%5;
+        if(flag){
+          // 必殺技打てるかどうか確認する
+          let rtn = this.checkKeiryaku(i+1);
+          if(rtn==0){
+            let cl = ["#00FFFF","#00CCCC","#00AAAA","#008888"];
+            ctx.fillStyle = cl[flag-1];
+          }
+        }
+      }else{
+        ctx.fillStyle = "#CC0088";
+      }
+      let mg = 2;
+      ctx.fillRect(px-mg,y-mg,w+2*mg,h+2*mg);
+      this.drawSupport(ctx,i,px,y,w,h);
+    }
+  }
+  drawSupport(ctx,i,x,y,w,h){
+    let [img,ix,iy] = this.imgfacePar[i];
+    //console.log(i,[img,ix,iy])
+    let mg = 0;
+    ctx.drawImage(img,ix,iy,144,144,x+mg,y+mg,w-2*mg,h-2*mg)
+  }
   drawchara(ctx,x,y,img0=null){
     ctx.save();
     ctx.shadowColor='rgb(0,255,255)';
@@ -362,7 +545,7 @@ class teamClass {
       ctx.textAlign = "start"; // 規定
       ctx.textBaseline = "alphabetic"; // 規定
       p = this.tpar;
-      let ctxt = (type<=2)?this.ctxt:this.ctxtP[type-3];
+      let ctxt = (type==0)?this.ctxt:this.ctxtP[type-1];
       ctx.fillText(ctxt, p[0],p[1]); // y:上に出す
     }
     // キャラの背景（薄い赤・薄い青）
@@ -372,7 +555,7 @@ class teamClass {
       let mt = st-mm;
       let x = 0;
       let w = (tm<mt)? gCVX: gCVX*(st-tm)/mm;
-      if(this.type==0){
+      if(this.type==0){ // 敵か味方か区別（ロード時に決める）
         ctx.fillStyle = 'rgba(0,255,0,0.5)'; //塗りつぶしの色
         x = gCVX-w;
       }else{
@@ -382,10 +565,10 @@ class teamClass {
     }
     // キャラの絵（dxに依存のみ）
     //DBG//console.log("drawCutin:",type)
-    if(type<=2){
+    if(type==0){
       this.drawchara(ctx,x+dx,y)
     }else{
-      this.drawchara(ctx,x+dx,y,this.imgP[type-3])
+      this.drawchara(ctx,x+dx,y,this.imgP[type-1])
     }
   }
 
@@ -427,6 +610,15 @@ class teamClass {
     }
     // キャラの絵（dxに依存のみ）
     let img = (sss.ch>=0)? this.imgP[sss.ch] : null;
+    /*if(sss.ch==0){//2431x1216
+      console.log("sss.ch");
+      //this.drawchara(ctx,x+dx,y,img);
+      let ww = 2431*350/1216;
+      let w0 = (gCVX - ww)/2
+      ctx.drawImage(img, 0,0,2431,1216, w0+dx,y,ww,350);
+    }else{
+    this.drawchara(ctx,x+dx,y,img);
+    }*/
     this.drawchara(ctx,x+dx,y,img);
   }
 
@@ -498,6 +690,12 @@ class teamClass {
     })
   }
   // 「damagelist」を 追加する。
+  setDamageF(v,mode=0){ // 火のダメージに対して
+    if(this.powersts["bbbnum"]){
+      v -= this.powersts["bbb"];
+    }
+    this.setDamage(v,mode);
+  }
   setDamage(v,mode=0){
     if(v < 0){v=0}
     let [xx,n] = this.digin.getlen2(this.hp);
@@ -506,9 +704,18 @@ class teamClass {
     e.setVal(v,60, x0, mode);
     this.damagelist.push(e);
     this.hp -= v;
-    //敵のロジックがあれば
+    //敵のロジックがあれば（被ダメで動きたいロジックがあれば）
+    //console.log(this.enelogic,this.hp,v)
     if(this.enelogic){
       this.enelogic(this.hp,v);
+    }
+  }
+  // とりあえず数字入れない、回復のみ
+  setHeal(v,mode=0){
+    this.hp += v;
+    //敵のロジックがもしあれば
+    if(this.enelogic){
+      this.enelogic(this.hp,0);
     }
   }
   // １面のボスのロジック
@@ -521,17 +728,118 @@ class teamClass {
     // はじめての被ダメ
     if(this.eneflag==0){
       this.eneflag++;
-      this.parent.cflag = 1;//計略を撃つ
+      this.parent.cflag = 10;//計略を撃つ
       this.parent.eventflag = 1;//EVENT
       return;
     }
     let tarhp = [600,300];
     if(hp<=tarhp[0] && tarhp[0]<hp+dam){ // はじめて３００を割った時
-      this.parent.cflag = 1;//計略を撃つ
+      this.parent.cflag = 10;//計略を撃つ
       this.parent.eventflag = 2;//EVENT
     }
     if(hp<=tarhp[1]){ // ３００以下は常に
-      this.parent.cflag = 1;//計略を撃つ
+      this.parent.cflag = 10;//計略を撃つ
+    }
+  }
+  // 味方用のロジック
+  stgfunc2(hp,dam){
+    if(this.eneflag==1 && dam > 10){ // 強化ダメージ
+      this.parent.eventflag = 12;//EVENT
+      this.eneflag++;
+      return;
+    }
+    if(this.eneflag==0){
+      this.parent.eventflag = 9;//EVENT
+      this.eneflag++;
+      return;
+    }
+  }
+  // ２面のボスのロジック
+  bossfunc2(hp,dam){
+    //console.log(hp,dam)//回復はdamが0以下
+    // 1回目＋2回目 の被ダメ
+    if(dam > 0 && this.eneflag==1){
+      console.log(this.eneflag)
+      this.parent.cflag = 12;//計略を撃つ(２人目) 回復
+      this.parent.eventflag = 11;//EVENT
+      this.eneflag++;
+      return;
+    }
+    if(dam > 0 && this.eneflag==2){ // 強化
+      console.log(this.eneflag)
+      this.parent.eventflag = 10;//EVENT
+      this.eneflag++;
+      return;
+    }
+    //console.log(dam)
+    if(dam == 200){ // ダメージ計略対策(sts=3じゃないので、cflagだと消えちゃう)
+      //this.parent.cflag = 12;//計略を撃つ(２人目)
+      if(this.eneflag==0){
+        this.eneflag++;
+        return;
+      } 
+      this.parent.eventflag = 14;//EVENT
+      return;
+    }
+
+    if(dam > 50){ // 大ダメージ
+      this.parent.cflag = 10;//計略を撃つ(ボス)
+      return;
+    }
+    if(hp<=250){ // ある値 未満は常に
+      this.parent.cflag = 12;//計略を撃つ(２人目)
+      return;
+    }
+    if(this.powersts["atknum"]>0){ // パワーアップ中は打たない 
+      this.stg2cnt = 0;
+    }else{
+      this.stg2cnt++;
+      if(this.stg2cnt>5){
+        this.parent.cflag = 11;//計略を撃つ(１人目)
+        this.stg2cnt = 0;
+      }
+    }
+  }
+  // 味方用のロジック
+  stgfunc3(hp,dam){
+    if(this.eneflag==0 && dam == 259){ // 強化ダメージ
+      this.parent.eventflag = 17;//EVENT
+      this.eneflag++;
+      return;
+    }
+  }
+  // ３面のボスのロジック
+  bossfunc3(hp,dam){
+    // 1回目＋2回目 の被ダメ
+    if(this.eneflag<=1){ // １人だけにする
+      this.parent.eventflag = 15+this.eneflag;//EVENT
+      this.eneflag++;
+      return;
+    }
+    if(this.powersts["defnum"]>0){ // パワーアップ中は打たない 
+      this.stg2cnt = 0;
+      return;
+    }else{
+      this.stg2cnt++;
+      if(this.eneflag==2 && this.stg2cnt==1){// 防御が切れた次のタイミング
+        this.parent.eventflag = 18;
+        this.eneflag++;
+        return;
+      }
+      if(this.stg2cnt==2){// 防御が切れた次のタイミング
+        this.parent.cflag = 10;//計略を撃つ(ボス)
+        return;
+      }
+      if(this.hp <= 600 && this.stg2cnt>2){
+        this.parent.cflag = 11;//計略を撃つ(１人目)
+        this.stg2cnt = 0;
+        return;
+      }
+      if(this.stg2cnt>5){
+        this.parent.cflag = 11;//計略を撃つ(１人目)
+        this.stg2cnt = 0;
+        return;
+      }
     }
   }
 

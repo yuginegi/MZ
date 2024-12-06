@@ -102,7 +102,7 @@ class cutinClass {
    * Public Functions
    ******************************************************************/
   // 計略打つ時
-  keiryakucutin(ctx,tt,tb,type){
+  keiryakucutin(ctx,tt,tb,type){ // type=1 敵、それ以外 味方
     let [k0,k1] = (type==1)?["enogu1","moji_keiryakuR"]:["enogu2","moji_keiryakuB"];
     let img = this.img[k0];
     let imgK = this.img[k1];
@@ -133,12 +133,19 @@ class keiryakuClass{
     // TEST
     this.img4 = new Image();
     this.img4.src = "img/add/gamenfire.png";
+    this.img8 = new Image();
+    this.img8.src = "img/add/minami.jpg";
   }
+  // 1: 敵の計略
+  // 2: 号令 敵
   // 3: 火計 敵→味方
-  // 5: 味方の補助１
-  // 6: 味方の補助２
-  // 7: 号令 味方
-  // 8: 号令 敵
+  // 4: 号令 味方（勇者）
+  // 5: 味方の補助１(１面)
+  // 6: 味方の補助２(１面)
+  // 7: 味方の補助１(２面)
+  // 8: 味方の補助２(２面)
+  // 10:敵の補助 火力（２面）
+  // 11:敵の補助 回復（２面）
   //----------------------
   // 計略時の演出
   //----------------------
@@ -151,54 +158,35 @@ class keiryakuClass{
     }
   }
   setCutinParam(id, ch, en){
-    //DBG//console.log(id); // 3
-    //let next = 0;
     this.char = null;
     if(id==3){
-      //next = 3;// 火計
       this.char = ch;
-      ch.pupset(2);//damflag
+      this.char.pupset(2);//damflag
     }
-    if(id==5||id==6||id==7){
-      //next = 7;
+    if([7,8].indexOf(id) != -1){
+      this.char = en;
+      this.char.pupset(2);//damflag
+    }
+    // 味方のパワーアップ
+    if([4,5,6,9,10].indexOf(id) != -1){
       this.char = ch;
-      ch.pupset(1);//pupflag
+      this.char.pupset(1);//pupflag
     }
-    if(id==8){
+    // 敵のパワーアップ
+    if([1,2,11,12].indexOf(id) != -1){
       this.char = en;
       this.char.pupset(1);//pupflag
     }
-    // HAKONE BOSS
-    if(id==1){
-      this.char = en;
-      this.char.pupset(1);//pupflag
-    }
-    this.id = id; // id is next if exists.
-    //this.next = next;
+    this.id = id;
     this.bgs = false;
-    //return next;
-    //DBG//console.log(this.id)
   }
   getInitParam(){
     // this.id で 決めるべき。
     let id = this.id;
     let bb = [-100,796+100];//796,604
-    let tm = 0; // 演出時間は３秒くらい
+    let tm = 180; // 演出時間は３秒くらい
     let base = bb[0]; // プレイヤー側
-    if(id==3){
-      [tm,base] = [180,bb[0]];
-    }
-    if(id==5||id==6||id==7){
-      [tm,base] = [180,bb[0]];
-    }
-    if(id==8){
-      [tm,base] = [180,bb[0]];
-    }
-    // HAKONE BOSS
-    if(id==1){
-      [tm,base] = [180,bb[0]];
-    }
-    //DBG//console.log(id,tm,base)
+    //default: [tm,base] = [180,bb[0]];
     return [tm,base];
   }
   // １８０Ｆ　演出
@@ -207,57 +195,86 @@ class keiryakuClass{
     if(this.id == 3){
       //兵士ためし
       this.char.pupdraw(ctx);
-      //640x2400 = 640,480 x 5
-      let [w,h] = [640,480];
-      let ix = Math.floor(tt/4)%5;
-      //[796,604]
-      let dy = 80;
-      ctx.drawImage(this.img4,0,h*ix+dy,w,h-dy,0,0,796,604);
+      //==== 炎演出
+      { //640x2400 = 640,480 x 5
+        let [w,h] = [640,480];
+        let ix = Math.floor(tt/4)%5;
+        let dy = 80; //[796,604]
+        ctx.drawImage(this.img4,0,h*ix+dy,w,h-dy,0,0,796,604);
+      }
       if(tt==175){
         audioPlayBGS("Fire1");
         this.bgs = true;
         // ダメ計
-        this.char.setDamage(259);
+        this.char.setDamageF(259);
       }
       this.ktext(ctx,["地獄の業火","火によるダメージを与える"]);
     }
-    // 号令 (180F)//796,604
-    if(this.id == 5||this.id == 6||this.id == 7){
+    // 火計(逆側)
+    if(this.id == 7){
       this.char.pupdraw(ctx);
       if(tt==175){
-        let pv = [5,6,1];
-        this.char.powerup(pv[this.id-5]);
+        this.char.powerup(7);
       }
       if(tt==170){
-        audioInvokeSE("Up2");
+        audioInvokeSE("Down2");
       }
       if(tt==80){
-        audioInvokeSE("Particles1");
+        audioInvokeSE("Down7");
       }
-      let ppp = [
-        ["烈火の攻勢","攻撃速度が上がる"],
-        ["疾風の守護陣","攻撃を受け止める"],
-        ["勇者の大号令","攻撃力が上がる"],
-      ];
-      this.ktext(ctx,ppp[this.id-5]);
+      this.ktext(ctx,["雲散霧消の陣","攻撃力アップの計略効果を解除する"]);
     }
     if(this.id == 8){
       this.char.pupdraw(ctx);
+      //==== カットイン演出
+      if(140<tt&&tt<170){
+        let [w,h] = [796,200]; // y=0-350
+        ctx.drawImage(this.img8,0,0,w,h,0,100,w,h);
+      }
+      let t0 = 140;
+      let tn = 40;
+      if(t0-tn<tt&&tt<t0){
+        let [w0,h0] = [796,200]; // y=0-350
+        let w = 5*w0;
+        let x = w-2*w*(t0-tt)/tn;
+        let y = 215;
+        let h = 50;
+        ctx.fillStyle="#FFFF0080";
+        ctx.fillRect(x,y,w,h);
+      }
       if(tt==175){
-        this.char.powerup(2);
+        // ダメ計
+        this.char.setDamage(200);
+        audioInvokeSE("Saint9");
       }
-      if(tt==170){
-        audioInvokeSE("Up2");
+      if(tt==140){
+        audioInvokeSE("Sword2");
       }
-      if(tt==80){
-        audioInvokeSE("Particles1");
+      if([100,80,60,40].indexOf(tt) != -1){
+        audioInvokeSE("Slash6");
       }
-      this.ktext(ctx,["献身的な防衛","攻撃力は下がるが、防御力が大きく上がる"]);
+      if([120].indexOf(tt) != -1){
+        audioInvokeSE("Saint2");
+      }
+      this.ktext(ctx,["シャイニングブレード","剣撃によるダメージを与える"]);
     }
-    if(this.id == 1){
+    // 号令 (180F)//796,604
+    if([1,2,4,5,6,9,10,11,12].indexOf(this.id) != -1){
+      let pdata = {
+        1:{tp:3,txt:["痛恨の一撃","攻撃速度は下げて、致命的な一撃を与える"]},
+        4:{tp:1,txt:["勇者の大号令","攻撃力が上がる"]},
+        2:{tp:2,txt:["献身的な防衛","防御力が大きく上がる"]},
+        5:{tp:5,txt:["烈火の攻勢","攻撃速度が上がる"]},
+        6:{tp:6,txt:["疾風の守護陣","攻撃を受け止める"]},
+        9:{tp:9,txt:["回復","部隊を回復する"]},
+        10:{tp:10,txt:["バリア","火に強いバリア、被弾で解除"]},
+        11:{tp:11,txt:["天凰の計","部隊を回復する"]},
+        12:{tp:12,txt:["落鳳の計","攻撃力が上がり続ける"]},
+      }
+      let par = pdata[this.id];
       this.char.pupdraw(ctx);
       if(tt==175){
-        this.char.powerup(3);
+        this.char.powerup(par.tp);
       }
       if(tt==170){
         audioInvokeSE("Up2");
@@ -265,7 +282,7 @@ class keiryakuClass{
       if(tt==80){
         audioInvokeSE("Particles1");
       }
-      this.ktext(ctx,["痛恨の一撃","攻撃速度は下げて、致命的な一撃を与える"]);
+      this.ktext(ctx,par.txt);
     }
   }
   ktext(ctx,txt){

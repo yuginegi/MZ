@@ -3,7 +3,7 @@ class characlass {
     //DBG//console.log("new characlass")
     let [gCVX] = [796];
     //let imgsrc = ["img/sv_actors/Actor1_1.png", "img/sv_actors/Actor1_2.png"];
-    let imgsrc = ["img/sv_add/EN1_1.png", "img/sv_add/EN1_2.png","","img/sv_add/Ehakone.png"];
+    let imgsrc = ["img/sv_add/EN1_1.png", "img/sv_add/EN1_2.png","img/sv_add/EN1_3.png","img/sv_add/Ehakone.png"];
     let img = new Image();
     //DBG//console.log("characlass",soltype);
     img.src = (soltype)? imgsrc[soltype] : imgsrc[type];

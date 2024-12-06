@@ -234,6 +234,7 @@ class charaImg{ // 歩行イメージ
     // args[2] から決めるパラメータ
     let cid = args[2];
     let imgfile = "/img/characters/"+ifile+".png";
+    //DBG//console.log("WALK:",imgfile,cid,id);
     // Image
     this.img = new Image();
     this.img.src = imgfile;

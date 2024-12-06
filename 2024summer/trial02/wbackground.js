@@ -3,6 +3,7 @@ class backgroundClass {
     this.parent = parent;
     this.gsize = [796,604];
     this.img = [];
+    if(0){
     let flist = [ /* 1000x740 */
       "img/battlebacks1/Grassland.png",
       "img/battlebacks2/Grassland.png",
@@ -14,9 +15,42 @@ class backgroundClass {
       img.src = src;
       this.img.push(img);
     }
+    }
+    
+    for(let i=0;i<4;i++){
+      this.img[i] = new Image();
+    }
     this.ihash = {
       "grass":[0,1],
       "ruins":[2,3],
+    }
+  }
+  init(stg=0){
+    //console.log("bgc",stg);
+    let flist = [ /* 1000x740 */
+      "img/battlebacks1/Grassland.png",
+      "img/battlebacks2/Grassland.png",
+      "img/battlebacks1/Ground1.png",
+      "img/battlebacks2/Ruins2.png"
+    ]; //--- default １面 ---
+    if(stg==2){ // ２面
+      flist = [ /* 1000x740 */
+        "img/battlebacks1/RockCave.png",
+        "img/battlebacks2/DirtCave.png",
+        "img/battlebacks1/Road1.png",
+        "img/battlebacks2/RockCave.png"
+      ];
+    }
+    if(stg==3){ // ３面
+      flist = [ /* 1000x740 */
+        "img/battlebacks1/Fort1.png",
+        "img/battlebacks2/Fort1.png",
+        "img/battlebacks1/DecorativeTile1.png",
+        "img/battlebacks2/Castle3.png"
+      ];
+    }
+    for(let i=0;i<4;i++){
+      this.img[i].src = flist[i];
     }
   }
   calcarg(type,base,m0,dy=0){

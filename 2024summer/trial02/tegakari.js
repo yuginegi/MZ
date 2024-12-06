@@ -73,8 +73,9 @@
       console.log(this.ids);
       this.idx = this.ids[0];
       // バーのサイズ (816, 624)
-      this.barpos = [160,0]
-      this.barsize = [816-this.barpos[0],100]
+      this.barpos = [350,0]
+      //this.barsize = [816-this.barpos[0],100]
+      this.barsize = [816-this.barpos[0],40]
       // 状態
       this.viewstate = 0;
     }
@@ -178,7 +179,7 @@
       let par = {
         type: "div", id: "TEGAKARI",
         style: { /* Left,Top,scale are CHANGED */
-          backgroundColor: "#FF000050", position: "relative", zIndex: 20,
+          backgroundColor: "#FF0000A0", position: "relative", zIndex: 20,
           width: w + "px", height: h + "px" /* W & H are FIXED */
         }
       };
@@ -187,8 +188,8 @@
       let par2 = {
         type: "div", id: "TEGTEXT", textContent: "0%",
         style: {
-          "font-size": "40pt",
-          position: "absolute", right: "5px", top: "5px"
+          "font-size": "20pt",
+          position: "absolute", right: "60px", top: "2px"
         }
       };
       generateElement(base,par2);
