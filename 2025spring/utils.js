@@ -13,43 +13,6 @@ function xxx() {
 window.addEventListener("load", xxx);
 
 //====================================================================
-// リサイズ（中央表示）
-var gXXX = 816;
-var gYYY = 624;
-function utilResizeFunc(target) {
-  let km = document.getElementById(target);
-  if (km) {
-    // リサイズした現在のウインドウサイズ
-    let [sw, sh] = [window.innerWidth, window.innerHeight];
-    // parseInt は数字以外を無視してくれる
-    let [tw, th] = [parseInt(km.style.width),parseInt(km.style.height)]
-    //=== 計算 ===
-    let [ax, ay] = [sw / gXXX, sh / gYYY];
-    let aa = (ax > ay) ? ay : ax;
-    let [cl, ct] = [(sw-tw)/2, (sh-th)/2]; // 真ん中に表示したいため
-    //=== 計算結果を反映 ===
-    km.style.left = cl + "px";
-    km.style.top = ct + "px";
-    km.style.transform = "scale(" + aa + "," + aa + ")";
-  }
-}
-
-//====================================================================
-// 会話を待たせる仕組み
-var gmbusy = null;
-function savegmbusy(){
-  gmbusy = true; 
-  Game_Interpreter.prototype.updateChild_org = Game_Interpreter.prototype.updateChild
-  Game_Interpreter.prototype.updateChild = function(){return true}
-}
-function rollbackmbusy(){
-  if(gmbusy){
-    Game_Interpreter.prototype.updateChild = Game_Interpreter.prototype.updateChild_org
-    gmbusy = null;
-  }
-}
-
-//====================================================================
 // HTML挿し込む関数
 function generateElement(target, par) {
   let ele = document.createElement(par.type);
@@ -69,4 +32,43 @@ function setStyleElement(ele, par) {
     ele[key] = par[key];
   }
   return ele;
+}
+
+//====================================================================
+// コントローラ。たぶん共通で使えるはず
+class gamePad{
+  constructor(){}
+  startfunc(){
+    this.gamepad = null;
+    this.cntintval = setInterval(this.cntfunc.bind(this),1000/60);
+  }
+  endfunc(){
+    clearInterval(this.cntintval);
+  }
+  cntfunc(){
+    // ゲームパッドを取得する
+    var gamepad_list = navigator.getGamepads();
+    for(let i=0;i<gamepad_list.length;i++){
+      let pad = gamepad_list[i];
+      if(pad){
+        return this.cntmainfunc(pad)
+      }
+    }
+    return {};
+  }
+  cntmainfunc(gamepad){
+    let gameInput = {
+      left: (gamepad.axes[0] < -0.5),
+      right: (gamepad.axes[0] > 0.5),
+      top: (gamepad.axes[1] < -0.5),
+      bottom: (gamepad.axes[1] > 0.5),
+      a: (gamepad.buttons[1].pressed),
+      b: (gamepad.buttons[0].pressed),
+      x: (gamepad.buttons[3].pressed),
+      y: (gamepad.buttons[2].pressed),
+      l: (gamepad.buttons[4].pressed),
+      r: (gamepad.buttons[5].pressed),
+    };
+    return gameInput;
+  }
 }
