@@ -4,6 +4,7 @@ window.onload = ()=>{
   mainfunc();
 }
 let wazalist = [];
+let wazalevellist = [];
 // 名前, 隊列, タイプ(攻撃１、防御２、回復３、パッシブ４), 値 
 let skilllist = [
   ["なし",0,1,1],
@@ -11,11 +12,31 @@ let skilllist = [
   ["防御",3,2,5],
   ["魔法A",3,1,10],
   ["魔法B",3,1,5],
+  ["クラッシュ",1,1,20],
 ]
 function init(){
-  wazalist = [
+  console.log(lv)
+  wazalevellist[0] = [[0,1],[3,5]] // LV3で５を獲得
+  wazalevellist[1] = [[0,1],[0,2]]
+  wazalevellist[2] = [[0,3],[0,4]]
+  wazalevellist[3] = [[0,1],[0,2],[0,4]]
+  /*wazalist = [
     [1],[1,2],[3,4],[1,2,4]
-  ];
+  ];*/
+  for(let i=0;i<4;i++){
+    setwazalist(i)
+  }
+  //console.log(wazalist)
+}
+function setwazalist(i){
+  let list = wazalevellist[i];
+  wazalist[i] = [];
+  for(let cc of list){
+    if(cc[0] <= lv[i]){
+      wazalist[i].push(cc[1])
+    }
+  }
+  wazaset(i)
 }
 
 function dataset(id,txt){
@@ -98,20 +119,52 @@ function targetclickset(i){
 
 //＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 
+let lv = [1,1,1,1]
 let hp = [100,120,80,90]
 function statset(id){
-  dataset("ch"+(id+1),"HP="+hp[id])
+  dataset("ch"+(id+1),"LV="+lv[id]+" HP="+hp[id])
 }
 function damageC(pid,dam){
   let p = document.getElementById("pt"+(pid+1)).textContent
   hp[pid] -= dam;
+  if(hp[pid] <= 0){
+    setpos(pid,4);
+    haiti();
+  }
   console.log(p,dam);
   statset(pid)
 }
-
+function levelup(){
+  for(let i=0;i<4;i++){
+    let pos = getpos(i);
+    if(pos==1||pos==2||pos==3){
+      lv[i]++;
+      setwazalist(i)
+      statset(i);
+    }
+  }
+}
 function setBattle(){
   let e = document.getElementById("battle");
   e.addEventListener("click", doBattle.bind(this));
+}
+function enemyAdd(){
+  let e = document.getElementById("enadd");
+  e.addEventListener("click", ()=>{
+    console.log("hello")
+    enemy = [100,10,0]
+    enemyView();
+  });
+}
+function partyHeal(){
+  let e = document.getElementById("cheal");
+  e.addEventListener("click", ()=>{
+    console.log("cheal")
+    hp = [100,120,80,90]
+    for(let i=0;i<4;i++){
+      statset(i);
+    }
+  });
 }
 
 function partyAttack(){
@@ -145,6 +198,9 @@ function partyAttack(){
     }
   }
   enemy[0] = enemy[0] - dam;
+  if(enemy[0]<=0){
+    levelup();
+  }
   enemyView();
 }
 
@@ -179,7 +235,15 @@ function enemyView(){
 
 function doBattle(){
   console.log("＝＝＝＜doBattle＞＝＝＝＝＝＝＝");
+  if(!(enemy[0]>0)){
+    console.log("敵はいない");
+    return;
+  }
   partyAttack();
+  if(!(enemy[0]>0)){
+    console.log("敵はいない");
+    return;
+  }
   enemyAttack();
 }
 
@@ -188,9 +252,10 @@ function doBattle(){
 let wazasetlist = [-1,-1,-1,-1];
 function wazaset(id){
   let l = document.getElementById("wlist"+(id+1));
+  l.innerHTML = "";
   let i = 0;
   for(let cc of wazalist[id]){
-  console.log("wazaset",id,wazalist[id])
+  //console.log("wazaset",id,wazalist[id])
     let e = document.createElement("v");
     let waza = skilllist[cc]
     e.textContent = "　["+waza[0]+"]　";
@@ -260,4 +325,7 @@ function mainfunc(){
 
   // 戦闘ボタン
   setBattle();
+  // 追加ボタン
+  enemyAdd();
+  partyHeal();
 }
