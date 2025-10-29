@@ -104,13 +104,21 @@ function poslist(){
     e.addEventListener("click",changepos.bind(this,-1,i))
   }
 }
+function lvuplist(){
+  for(let i　of [1,2,3,4]){
+    let e = document.getElementById("lvup"+(i))
+    e.addEventListener("click",levelup.bind(this,i))
+  }
+}
+
 function posview(){
- //document.getElementById("ctar").textContent = chartarget
- document.getElementById("ctar").textContent = document.getElementById("pt"+(chartarget+1)).textContent 
+  //document.getElementById("ctar").textContent = chartarget
+  document.getElementById("ctar").textContent = document.getElementById("pt"+(chartarget+1)).textContent 
 }
 function changetar(id){
   chartarget = id;
   posview();
+  setLVUPNEED();
 }
 function targetclickset(i){
   let e = document.getElementById("pt"+(i+1))
@@ -119,10 +127,33 @@ function targetclickset(i){
 
 //＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 
+let material = [10,20,30,40]
+function getres(){
+  for(let i=0;i<4;i++){
+    let pos = getpos(i);
+    if(pos==4){
+      material[i]+=10;
+    }
+  }
+  materialView();
+}
+function materialView(){
+  let txt = ["赤","黄","緑","青"]
+  for(let i=0;i<4;i++){
+    let e = document.getElementById("lvup"+(i+1))
+    e.textContent = txt[i]+":"+material[i]
+  }
+}
+function setLVUPNEED(){
+  let i = chartarget;
+  document.getElementById("lvupneed").textContent = lv[i]*100
+}
+
+let lvmax = [1,1,1,1]
 let lv = [1,1,1,1]
 let hp = [100,120,80,90]
 function statset(id){
-  dataset("ch"+(id+1),"LV="+lv[id]+" HP="+hp[id])
+  dataset("ch"+(id+1),"LV="+lv[id]+"/"+lvmax[id]+" HP="+hp[id])
 }
 function damageC(pid,dam){
   let p = document.getElementById("pt"+(pid+1)).textContent
@@ -134,13 +165,34 @@ function damageC(pid,dam){
   console.log(p,dam);
   statset(pid)
 }
-function levelup(){
+function levelmaxup(){
+  //console.log("levelmaxup")
   for(let i=0;i<4;i++){
     let pos = getpos(i);
     if(pos==1||pos==2||pos==3){
-      lv[i]++;
-      setwazalist(i)
+      lvmax[i]++;
       statset(i);
+    }
+  }
+  //console.log("levelmaxup",lvmax)
+}
+function levelup(tp0){ // tp は 赤・黄・緑・青 の意味
+  let tp = tp0-1
+  let i = chartarget;
+  if(lv[i] < lvmax[i])
+  {
+    let pos = getpos(i);
+    if(pos > 0){ // ポジション制約、今は無し
+      console.log(i, tp, material[tp], lv[i]*100)
+      if(material[tp] >= lv[i]*100){
+        material[tp] -= lv[i]*100
+        materialView();
+        lv[i]++;
+        console.log("Level UP", i, lv[i])
+        setLVUPNEED();
+        setwazalist(i)
+        statset(i);
+      }
     }
   }
 }
@@ -165,6 +217,10 @@ function partyHeal(){
       statset(i);
     }
   });
+}
+function getMaterialButton(){
+  let e = document.getElementById("getres");
+  e.addEventListener("click", getres);
 }
 
 function partyAttack(){
@@ -199,7 +255,7 @@ function partyAttack(){
   }
   enemy[0] = enemy[0] - dam;
   if(enemy[0]<=0){
-    levelup();
+    levelmaxup();
   }
   enemyView();
 }
@@ -293,6 +349,9 @@ function mainfunc(){
   enemyView();
   // 隊列選択
   poslist();
+  // LVUP選択
+  lvuplist();
+  materialView();
   for(let i=0;i<4;i++){
     // ステ埋める（名前・HP）
     statset(i)
@@ -306,7 +365,8 @@ function mainfunc(){
   // 配置を決める
   haiti();
   // 隊列選択の初期値
-  posview();
+  //posview();
+  changetar(0);
   // 前衛を変える
   changepos(3,1);
   // 待機に変える
@@ -328,4 +388,5 @@ function mainfunc(){
   // 追加ボタン
   enemyAdd();
   partyHeal();
+  getMaterialButton();
 }
