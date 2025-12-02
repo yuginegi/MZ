@@ -1,0 +1,107 @@
+<HTML>
+<HEAD>
+<script>
+const imgfile = "pict.jpg"; // 1920x1080
+const [canwidth,canheight] = [1920/2,1080/2];
+const v0 = 4;
+const z0 = 2;
+window.onload = init;
+function init(){
+  initpar();
+  initcanvas(canwidth,canheight);
+  initimage();
+}
+let par = {}
+const claczoom = () => {
+  return z0**(par.v/4)
+}
+function initpar(){
+  // Displayの４点（固定）
+  par.dx = 0;
+  par.dy = 0;
+  par.dw = canwidth;
+  par.dh = canheight;
+  // 画像を表示する位置
+  par.x = canwidth; // (canwidth/2)
+  par.y = canheight;
+  par.w = canwidth;
+  par.h = canheight;
+  // ホイールイベント用
+  par.v = v0;
+  // マウスイベント用
+  par.fx = 0 // par.x の記憶
+  par.fy = 0 // par.y の記憶
+  par.pos = null // カーソル位置の記憶
+}
+function initcanvas(cw,ch){
+  const can = document.getElementById("mycan");
+  can.width = cw;
+  can.height = ch;
+  const ctx = can.getContext("2d");
+  par.can = can;
+  par.ctx = ctx;
+  //Event
+  SetEventWheel();
+  SetEventMouse();
+}
+function initimage(){
+  // https://min-chi.material.jp/fm/bg_c/country_road2/
+  let img = new Image();
+  img.src = imgfile;
+  par.img = img
+  img.onload = ()=>{updateview()}
+}
+function updateview(){
+  let ctx = par.ctx;
+  ctx.fillStyle = "#888888"
+  ctx.fillRect(par.dx,par.dy,par.dw,par.dh);
+  let zoom = claczoom()//z0**par.v
+  let x = par.x - (canwidth/2)* zoom
+  let y = par.y - (canheight/2)* zoom
+  let w = par.w * zoom
+  let h = par.h * zoom
+  ctx.drawImage(par.img, x,y,w,h,par.dx,par.dy,par.dw,par.dh)
+}
+function SetEventWheel(){
+  const wfunc = (e) => {
+    e.preventDefault();
+    ScaleChange(e.deltaY > 0);
+  }
+  const ele = par.can;
+  console.log(ele)
+  ele.addEventListener("wheel", wfunc, false);
+}
+function ScaleChange(b){
+  par.v += (b)? 1:-1;
+  updateview();
+}
+function SetEventMouse(){
+  const mdw = (e) => {
+    e.preventDefault();
+    par.pos = [e.clientX,e.clientY]
+    par.fx = par.x
+    par.fy = par.y
+  }
+  const mup = (e) => {
+    e.preventDefault();
+    par.pos = null
+  }
+  const mmv = (e) => {
+    e.preventDefault();
+    if(!(par.pos)){return}
+    let zoom = claczoom()//z0**par.v
+    par.x = par.fx + zoom*(par.pos[0]-e.clientX)
+    par.y = par.fy + zoom*(par.pos[1]-e.clientY)
+    updateview();
+  }
+  const ele = par.can;
+  ele.addEventListener("mouseup", mup, false);
+  ele.addEventListener("mousemove", mmv, false);
+  ele.addEventListener("mousedown", mdw, false);
+}
+</script>
+</HEAD>
+<BODY>
+  <canvas id="mycan"></canvas>
+</BODY>
+</HTML>
