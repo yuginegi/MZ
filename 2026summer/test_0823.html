@@ -1,0 +1,179 @@
+<html>
+
+<style></style>
+
+<script>
+// --- 1. アプリの状態（データ）を1つにまとめる ---
+let App = null;
+
+// --- 2. 初期化処理 ---
+async function main() {
+  console.log(App)
+  App.ctx = App.canvas.getContext('2d');
+  App.offCanvas.width = App.canvas.width;
+  App.offCanvas.height = App.canvas.height;
+  App.offCtx = App.offCanvas.getContext('2d');
+  console.log(App.offCanvas)
+
+  // 画像の一括読み込み（Promise.all）
+  const imgList = ["mao1.png", "maoN.png"];
+  App.images = await Promise.all(imgList.map(src => {
+    return new Promise(resolve => {
+      const img = new Image();
+      // デモ用URL（ローカル実行時は src に戻してください）
+      img.src = src;
+      img.onload = () => resolve(img);
+    });
+  }));
+
+  // 裏画面に初期状態（カバー画像）を描画
+  App.offCtx.drawImage(App.images[1], 0, 0, App.canvas.width, App.canvas.height);
+
+  // 初回表示
+  render();
+
+  // マウスイベントの登録
+  initEvents();
+}
+
+// --- 3. マウスイベント処理（座標の計算・記録） ---
+function initEvents() {
+  const canvas = App.canvas;
+
+  canvas.addEventListener('mousedown', (e) => {
+    App.isDrawing = true;
+    addPoint(e);
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (!App.isDrawing) return;
+    addPoint(e);
+  });
+
+  window.addEventListener('mouseup', () => {
+    App.isDrawing = false;
+  });
+}
+
+function addPoint(e) {
+  const rect = App.canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  App.points.push({ x, y });
+
+  // ① まず裏画面を削る
+  eraseOffScreen();
+  // ② その結果を表画面に描画（合成）する
+  render();
+}
+
+// --- 4. 【ビジネスロジック】裏画面を消しゴムで削る処理 ---
+function eraseOffScreen() {
+  if (App.points.length === 0) return;
+  const ctx = App.offCtx;
+
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.beginPath();
+
+  if (App.points.length === 1) {
+    // 1点目はカチッとクリックしただけなので円を描く
+    const p = App.points[0];
+    ctx.arc(p.x, p.y, App.brushRadius, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    // 2点目以降は「前回の点」から「今回の点」へ滑らかな太い線を引く（点線防止）
+    const pPrev = App.points[App.points.length - 2];
+    const pCurr = App.points[App.points.length - 1];
+    
+    ctx.moveTo(pPrev.x, pPrev.y);
+    ctx.lineTo(pCurr.x, pCurr.y);
+    
+    ctx.lineWidth = App.brushRadius * 2; // 半径を直径にする
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+  }
+
+  ctx.globalCompositeOperation = 'source-over'; // モードを安全に戻す
+}
+
+// --- 5. 【描画・合成】表画面（メイン）に重ね合わせて出力する処理 ---
+function render() {
+  const ctx = App.ctx;
+  const w = App.canvas.width;
+  const h = App.canvas.height;
+
+  // 画面を一度まっさらにクリア（汚れ防止）
+  ctx.clearRect(0, 0, w, h);
+
+  // 1層目：背景画像を描く
+  ctx.drawImage(App.images[0], 0, 0, w, h);
+
+  // 2層目：削り取られた裏画面をそのまま上に1枚重ねる
+  ctx.drawImage(App.offCanvas, 0, 0);
+
+  checkErasePercent()
+}
+
+// アプリの実行
+//main();
+window.onload = () => {
+  // App initialize
+  const aaa = {
+    canvas: document.getElementById('myCanvas'),
+    ctx: null,
+    offCanvas: document.createElement('canvas'),
+    offCtx: null,
+    images: [],
+    points: [],
+    isDrawing: false,
+    brushRadius: 10 // 消しゴムの太さ（半径）をここで一括管理
+  };
+  App = aaa;
+  main()
+}
+
+function checkErasePercent() {
+  const ctx = App.offCtx;
+  const w = App.canvas.width;
+  const h = App.canvas.height;
+
+  // 1. 裏画面の全ピクセルデータを取得する
+  // [赤, 緑, 青, 透明度, 赤, 緑, 青, 透明度... ] という膨大な数の配列が返ってきます
+  const imgData = ctx.getImageData(0, 0, w, h);
+  const data = imgData.data;
+
+  let transparentPixels = 0;
+
+  // 2. 4ピクセルおき（透明度のデータだけ）にチェックしていくループ
+  // data[0]=R, data[1]=G, data[2]=B, data[3]=A（透明度）
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] === 0) {
+      transparentPixels++; // 完全に透明ならカウントアップ
+    }
+  }
+  // 初回の数字を覚えておく
+  if(!App.initval){
+    App.initval = transparentPixels;
+    document.getElementById('result').innerText = `0%`;
+    return;
+  }
+
+  // 3. 全体のピクセル数（幅 × 高さ）
+  const totalPixels = w * h;
+
+  // 4. ％を計算（小数点以下を切り捨て）
+  const percent = (totalPixels-App.initval) > 0 ? Math.floor(((transparentPixels-App.initval) / (totalPixels-App.initval)) * 100) : 100;
+
+  console.log(`削られた割合: ${percent}%`);
+  
+  // 必要に応じて、画面上のHTML要素（<div id="result">0%</div>など）に数値を書き出す
+  document.getElementById('result').innerText = `${percent}%`;
+}
+</script>
+
+<div id="result">0%</div>
+<canvas id="myCanvas" width="200" height="200"></canvas>
+
+</html>
