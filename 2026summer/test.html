@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    canvas { border: 1px solid #ccc; background: #111; }
+  </style>
+</head>
+<body>
+  <canvas id="waveCanvas" width="400" height="400"></canvas>
+
+<script>
+
+//----------------
+const canvas = document.getElementById('waveCanvas');
+const ctx = canvas.getContext('2d');
+
+const WIDTH = canvas.width;
+const HEIGHT = canvas.height;
+
+// 波の高さを管理する2つのバッファ（古い波と新しい波）
+let buffer1 = new Float32Array(WIDTH * HEIGHT);
+let buffer2 = new Float32Array(WIDTH * HEIGHT);
+
+let img = new Image();
+img.src = 'mao1.png'; // やまださんの透過PNGをセット！
+img.onload = () => {
+  // 初回描画
+  ctx.drawImage(img, 0, 0, WIDTH, HEIGHT);
+  // 60FPSループ開始
+  requestAnimationFrame(loop);
+};
+
+// クリックした場所に「波の高さ」のエネルギーを注入する
+canvas.addEventListener('click', (e) => {
+  const x = e.clientX - canvas.getBoundingClientRect().left;
+  const y = e.clientY - canvas.getBoundingClientRect().top;
+  
+  // クリックした中心点の波を高くする（半径3マスの範囲を凹ませる）
+  //const idx = Math.floor(y) * WIDTH + Math.floor(x);
+  //buffer1[idx] = cval; 
+  isSkipping = false;  // スキップ解除（叩き起こす）
+  startFrame = 0;
+  clickX = x;
+  clickY = y;
+});
+
+let isSkipping = true;
+let startFrame = 0;   // クリックされた瞬間の時間（フレーム数）
+let clickX = 0;       // クリックされた中心X
+let clickY = 0;       // クリックされた中心Y
+
+const WAVE_DURATION = 60; // 0.5秒（60fpsなら30フレーム）でアニメーション完了
+
+const EFFECT_COLOR = [255,255,0]; // 水色（シアン）などにする
+
+function loop() {
+    ctx.clearRect(0, 0, WIDTH, HEIGHT)
+    ctx.drawImage(img, 0, 0, WIDTH, HEIGHT);
+  if (isSkipping) {
+    //ctx.clearRect(0, 0, WIDTH, HEIGHT)
+    //ctx.drawImage(img, 0, 0, WIDTH, HEIGHT);
+    requestAnimationFrame(loop);
+    return; // 🛑 波がない間は超軽量（計算量ゼロ）
+  }
+
+  // 時間（フレーム）を進める
+  startFrame++;
+
+  // 0.5秒（30フレーム）経ったら、波紋を完全に終了させて眠らせる
+  if (startFrame > WAVE_DURATION) {
+    isSkipping = true;
+    ctx.drawImage(img, 0, 0, WIDTH, HEIGHT);
+    requestAnimationFrame(loop);
+    return;
+  }
+
+  // 1. 現在の波の半径を計算（0.5秒で画面全体に広がるように自動拡大）
+  // 30フレームかけて、半径 0 から 300ピクセル まで滑らかに広がる
+  const currentRadius = (startFrame / WAVE_DURATION) * 300;
+
+  // 2. 波の強さ（減衰）。時間が経つほど波を小さく消していく
+  const wavePower = 1.0 - (startFrame / WAVE_DURATION);
+
+  // 3. 元のイラストのピクセルを取得
+  ctx.drawImage(img, 0, 0, WIDTH, HEIGHT);
+  const sourceImgData = ctx.getImageData(0, 0, WIDTH, HEIGHT);
+  const source = sourceImgData.data;
+
+  const outputImgData = ctx.createImageData(WIDTH, HEIGHT);
+  const output = outputImgData.data;
+
+// ★歪みの質感をコントロールする調整ツマミ（ループの外で変えてもOK）
+const WAVE_RANGE = 50;   // 【変更】歪む範囲を「15」から「40」へ大幅拡大（前後の余韻が長くなります）
+const WAVE_POW = 0.2;    // 【新設】歪みのパワー倍率（ぐにゃり感を強めます。好みで 2.0 〜 4.0 で調整）
+
+for (let y = 0; y < HEIGHT; y++) {
+    for (let x = 0; x < WIDTH; x++) {
+      const i = (y * WIDTH + x) * 4;
+
+      // 1. 三平方の定理で、このピクセルからクリック位置までの「距離」を計算
+      const dx = x - clickX;
+      const dy = y - clickY;
+      const distance = Math.hypot(dx, dy);
+
+      // 2. 今の波の半径（currentRadius）と、このピクセルの距離の「差」を見る
+      const distFromWave = distance - currentRadius;
+
+      // ★【あなたのアイデア！】波の範囲外（40ピクセルより遠い）なら、
+      // 歪ませずにそのまま元の絵をコピーして、次のピクセルの処理（continue）へ進む！
+      if (distFromWave <= -WAVE_RANGE || distFromWave >= WAVE_RANGE) {
+        output[i]     = source[i];
+        output[i + 1] = source[i + 1];
+        output[i + 2] = source[i + 2];
+        output[i + 3] = source[i + 3];
+        continue; 
+      }
+
+      // --- ここから下は「波の範囲内（40ピクセル以内）」確定の超すっきりゾーン ---
+
+      // 3. サイン/コサインを使って、この位置の「歪み量（ピクセルを引っ張る強さ）」を計算
+      const waveProgress = Math.cos(distFromWave * (Math.PI / WAVE_RANGE)) * WAVE_RANGE * wavePower * WAVE_POW;
+
+      // 4. 進行方向（中心から外側へ向かう矢印）の向きにピクセルを引っ張る！
+      let offsetX = 0;
+      let offsetY = 0;
+      if (distance > 0) {
+        offsetX = Math.floor((dx / distance) * waveProgress);
+        offsetY = Math.floor((dy / distance) * waveProgress);
+      }
+
+      // 5. 画面外をサンプリングしないように安全クランプ
+      let srcX = x + offsetX;
+      let srcY = y + offsetY;
+      if (srcX < 0) srcX = 0; if (srcX >= WIDTH) srcX = WIDTH - 1;
+      if (srcY < 0) srcY = 0; if (srcY >= HEIGHT) srcY = HEIGHT - 1;
+
+      const srcIdx = (srcY * WIDTH + srcX) * 4;
+
+      // 6. 歪ませた位置（srcIdx）から色を取ってきて画面（output）に塗る
+      output[i]     = source[srcIdx];
+      output[i + 1] = source[srcIdx + 1];
+      output[i + 2] = source[srcIdx + 2];
+      output[i + 3] = source[srcIdx + 3];
+    }
+  }
+
+  // 画面に反映
+  ctx.putImageData(outputImgData, 0, 0);
+
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
